@@ -157,6 +157,9 @@ const delayFrames = computed<number>(() => {
   return isNaN(parsed) ? 0 : parsed
 })
 
+// 延迟时间（秒）
+const delaySeconds = computed(() => delayFrames.value / 60)
+
 watch(
   () => appStore.currentSong?.xmlObject?.TITLE?.DELAY?.Value,
   (val) => {
@@ -681,10 +684,14 @@ const handleDoubleClickTime = () => {
   isEditingTime.value = true
 }
 
+// 手动输入跳转：UI 显示时间加上延迟后跳转到底层实际时间
 const submitTimeChange = () => {
   if (!isEditingTime.value) return
-  const target = parseTimeToSeconds(inputTimeString.value)
-  if (target !== null) handleSeek(Math.max(0, Math.min(target, duration.value)))
+  const inputDisplayTime = parseTimeToSeconds(inputTimeString.value)
+  if (inputDisplayTime !== null) {
+    const actualTime = inputDisplayTime + delaySeconds.value
+    handleSeek(Math.max(0, Math.min(actualTime, duration.value)))
+  }
   isEditingTime.value = false
 }
 
@@ -693,15 +700,16 @@ const cancelTimeEdit = () => {
 }
 
 const formatTime = (s: number) => {
-  if (!s || isNaN(s)) return '00:00.000'
+  if (!s || isNaN(s) || s < 0) return '00:00.000'
   const m = Math.floor(s / 60).toString().padStart(2, '0')
   const sec = Math.floor(s % 60).toString().padStart(2, '0')
   const ms = Math.floor((s % 1) * 1000).toString().padStart(3, '0')
   return `${m}:${sec}.${ms}`
 }
 
-const formattedDuration = computed(() => formatTime(duration.value))
-const formattedCurrentTime = computed(() => formatTime(currentTime.value))
+// UI 文本只展示减去延迟后的时间，并保证不小于 0
+const formattedDuration = computed(() => formatTime(Math.max(0, duration.value - delaySeconds.value)))
+const formattedCurrentTime = computed(() => formatTime(Math.max(0, currentTime.value - delaySeconds.value)))
 
 // --- 暴露给父组件的通用跳转接口 ---
 const seekTo = (target: number | string, type: 'time' | 'frame' | 'coord') => {
@@ -717,7 +725,10 @@ const seekTo = (target: number | string, type: 'time' | 'frame' | 'coord') => {
       seconds = getSecondsFromCoord(targetCoord)
     }
   } else {
-    seconds = typeof target === 'number' ? target : parseTimeToSeconds(String(target))
+    const parsedDisplayTime = typeof target === 'number' ? target : parseTimeToSeconds(String(target))
+    if (parsedDisplayTime !== null) {
+      seconds = parsedDisplayTime + delaySeconds.value
+    }
   }
 
   if (seconds !== null && !isNaN(seconds)) {
