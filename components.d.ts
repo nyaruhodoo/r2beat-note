@@ -11,9 +11,7 @@ export {}
 /* prettier-ignore */
 declare module 'vue' {
   export interface GlobalComponents {
-    AudioPlayer: typeof import('./src/components/AudioPlayer.vue')['default']
     BpmEditModal: typeof import('./src/components/BpmEditModal.vue')['default']
-    ContextMenu: typeof import('./src/components/ContextMenu.vue')['default']
     ElButton: typeof import('element-plus/es')['ElButton']
     ElColorPicker: typeof import('element-plus/es')['ElColorPicker']
     ElDialog: typeof import('element-plus/es')['ElDialog']
@@ -23,13 +21,9 @@ declare module 'vue' {
     ElIcon: typeof import('element-plus/es')['ElIcon']
     ElInput: typeof import('element-plus/es')['ElInput']
     ElInputNumber: typeof import('element-plus/es')['ElInputNumber']
-    ElOption: typeof import('element-plus/es')['ElOption']
-    ElSelect: typeof import('element-plus/es')['ElSelect']
     ElSlider: typeof import('element-plus/es')['ElSlider']
     ElSwitch: typeof import('element-plus/es')['ElSwitch']
     ElUpload: typeof import('element-plus/es')['ElUpload']
-    HelloWorld: typeof import('./src/components/HelloWorld.vue')['default']
-    MusicPlayer: typeof import('./src/components/MusicPlayer.vue')['default']
     ObstacleConfig: typeof import('./src/components/ObstacleConfig.vue')['default']
     ObstacleSelector: typeof import('./src/components/ObstacleSelector.vue')['default']
     RhythmCanvas: typeof import('./src/components/RhythmCanvas.vue')['default']

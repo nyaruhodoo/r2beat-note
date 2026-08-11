@@ -157,7 +157,7 @@ import { ref, reactive, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 
 import { useSongStorage } from '@/db/useSongStorage'
-import { useAppStore, type SongData, type SongXmlData } from '@/store/store'
+import { useAppStore, type SongXmlData } from '@/store/store'
 
 const router = useRouter()
 const { setCurrentSong } = useAppStore()

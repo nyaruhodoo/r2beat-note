@@ -120,9 +120,9 @@ function generateObstacle(
   // const nextObsKind = +(nextObs?.Kind ?? 0)
   const selectedObstacleKind = +selectedObstacle.value.Kind
 
-  // console.log({
-  //   prevObs, nextObs, offsetXRatio, selectedObstacle: selectedObstacle.value
-  // })
+  console.log({
+    prevObs, nextObs, offsetXRatio, selectedObstacle: selectedObstacle.value
+  })
 
   // 长按障碍物特殊映射
   if (selectedObstacle.value.Level === "5" && selectedObstacleKind > 100) {
@@ -166,6 +166,7 @@ function getSurroundingObstacles(targetCoord: number) {
       break // 已经有序，找到第一个大于 targetCoord 的即可直接退出
     }
   }
+
 
   return { prevObs, nextObs }
 }
