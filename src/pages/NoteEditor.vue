@@ -10,7 +10,7 @@
         <h1 class="text-lg font-bold text-slate-800">谱面编辑器</h1>
       </div>
       <div class="flex items-center gap-3">
-        <el-button type="primary" @click="handleSaveXml">保存谱面</el-button>
+        <el-button type="primary" @click="handleSaveXml">导出谱面</el-button>
       </div>
     </header>
 
