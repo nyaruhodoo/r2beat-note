@@ -24,6 +24,7 @@ declare module 'vue' {
     ElSlider: typeof import('element-plus/es')['ElSlider']
     ElSwitch: typeof import('element-plus/es')['ElSwitch']
     ElUpload: typeof import('element-plus/es')['ElUpload']
+    MusicPlayer: typeof import('./src/components/MusicPlayer.vue')['default']
     ObstacleConfig: typeof import('./src/components/ObstacleConfig.vue')['default']
     ObstacleSelector: typeof import('./src/components/ObstacleSelector.vue')['default']
     RhythmCanvas: typeof import('./src/components/RhythmCanvas.vue')['default']

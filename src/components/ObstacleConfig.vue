@@ -36,13 +36,13 @@
           </el-form-item>
 
           <!-- 新增：音乐延迟修正 -->
-          <!-- <el-form-item label="额外延迟修正(秒)" class="prevent-item-expand" title="如果你不知道有什么用请不要改">
+          <el-form-item label="额外延迟修正(秒)" class="prevent-item-expand" title="如果你不知道有什么用请不要改">
             <div class="flex items-center gap-1">
-              <el-input-number v-model="fixMusicDelaySafe" :min="-1" :max="1" :step="0.01" :precision="2"
+              <el-input-number v-model="fixMusicDelaySafe" :min="-0.1" :max="0.1" :step="0.01" :precision="2"
                 :value-on-clear="0" style="width: 100px" />
               <el-button :icon="Refresh" size="small" @click="resetField('fixMusicDelay')" title="重置为默认值" />
             </div>
-          </el-form-item> -->
+          </el-form-item>
         </div>
 
         <el-divider class="my-2" />
