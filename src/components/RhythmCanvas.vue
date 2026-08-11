@@ -439,7 +439,7 @@ const coordRange = computed(() => {
 })
 
 // 原 maxCoord 不再直接使用，改为从 coordRange 获取
-const maxCoord = computed(() => coordRange.value.max)
+// const maxCoord = computed(() => coordRange.value.max)
 
 const CONFIG = computed(() => ({
   visibleGridCount: visibleGridCount.value,
@@ -930,7 +930,7 @@ const renderEditor = () => {
   }
 
   // 滚动条（基于 raw 坐标范围）
-  const { min: rawMin, max: rawMax, span: rawSpan } = range
+  const { min: rawMin, span: rawSpan } = range
   const trackHeight = viewHeight - 20
   const trackY0 = 10
 
