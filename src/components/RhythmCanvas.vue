@@ -1,5 +1,4 @@
 <template>
-  <!-- 外部容器固定宽度 240px，高100% -->
   <main ref="containerRef"
     class="relative h-full w-60 shrink-0 select-none overflow-hidden rounded-2xl border border-slate-200/80 bg-slate-900"
     @wheel="handleWheel" @contextmenu.prevent>
@@ -11,7 +10,6 @@
 import { spritesConfig } from '@/sprites'
 import { useGlobalConfigStore } from '@/store/global-config'
 import { useAppStore } from '@/store/store'
-import type { BpmItem } from '@/store/store'
 import { getDecimalPlaces } from '@/utils/utils'
 import { useEventListener } from '@vueuse/core'
 import { storeToRefs } from 'pinia'
@@ -36,7 +34,6 @@ const props = withDefaults(
     isPlaying?: boolean
     seekTo: (target: number | string, type: 'time' | 'frame' | 'coord') => void
     duration: number
-    // 属于该组件特有的 UI 比例配置（非全局 Store 配置）
     gridAspect?: number
   }>(),
   {
@@ -47,7 +44,6 @@ const props = withDefaults(
 const appStore = useAppStore()
 const { currentSong, selectedObstacle } = storeToRefs(appStore)
 
-// 引入全局配置 Store 并解构为响应式 refs
 const globalConfigStore = useGlobalConfigStore()
 const {
   activeRowColor,
@@ -63,15 +59,12 @@ const {
   gridLineColor,
 } = storeToRefs(globalConfigStore)
 
-// 当前鼠标悬停状态
 const hoverState = ref<{ coord: number; offsetXRatio: number } | null>(null)
 const isRightMouseDown = ref(false)
 const isLeftMouseDown = ref(false)
 
-// 拖拽防重记录：避免同一 coord 内频繁重复触发增删
 let lastProcessedDragCoord: number | null = null
 
-// ---------------- 选中状态管理 ----------------
 const selectedCoords = ref<Set<number>>(new Set())
 const shiftAnchorCoord = ref<number | null>(null)
 
@@ -82,34 +75,21 @@ const setPendingObstacle = (obs: Obstacle | null) => {
 defineExpose({
   setPendingObstacle,
   pendingObstacle: selectedObstacle,
-  selectedCoords, // 暴露选中状态
+  selectedCoords,
 })
 
-// 提取障碍物列表
 const obstacles = computed<Obstacle[]>(() => {
   const areaData = currentSong.value?.xmlObject?.TITLE?.AREA
   if (!areaData) return []
   return Array.isArray(areaData) ? areaData : [areaData]
 })
 
-
-/**
- * 真正修改 store 数据中的障碍物核心函数，无论添加还是剔除
- * 内置了一次排序
- */
 function updateSongObstacles(newObstacles: Obstacle[]) {
   if (!currentSong.value?.xmlObject?.TITLE) return
-
-  // 保持按 Coord 升序排列
   const sortedObstacles = [...newObstacles].sort((a, b) => Number(a.Coord) - Number(b.Coord))
   currentSong.value.xmlObject.TITLE.AREA = sortedObstacles
 }
 
-
-/**
- * 根据上下文映射合适的障碍物
- * 该函数允许报错，会在鼠标对应行内显示红色文字
- */
 function generateObstacle(
   prevObs: Obstacle | null,
   nextObs: Obstacle | null,
@@ -118,34 +98,26 @@ function generateObstacle(
   if (!selectedObstacle.value) return null
 
   const prevObsKind = +(prevObs?.Kind ?? 0)
-  // const nextObsKind = +(nextObs?.Kind ?? 0)
   const selectedObstacleKind = +selectedObstacle.value.Kind
 
   console.log({
     prevObs, nextObs, offsetXRatio, selectedObstacle: selectedObstacle.value
   })
 
-  // 长按障碍物特殊映射
   if (selectedObstacle.value.Level === "5" && selectedObstacleKind > 100) {
-
     if ((prevObsKind !== selectedObstacleKind - 2 || prevObsKind === selectedObstacleKind) && (prevObsKind + 1 !== selectedObstacleKind)) {
       return {
         ...selectedObstacle.value,
         Kind: selectedObstacleKind - 2 + ''
       }
     }
-
   }
-
-
 
   return { ...selectedObstacle.value }
 }
 
-// 辅助方法：获取指定 Coord 前后的障碍物
 function getSurroundingObstacles(targetCoord: number) {
   const step = stepCoord.value
-  // 直接使用有序的 obstacles.value，无需重复拷贝和 sort
   const sorted = obstacles.value
 
   let prevObs: Obstacle | null = null
@@ -164,17 +136,13 @@ function getSurroundingObstacles(targetCoord: number) {
       prevObs = obs
     } else if (c > targetCoord) {
       nextObs = obs
-      break // 已经有序，找到第一个大于 targetCoord 的即可直接退出
+      break
     }
   }
-
 
   return { prevObs, nextObs }
 }
 
-
-
-// ---------------- 衍生方向计算与预览障碍物处理 ----------------
 const hoverDirection = computed<'left' | 'right' | null>(() => {
   if (!hoverState.value) return null
   return hoverState.value.offsetXRatio <= 0.5 ? 'left' : 'right'
@@ -206,7 +174,6 @@ function computePreviewObstacle() {
   }
 }
 
-// 精细化监听：仅在 hover 的 coord、方向(left/right) 或 selectedObstacle 发生变化时重新计算预览
 watch(
   [hoverCoord, hoverDirection, selectedObstacle],
   () => {
@@ -215,84 +182,56 @@ watch(
   { immediate: true }
 )
 
-// 辅助方法：删除包含/靠近指定 Coord 的障碍物（包含高精度障碍物）
 function removeObstacleAtCoord(coord: number): boolean {
   const currentList = obstacles.value
   const step = stepCoord.value
-
-  // 受保护的过渡障碍物 Kind 集合（不能直接被鼠标点击/主动删除）
   const PROTECTED_KINDS = new Set(['129', '132', '144', '141', '138', '135'])
 
   const minThreshold = coord - step / 2
   const maxThreshold = coord + step / 2
 
-  // 1. 查找落在当前刻度范围内、且允许删除的障碍物
   const obstaclesToRemove = currentList.filter((obs) => {
-    // 保护过渡障碍物，不允许直接点击删除
-    if (PROTECTED_KINDS.has(obs.Kind)) {
-      return false
-    }
-
+    if (PROTECTED_KINDS.has(obs.Kind)) return false
     const obsCoord = Number(obs.Coord)
     const rowSpan = obs.Kind === '24' ? 3 : 1
     const maxObsCoord = obsCoord + (rowSpan - 1) * step
-
     const isInsideRange = obsCoord > minThreshold && obsCoord < maxThreshold
     const isOverlapping = obsCoord <= maxThreshold && maxObsCoord >= minThreshold
-
     return isInsideRange || isOverlapping
   })
 
-  if (obstaclesToRemove.length === 0) {
-    return false
-  }
+  if (obstaclesToRemove.length === 0) return false
 
-  // 2. 从选中状态集合中移除待删除的坐标
   obstaclesToRemove.forEach((obs) => {
     selectedCoords.value.delete(Number(obs.Coord))
   })
 
-  // 3. 基础删除：获取删除目标后的剩余列表
   let updatedList = currentList.filter((obs) => !obstaclesToRemove.includes(obs))
 
-  // 4. 联动清理：如果本次删除包含了区间起止节点 (Kind > 100)，自动清除失效的过渡障碍物
   const hasRemovedIntervalBoundary = obstaclesToRemove.some(
     (obs) => Number(obs.Kind) > 100 && obs.Level === '5'
   )
 
   if (hasRemovedIntervalBoundary) {
-    // 根据删除后的新列表重新计算当前所有有效的闭区间
     const validIntervals = calculateClosedIntervals(updatedList, RANGE_PAIR_MAP)
-
-    // 过滤掉所有不在任何有效闭区间 (startCoord, endCoord) 内的过渡障碍物
     updatedList = updatedList.filter((obs) => {
-      // 非过渡障碍物直接保留
-      if (!PROTECTED_KINDS.has(obs.Kind)) {
-        return true
-      }
-
+      if (!PROTECTED_KINDS.has(obs.Kind)) return true
       const obsCoord = Number(obs.Coord)
-
-      // 判断当前过渡障碍物是否处于某个有效的闭区间内
       const isInValidInterval = validIntervals.some(
         ({ startCoord, endCoord }) => obsCoord > startCoord && obsCoord < endCoord
       )
-
       return isInValidInterval
     })
   }
 
-  // 5. 更新歌谱障碍物列表
   updateSongObstacles(updatedList)
   return true
 }
-// 辅助方法：在指定 Coord 摆放障碍物
+
 function placeObstacleAtCoord(coord: number, offsetXRatio: number) {
   if (!selectedObstacle.value) return
-
   const currentList = obstacles.value
 
-  // === 新增限制：不允许在已闭合的区间内（startCoord < coord < endCoord）放置任何障碍物 ===
   const existingIntervals = calculateClosedIntervals(currentList, RANGE_PAIR_MAP)
   const isInsideClosedInterval = existingIntervals.some(
     ({ startCoord, endCoord }) => coord > startCoord && coord < endCoord
@@ -317,13 +256,11 @@ function placeObstacleAtCoord(coord: number, offsetXRatio: number) {
 
   const step = stepCoord.value
 
-  // 1. 完全重复检测
   const isAlreadyPresent = currentList.some(
     (obs) => Number(obs.Coord) === coord && obs.Kind === finalObs?.Kind
   )
   if (isAlreadyPresent) return
 
-  // 2. 清理与当前放置坐标重叠的旧障碍物
   let newObsList = currentList.filter((obs) => {
     const obsCoord = Number(obs.Coord)
     const rowSpan = obs.Kind === '24' ? 3 : 1
@@ -331,13 +268,11 @@ function placeObstacleAtCoord(coord: number, offsetXRatio: number) {
     return !(coord >= obsCoord && coord <= maxObsCoord)
   })
 
-  // 3. 追加新放置的障碍物
   newObsList.push({
     ...finalObs,
     Coord: coord.toString(),
   })
 
-  // 4. 特殊障碍物区间自动填充逻辑 (Kind > 100 且 Level === "5")
   const kindNum = Number(finalObs.Kind)
   if (kindNum > 100 && finalObs.Level === "5") {
     const intervals = calculateClosedIntervals(newObsList, RANGE_PAIR_MAP)
@@ -345,13 +280,11 @@ function placeObstacleAtCoord(coord: number, offsetXRatio: number) {
     for (const interval of intervals) {
       const { startCoord, endCoord, fillKind } = interval
 
-      // Step 4.1: 保留首尾（startCoord 和 endCoord），只清空中间 (startCoord, endCoord) 的过渡障碍物
       newObsList = newObsList.filter((obs) => {
         const c = Number(obs.Coord)
         return !(c > startCoord && c < endCoord)
       })
 
-      // Step 4.2 & 4.3: 从 (endCoord - 12) 开始倒序递减，仅在严格大于 startCoord 的位置填充 fillKind
       const filledObstacles: Obstacle[] = []
       for (let curCoord = endCoord - 12; curCoord > startCoord; curCoord -= 12) {
         filledObstacles.push({
@@ -360,8 +293,6 @@ function placeObstacleAtCoord(coord: number, offsetXRatio: number) {
           Coord: curCoord.toString(),
         })
       }
-
-      // 将中间填充的过渡障碍物合并回列表
       newObsList.push(...filledObstacles)
     }
   }
@@ -369,7 +300,6 @@ function placeObstacleAtCoord(coord: number, offsetXRatio: number) {
   updateSongObstacles(newObsList)
 }
 
-// 成对区间的连线/填充区间计算
 const RANGE_PAIR_MAP: Record<string, { endKind: string; fillKind: string }> = {
   '128': { endKind: '130', fillKind: '129' },
   '131': { endKind: '133', fillKind: '132' },
@@ -379,41 +309,26 @@ const RANGE_PAIR_MAP: Record<string, { endKind: string; fillKind: string }> = {
   '140': { endKind: '142', fillKind: '141' },
 }
 
-/**
- * 根据输入的障碍物列表及映射规则，计算出已形成闭合的区间列表
- */
 function calculateClosedIntervals(
   obstacles: Obstacle[],
   rangePairMap: Record<string, { endKind: string; fillKind: string }> = RANGE_PAIR_MAP
-): {
-  startCoord: number
-  endCoord: number
-  fillKind: string
-}[] {
+): { startCoord: number; endCoord: number; fillKind: string }[] {
   if (!obstacles || obstacles.length === 0) return []
 
-
   const sorted = obstacles
-  const intervals: {
-    startCoord: number
-    endCoord: number
-    fillKind: string
-  }[] = []
-  // 维护每种起始 Kind 的 Coord 栈，用于处理嵌套/连续区间
+  const intervals: { startCoord: number; endCoord: number; fillKind: string }[] = []
   const activeStacks: Record<string, number[]> = {}
 
   for (const obs of sorted) {
     const coord = Number(obs.Coord)
     const kind = obs.Kind
 
-    // 1. 如果是起始 Kind，压入对应的栈中
     if (rangePairMap[kind]) {
       if (!activeStacks[kind]) activeStacks[kind] = []
       activeStacks[kind].push(coord)
       continue
     }
 
-    // 2. 如果是结束 Kind，寻找匹配的起始点构成闭合区间
     for (const [startKind, rule] of Object.entries(rangePairMap)) {
       if (kind === rule.endKind && activeStacks[startKind] && activeStacks[startKind].length > 0) {
         const startCoord = activeStacks[startKind].pop()!
@@ -432,27 +347,34 @@ function calculateClosedIntervals(
   return intervals
 }
 
-
-
 const filledIntervals = computed(() => {
   return calculateClosedIntervals(obstacles.value, RANGE_PAIR_MAP)
 })
 
-const maxCoord = ref<number>(0)
-
 // BPM 分段计算
 const bpmSegments = computed(() => {
-  const bpmData = currentSong.value?.xmlObject?.TITLE?.BPM as BpmItem[]
-  if (!bpmData || bpmData.length === 0) {
-    return [{ frame: 0, startCoord: 0, bpm: props.bpm || 120 }]
+  const bpmData = currentSong.value?.xmlObject?.TITLE?.BPM
+  const defaultBpm = props.bpm ?? 120
+
+  let sortedNodes: Array<{ frame: number; bpm: number }> = []
+
+  if (bpmData && bpmData.length > 0) {
+    sortedNodes = bpmData
+      .map((node) => {
+        const bpmVal = Number(node.BPM)
+        return {
+          frame: Number(node.Frame) || 0,
+          bpm: Number.isNaN(bpmVal) ? defaultBpm : bpmVal,
+        }
+      })
+      .sort((a, b) => a.frame - b.frame)
   }
 
-  const sortedNodes = [...bpmData]
-    .map((node) => ({
-      frame: Number(node.Frame),
-      bpm: Number(node.BPM),
-    }))
-    .sort((a, b) => a.frame - b.frame)
+  if (sortedNodes.length === 0) {
+    sortedNodes.push({ frame: 0, bpm: defaultBpm })
+  } else if (sortedNodes[0].frame > 0) {
+    sortedNodes.unshift({ frame: 0, bpm: sortedNodes[0].bpm })
+  }
 
   const segments = []
   let currentCoordAccumulator = 0
@@ -476,7 +398,6 @@ const bpmSegments = computed(() => {
   return segments
 })
 
-
 function timeToCoord(time: number): number {
   const targetFrame = time * 60
   const segments = bpmSegments.value
@@ -495,17 +416,30 @@ function timeToCoord(time: number): number {
   return activeSegment.startCoord + deltaFrames * coordPerFrame
 }
 
-watch(
-  () => [props.duration, currentSong.value?.xmlObject?.TITLE?.BPM],
-  ([duration]) => {
-    if (!duration || (duration as number) <= 0) {
-      maxCoord.value = 0
-      return
-    }
-    maxCoord.value = Math.round(timeToCoord(duration as number))
-  },
-  { immediate: true, deep: true }
-)
+// 计算出整首曲子的 raw 坐标范围（用于滚动条、视口限制）
+const coordRange = computed(() => {
+  const segments = bpmSegments.value
+  if (segments.length === 0) return { min: 0, max: 0, span: 0 }
+
+  // 计算曲子开头和结尾的坐标
+  const startCoord = 0 // 时间 0 的坐标，由 bpmSegments 保证为 0
+  const endCoord = timeToCoord(props.duration) // 时间 duration 的坐标
+
+  // 收集所有分段边界点的坐标（包含开头和结尾）
+  const coords = [startCoord, endCoord]
+  for (const seg of segments) {
+    coords.push(seg.startCoord)
+  }
+
+  const min = Math.min(...coords)
+  const max = Math.max(...coords)
+  const span = max - min
+
+  return { min, max, span }
+})
+
+// 原 maxCoord 不再直接使用，改为从 coordRange 获取
+const maxCoord = computed(() => coordRange.value.max)
 
 const CONFIG = computed(() => ({
   visibleGridCount: visibleGridCount.value,
@@ -674,19 +608,21 @@ watch(
   }
 )
 
-watch(maxCoord, (newMax) => {
-  if (newMax <= 0) return
-  if (!app && !isInitializing) {
-    initPixi()
-  } else if (app) {
-    if (props.currentCoord.raw > newMax) {
-      props.seekTo(newMax, 'coord')
+// 当坐标范围或 song 变化时，确保 PIXI 初始化
+watch(
+  [coordRange, () => currentSong.value],
+  ([range]) => {
+    if (range.span > 0 && !app && !isInitializing) {
+      initPixi()
     }
-  }
-})
+  },
+  { immediate: true }
+)
 
 const initPixi = async () => {
-  if (!canvasContainerRef.value || maxCoord.value <= 0 || app || isInitializing) return
+  if (!canvasContainerRef.value || app || isInitializing) return
+  const range = coordRange.value
+  if (range.span <= 0) return
 
   isInitializing = true
 
@@ -761,7 +697,8 @@ function getPointerGridState(
   const rawCoord = props.currentCoord.raw + relativeY / rowHPerCoord
 
   const snapped = Math.round(rawCoord / cfg.stepCoord) * cfg.stepCoord
-  if (snapped < 0 || snapped > maxCoord.value) return null
+  const { min, max } = coordRange.value
+  if (snapped < min || snapped > max) return null
 
   return { coord: snapped, offsetXRatio }
 }
@@ -808,7 +745,8 @@ function renderObstacleItem(
 }
 
 const renderEditor = () => {
-  if (!app || !g || maxCoord.value <= 0) return
+  const range = coordRange.value
+  if (!app || !g || range.span <= 0) return
 
   const cfg = CONFIG.value
   g.clear()
@@ -821,7 +759,6 @@ const renderEditor = () => {
   const gridHeight = viewHeight / cfg.visibleGridCount
   const trackWidth = gridHeight / cfg.gridAspect
 
-  // 滚动条靠右放置（保留 2px 边距）
   const scrollbarStartX = viewWidth - cfg.scrollbarWidth - 4
   const trackStartX = (viewWidth - trackWidth) / 2
 
@@ -842,22 +779,19 @@ const renderEditor = () => {
     currentCoord.raw - (cfg.activeRowIndexFromBottom * gridHeight) / rowHPerCoord - 12
   const maxVisibleCoord = currentCoord.raw + visibleCoordRange
 
-  // 计算精度用于刻度文本展示
   const precision = getDecimalPlaces(cfg.stepCoord)
 
-  // 1. 背景
+  // 背景
   g.rect(trackStartX, 0, trackWidth, viewHeight)
   g.fill({ color: 0x000000 })
 
-  // 2. 网格与刻度
+  // 网格与刻度（允许负坐标）
   const startCoordIndex = Math.floor(minVisibleCoord / cfg.stepCoord)
   const maxCoordIndex = Math.ceil(maxVisibleCoord / cfg.stepCoord)
   const isShowGridLines = showGridLines.value
 
   for (let i = startCoordIndex; i <= maxCoordIndex; i++) {
     const c = i * cfg.stepCoord
-    if (c < 0) continue
-
     const centerY = coordToCenterY(c)
     const cellTopY = centerY - gridHeight / 2
     const cellBottomY = centerY + gridHeight / 2
@@ -889,12 +823,12 @@ const renderEditor = () => {
     }
   }
 
-  // 3. 当前行高亮
+  // 当前行高亮
   const activeCellTopY = targetBaselineY - gridHeight / 2
   g.rect(trackStartX, activeCellTopY, trackWidth, gridHeight)
   g.fill({ color: activeRowColor.value, alpha: activeRowAlpha.value })
 
-  // 4. 连线填充（带视口剪裁早退）
+  // 连线填充
   const intervals = filledIntervals.value
   for (let i = 0; i < intervals.length; i++) {
     const interval = intervals[i]
@@ -926,7 +860,7 @@ const renderEditor = () => {
     }
   }
 
-  // 5. 现存障碍物渲染（前提：obstacles 数组已按 Coord 升序排列，支持 Break 早退）
+  // 现存障碍物
   const obstacleList = obstacles.value
   const currentHoverCoord = hoverState.value?.coord ?? null
   const hasSelectedObstacle = !!selectedObstacle.value
@@ -935,17 +869,14 @@ const renderEditor = () => {
     const obs = obstacleList[i]
     const obsCoord = Number(obs.Coord)
 
-    // 关键早退判断：由于数组升序，当障碍物起点已超过视口上限，后续所有障碍物都无需处理，直接跳出循环
     if (obsCoord > maxVisibleCoord) break
 
     const isKind24 = obs.Kind === '24'
     const rowSpan = isKind24 ? 3 : 1
     const maxObsCoord = obsCoord + (rowSpan - 1) * cfg.stepCoord
 
-    // 下方视口外的障碍物过滤
     if (maxObsCoord < minVisibleCoord) continue
 
-    // 悬停摆放预览避让
     if (
       hasSelectedObstacle &&
       currentHoverCoord !== null &&
@@ -969,7 +900,7 @@ const renderEditor = () => {
     )
   }
 
-  // 5.5 预览摆放
+  // 预览摆放
   if (hasSelectedObstacle && hoverState.value !== null) {
     const { coord } = hoverState.value
     const { obstacle: previewObs, error: errorMessage } = previewObstacleState.value
@@ -998,16 +929,19 @@ const renderEditor = () => {
     }
   }
 
-  // 6. 滚动条
+  // 滚动条（基于 raw 坐标范围）
+  const { min: rawMin, max: rawMax, span: rawSpan } = range
   const trackHeight = viewHeight - 20
   const trackY0 = 10
 
   g.roundRect(scrollbarStartX, trackY0, cfg.scrollbarWidth, trackHeight, 3)
   g.fill({ color: 0x1e293b })
 
-  const thumbHeight = Math.max(30, (viewHeight / (maxCoord.value * rowHPerCoord)) * trackHeight)
+  const thumbHeight = Math.max(30, (viewHeight / (rawSpan * rowHPerCoord)) * trackHeight)
   const availableTrackLength = trackHeight - thumbHeight
-  const progressRatio = Math.min(1, Math.max(0, currentCoord.raw / maxCoord.value))
+  // 当前坐标在 raw 范围中的比例（0~1）
+  const progressRatio =
+    rawSpan > 0 ? Math.min(1, Math.max(0, (currentCoord.raw - rawMin) / rawSpan)) : 0
 
   const thumbY = trackY0 + availableTrackLength * (1 - progressRatio)
 
@@ -1017,20 +951,22 @@ const renderEditor = () => {
 
 const handleWheel = (e: WheelEvent) => {
   e.preventDefault()
-  if (maxCoord.value <= 0) return
+  const range = coordRange.value
+  if (range.span <= 0) return
 
   const cfg = CONFIG.value
   const currentCoord = props.currentCoord
   const baseTick = Math.round(currentCoord.raw / cfg.stepCoord) * cfg.stepCoord
   const stepDelta = e.deltaY < 0 ? cfg.stepCoord : -cfg.stepCoord
-  const targetCoord = Math.max(0, Math.min(maxCoord.value, baseTick + stepDelta))
+  const targetCoord = Math.max(range.min, Math.min(range.max, baseTick + stepDelta))
 
   props.seekTo(targetCoord, 'coord')
 }
 
-// ---------------- 点击交互逻辑 ----------------
 const handleCanvasClick = (e: PIXI.FederatedPointerEvent) => {
-  if (!app || maxCoord.value <= 0) return
+  if (!app) return
+  const range = coordRange.value
+  if (range.span <= 0) return
 
   const cfg = CONFIG.value
   const viewWidth = app.screen.width
@@ -1040,7 +976,6 @@ const handleCanvasClick = (e: PIXI.FederatedPointerEvent) => {
   const clickY = e.global.y
   const button = e.button
 
-  // 1. 点击滚动条
   if (clickX >= scrollbarStartX - 6 && button === 0) {
     isDraggingScrollbar = true
     dragStartY = clickY
@@ -1050,7 +985,6 @@ const handleCanvasClick = (e: PIXI.FederatedPointerEvent) => {
 
   const pointerState = getPointerGridState(clickX, clickY)
 
-  // 2. 右键逻辑
   if (button === 2) {
     let removedSuccess = false
 
@@ -1093,14 +1027,12 @@ const handleCanvasClick = (e: PIXI.FederatedPointerEvent) => {
       })
 
       if (shiftAnchorCoord.value === null) {
-        // 锚点不存在时：初始化锚点，并仅选中当前点击的障碍物（如果有）
         shiftAnchorCoord.value = clickedCoord
         selectedCoords.value.clear()
         if (targetObs) {
           selectedCoords.value.add(Number(targetObs.Coord))
         }
       } else {
-        // 锚点已存在：计算区间框选 [shiftAnchorCoord, clickedCoord]
         selectedCoords.value.clear()
 
         const start = Math.min(shiftAnchorCoord.value, clickedCoord)
@@ -1117,26 +1049,25 @@ const handleCanvasClick = (e: PIXI.FederatedPointerEvent) => {
         })
       }
 
-      // 如果成功选中了障碍物，清空待摆放状态（退出放置模式）
       if (selectedCoords.value.size > 0 && selectedObstacle.value) {
         appStore.selectedObstacle = null
       }
       return
     }
 
-    // 模式 C: 未按 Shift 键的普通左键点击 -> 清空选中状态，重置锚点
     selectedCoords.value.clear()
     shiftAnchorCoord.value = null
   }
 }
 
 const handlePointerMove = (e: PIXI.FederatedPointerEvent) => {
-  if (!app || maxCoord.value <= 0) return
+  if (!app) return
+  const range = coordRange.value
+  if (range.span <= 0) return
 
   const pointerState = getPointerGridState(e.global.x, e.global.y)
   hoverState.value = pointerState
 
-  // 关键优化：只有在鼠标跨越到新的 coord 时才触发连续增删
   if (pointerState !== null && pointerState.coord !== lastProcessedDragCoord) {
     if (isRightMouseDown.value) {
       removeObstacleAtCoord(pointerState.coord)
@@ -1156,15 +1087,16 @@ const handlePointerMove = (e: PIXI.FederatedPointerEvent) => {
   const gridHeight = viewHeight / cfg.visibleGridCount
   const rowHPerCoord = gridHeight / cfg.stepCoord
 
-  const thumbHeight = Math.max(30, (viewHeight / (maxCoord.value * rowHPerCoord)) * trackHeight)
+  const thumbHeight = Math.max(30, (viewHeight / (range.span * rowHPerCoord)) * trackHeight)
   const availableTrackLength = trackHeight - thumbHeight
 
   const deltaY = e.global.y - dragStartY
-  const deltaCoord = -(deltaY / availableTrackLength) * maxCoord.value
+  // 拖拽位移对应 raw 坐标变化
+  const deltaCoord = -(deltaY / availableTrackLength) * range.span
 
   const rawTargetCoord = dragStartCoord + deltaCoord
   const snappedCoord = Math.round(rawTargetCoord / cfg.stepCoord) * cfg.stepCoord
-  const targetCoord = Math.max(0, Math.min(maxCoord.value, snappedCoord))
+  const targetCoord = Math.max(range.min, Math.min(range.max, snappedCoord))
 
   props.seekTo(targetCoord, 'coord')
 }
@@ -1184,7 +1116,6 @@ const handlePointerUp = (e: PIXI.FederatedPointerEvent) => {
   }
 }
 
-// 监听 Esc 键按下取消选中待摆放项
 useEventListener('keydown', (e: KeyboardEvent) => {
   if (e.key === 'Escape' || e.key === 'Esc') {
     if (selectedObstacle.value) {
@@ -1194,7 +1125,7 @@ useEventListener('keydown', (e: KeyboardEvent) => {
 })
 
 onMounted(() => {
-  if (maxCoord.value > 0) {
+  if (coordRange.value.span > 0) {
     initPixi()
   }
 })

@@ -10,7 +10,7 @@
         <div class="flex items-center gap-2">
           <!-- 排序切换按钮 -->
           <button type="button"
-            class="flex items-center gap-1 rounded bg-white px-2 py-1 text-slate-600 shadow-xs hover:bg-slate-50 transition-colors"
+            class="flex items-center gap-1 rounded bg-white px-2 py-1 text-slate-600 shadow-xs hover:bg-slate-50 transition-colors cursor-pointer"
             @click="isReversed = !isReversed">
             <span>{{ isReversed ? '从后往前 (倒序)' : '从前往后 (正序)' }}</span>
             <svg class="h-3.5 w-3.5 transition-transform" :class="{ 'rotate-180': isReversed }" fill="none"
@@ -25,24 +25,24 @@
       <div class="grid grid-cols-12 gap-2 rounded-xl border border-slate-200/80 bg-slate-50/50 p-2 text-xs">
         <div class="col-span-6 flex items-center gap-1.5">
           <span class="text-slate-400 font-medium shrink-0">Frame 筛选:</span>
-          <input v-model="filterForm.minFrame" type="number" placeholder="Min"
+          <input v-model.number="filterForm.minFrame" type="number" placeholder="Min"
             class="w-full rounded-md border border-slate-200 bg-white px-2 py-1 font-mono text-slate-700 focus:border-slate-500 focus:outline-none" />
           <span class="text-slate-300">-</span>
-          <input v-model="filterForm.maxFrame" type="number" placeholder="Max"
+          <input v-model.number="filterForm.maxFrame" type="number" placeholder="Max"
             class="w-full rounded-md border border-slate-200 bg-white px-2 py-1 font-mono text-slate-700 focus:border-slate-500 focus:outline-none" />
         </div>
 
         <div class="col-span-5 flex items-center gap-1.5">
           <span class="text-slate-400 font-medium shrink-0">BPM 筛选:</span>
-          <input v-model="filterForm.minBpm" type="number" placeholder="Min"
+          <input v-model.number="filterForm.minBpm" type="number" placeholder="Min"
             class="w-full rounded-md border border-slate-200 bg-white px-2 py-1 font-mono text-slate-700 focus:border-slate-500 focus:outline-none" />
           <span class="text-slate-300">-</span>
-          <input v-model="filterForm.maxBpm" type="number" placeholder="Max"
+          <input v-model.number="filterForm.maxBpm" type="number" placeholder="Max"
             class="w-full rounded-md border border-slate-200 bg-white px-2 py-1 font-mono text-slate-700 focus:border-slate-500 focus:outline-none" />
         </div>
 
         <div class="col-span-1 flex items-center justify-end">
-          <button type="button" class="text-xs text-slate-400 hover:text-slate-600 transition-colors"
+          <button type="button" class="text-xs text-slate-400 hover:text-slate-600 transition-colors cursor-pointer"
             @click="resetFilter">
             重置
           </button>
@@ -60,7 +60,8 @@
             </svg>
             批量 BPM 渐变配置
           </span>
-          <button type="button" class="text-slate-400 hover:text-slate-600" @click="toggleRampPanel(false)">✕</button>
+          <button type="button" class="text-slate-400 hover:text-slate-600 cursor-pointer"
+            @click="toggleRampPanel(false)">✕</button>
         </div>
 
         <div class="grid grid-cols-2 gap-3">
@@ -113,7 +114,7 @@
 
         <div class="flex justify-end gap-2 pt-1">
           <button type="button"
-            class="rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-indigo-700 active:scale-95 transition-all"
+            class="rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-indigo-700 active:scale-95 transition-all cursor-pointer"
             @click="generateRampNodes">
             生成并插入节点
           </button>
@@ -131,7 +132,8 @@
             </svg>
             指定区间批量删除
           </span>
-          <button type="button" class="text-slate-400 hover:text-slate-600" @click="toggleDeletePanel(false)">✕</button>
+          <button type="button" class="text-slate-400 hover:text-slate-600 cursor-pointer"
+            @click="toggleDeletePanel(false)">✕</button>
         </div>
 
         <div class="grid grid-cols-2 gap-3">
@@ -165,7 +167,7 @@
             受影响节点: <strong class="text-rose-600 font-mono">{{ pendingDeleteCount }}</strong> 个 (首个固定节点会被保留)
           </span>
           <button type="button" :disabled="pendingDeleteCount === 0"
-            class="rounded-lg bg-rose-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-rose-700 active:scale-95 transition-all disabled:opacity-40 disabled:hover:bg-rose-600 disabled:cursor-not-allowed"
+            class="rounded-lg bg-rose-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-rose-700 active:scale-95 transition-all disabled:opacity-40 disabled:hover:bg-rose-600 disabled:cursor-not-allowed cursor-pointer"
             @click="executeBatchDelete">
             确认批量删除
           </button>
@@ -190,20 +192,22 @@
               #{{ item.rawIndex + 1 }}
             </div>
 
+            <!-- 修复点：直接响应式绑定 localList 对应的项 -->
             <div class="col-span-4">
-              <input v-model="item.Frame" type="number" min="0" step="1" :disabled="item.rawIndex === 0"
-                :placeholder="item.rawIndex === 0 ? '0 (固定)' : 'Frame'"
+              <input v-model="localList[item.rawIndex].Frame" type="number" min="0" step="1"
+                :disabled="item.rawIndex === 0" :placeholder="item.rawIndex === 0 ? '0 (固定)' : 'Frame'"
                 class="w-full rounded-md border border-slate-200 bg-white px-2 py-1 font-mono text-xs font-semibold text-slate-700 transition-all focus:border-slate-500 focus:outline-none disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none" />
             </div>
 
+            <!-- 修复点：直接响应式绑定 localList 对应的项 -->
             <div class="col-span-4">
-              <input v-model="item.BPM" type="number" min="1" step="0.01" placeholder="BPM"
+              <input v-model="localList[item.rawIndex].BPM" type="number" min="1" step="0.01" placeholder="BPM"
                 class="w-full rounded-md border border-slate-200 bg-white px-2 py-1 font-mono text-xs font-semibold text-slate-700 transition-all focus:border-slate-500 focus:outline-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none" />
             </div>
 
             <div class="col-span-2 flex justify-center">
               <button type="button" :disabled="item.rawIndex === 0"
-                class="flex h-7 w-7 items-center justify-center rounded-md text-slate-400 transition-colors hover:bg-rose-50 hover:text-rose-600 disabled:cursor-not-allowed disabled:opacity-20 disabled:hover:bg-transparent disabled:hover:text-slate-400"
+                class="flex h-7 w-7 items-center justify-center rounded-md text-slate-400 transition-colors hover:bg-rose-50 hover:text-rose-600 disabled:cursor-not-allowed disabled:opacity-20 disabled:hover:bg-transparent disabled:hover:text-slate-400 cursor-pointer"
                 title="删除此 BPM 节点" @click="removeItemByRawIndex(item.rawIndex)">
                 <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round"
@@ -227,7 +231,7 @@
       <!-- 底部添加操作栏 -->
       <div class="grid grid-cols-3 gap-2">
         <button type="button"
-          class="flex items-center justify-center gap-1 rounded-xl border border-dashed border-slate-300 py-2 text-xs font-semibold text-slate-600 hover:border-slate-400 hover:bg-slate-50 active:scale-[0.99] transition-all"
+          class="flex items-center justify-center gap-1 rounded-xl border border-dashed border-slate-300 py-2 text-xs font-semibold text-slate-600 hover:border-slate-400 hover:bg-slate-50 active:scale-[0.99] transition-all cursor-pointer"
           @click="addItem">
           <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
@@ -236,7 +240,7 @@
         </button>
 
         <button type="button"
-          class="flex items-center justify-center gap-1 rounded-xl border border-indigo-200 bg-indigo-50/50 py-2 text-xs font-semibold text-indigo-600 hover:bg-indigo-100/50 active:scale-[0.99] transition-all"
+          class="flex items-center justify-center gap-1 rounded-xl border border-indigo-200 bg-indigo-50/50 py-2 text-xs font-semibold text-indigo-600 hover:bg-indigo-100/50 active:scale-[0.99] transition-all cursor-pointer"
           @click="toggleRampPanel(!showRampPanel)">
           <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
@@ -245,7 +249,7 @@
         </button>
 
         <button type="button"
-          class="flex items-center justify-center gap-1 rounded-xl border border-rose-200 bg-rose-50/50 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-100/50 active:scale-[0.99] transition-all"
+          class="flex items-center justify-center gap-1 rounded-xl border border-rose-200 bg-rose-50/50 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-100/50 active:scale-[0.99] transition-all cursor-pointer"
           @click="toggleDeletePanel(!showDeletePanel)">
           <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round"
@@ -259,12 +263,12 @@
     <template #footer>
       <div class="flex items-center justify-end gap-2 pt-2">
         <button type="button"
-          class="rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-50"
+          class="rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-50 cursor-pointer"
           @click="handleClose(false)">
           取消
         </button>
         <button type="button"
-          class="rounded-xl bg-slate-900 px-4 py-2 text-xs font-semibold text-white hover:bg-slate-800 active:scale-95 transition-all"
+          class="rounded-xl bg-slate-900 px-4 py-2 text-xs font-semibold text-white hover:bg-slate-800 active:scale-95 transition-all cursor-pointer"
           @click="handleSave">
           保存修改
         </button>
@@ -305,10 +309,10 @@ const showDeletePanel = ref(false)
 
 // 列表筛选表单
 const filterForm = reactive({
-  minFrame: '',
-  maxFrame: '',
-  minBpm: '',
-  maxBpm: '',
+  minFrame: '' as number | '',
+  maxFrame: '' as number | '',
+  minBpm: '' as number | '',
+  maxBpm: '' as number | '',
 })
 
 // 渐变生成表单
@@ -332,31 +336,22 @@ const initialDeleteForm = {
 }
 const deleteForm = reactive({ ...initialDeleteForm })
 
-// 重置渐变配置
-const resetRampForm = () => {
-  Object.assign(rampForm, initialRampForm)
-}
+const resetRampForm = () => Object.assign(rampForm, initialRampForm)
+const resetDeleteForm = () => Object.assign(deleteForm, initialDeleteForm)
 
-// 重置批量删除配置
-const resetDeleteForm = () => {
-  Object.assign(deleteForm, initialDeleteForm)
-}
-
-// 展开/关闭渐变面板
 const toggleRampPanel = (visible: boolean) => {
   showRampPanel.value = visible
-  if (visible) showDeletePanel.value = false // 互斥展开
+  if (visible) showDeletePanel.value = false
   else resetRampForm()
 }
 
-// 展开/关闭删除面板
 const toggleDeletePanel = (visible: boolean) => {
   showDeletePanel.value = visible
-  if (visible) showRampPanel.value = false // 互斥展开
+  if (visible) showRampPanel.value = false
   else resetDeleteForm()
 }
 
-// 实时计算将被批量删除的节点数量 (排除原始第 0 项)
+// 实时计算将被批量删除的节点数量
 const pendingDeleteCount = computed(() => {
   const minF = deleteForm.minFrame !== '' ? Number(deleteForm.minFrame) : -Infinity
   const maxF = deleteForm.maxFrame !== '' ? Number(deleteForm.maxFrame) : Infinity
@@ -364,18 +359,17 @@ const pendingDeleteCount = computed(() => {
   const maxB = deleteForm.maxBpm !== '' ? Number(deleteForm.maxBpm) : Infinity
 
   if (minF === -Infinity && maxF === Infinity && minB === -Infinity && maxB === Infinity) {
-    return 0 // 未输入任何条件时不执行全删，保障安全
+    return 0
   }
 
   return localList.value.filter((item, index) => {
-    if (index === 0) return false // 不包含第一项
+    if (index === 0) return false
     const frameVal = parseFloat(item.Frame) || 0
     const bpmVal = parseFloat(item.BPM) || 0
     return frameVal >= minF && frameVal <= maxF && bpmVal >= minB && bpmVal <= maxB
   }).length
 })
 
-// 执行批量删除
 const executeBatchDelete = () => {
   errorMessage.value = ''
   const minF = deleteForm.minFrame !== '' ? Number(deleteForm.minFrame) : -Infinity
@@ -384,18 +378,16 @@ const executeBatchDelete = () => {
   const maxB = deleteForm.maxBpm !== '' ? Number(deleteForm.maxBpm) : Infinity
 
   localList.value = localList.value.filter((item, index) => {
-    if (index === 0) return true // 绝对保护首节点
+    if (index === 0) return true
     const frameVal = parseFloat(item.Frame) || 0
     const bpmVal = parseFloat(item.BPM) || 0
-    const isTarget = frameVal >= minF && frameVal <= maxF && bpmVal >= minB && bpmVal <= maxB
-    return !isTarget
+    return !(frameVal >= minF && frameVal <= maxF && bpmVal >= minB && bpmVal <= maxB)
   })
 
-  // 成功后关闭面板并清空数据
   toggleDeletePanel(false)
 }
 
-// 三阶贝塞尔曲线算法
+// 三阶贝塞尔曲线求解器 (已修复二分循环死锁)
 const cubicBezier = (mX1: number, mY1: number, mX2: number, mY2: number) => {
   if (mX1 === mY1 && mX2 === mY2) return (t: number) => t
 
@@ -412,15 +404,16 @@ const cubicBezier = (mX1: number, mY1: number, mX2: number, mY2: number) => {
   const solveCurveX = (aX: number) => {
     let t = aX
     for (let i = 0; i < 8; i++) {
-      const currentX = calcBezier(t, mX1, mX2) - aX
       const currentSlope = getSlope(t, mX1, mX2)
-      if (Math.abs(currentX) < 1e-6 || currentSlope === 0) break
+      if (currentSlope === 0) break
+      const currentX = calcBezier(t, mX1, mX2) - aX
+      if (Math.abs(currentX) < 1e-6) return t
       t -= currentX / currentSlope
     }
     let intervalStart = 0.0
     let intervalEnd = 1.0
     t = aX
-    while (intervalStart < intervalEnd) {
+    for (let i = 0; i < 20; i++) {
       const currentX = calcBezier(t, mX1, mX2)
       if (Math.abs(currentX - aX) < 1e-6) break
       if (aX > currentX) intervalStart = t
@@ -501,7 +494,7 @@ const generateRampNodes = () => {
   const totalBpmDiff = endB - startB
   const newNodes: BpmItem[] = []
 
-  for (let currentF = startF; currentF <= endF; currentF += stepF) {
+  for (let currentF = startF; currentF < endF; currentF += stepF) {
     const t = (currentF - startF) / totalFrameDiff
     const progress = easeFn(Math.min(Math.max(t, 0), 1))
     const currentBpm = startB + totalBpmDiff * progress
@@ -513,14 +506,11 @@ const generateRampNodes = () => {
     })
   }
 
-  const lastGenerated = newNodes[newNodes.length - 1]
-  if (!lastGenerated || Number(lastGenerated.Frame) !== endF) {
-    newNodes.push({
-      Frame: String(Math.round(endF)),
-      BPM: String(Number(endB.toFixed(2))),
-      OriginalBPM: String(Number(endB.toFixed(2))),
-    })
-  }
+  newNodes.push({
+    Frame: String(Math.round(endF)),
+    BPM: String(Number(endB.toFixed(2))),
+    OriginalBPM: String(Number(endB.toFixed(2))),
+  })
 
   localList.value = [...localList.value, ...newNodes]
   sortAndDedupLocalList()
@@ -528,12 +518,24 @@ const generateRampNodes = () => {
   toggleRampPanel(false)
 }
 
+// 排序 & 按 Frame 帧进行去重 (相同 Frame 留后者)
 const sortAndDedupLocalList = () => {
-  const first = localList.value[0] || { Frame: '0', BPM: '120', OriginalBPM: '120' }
-  first.Frame = '0'
+  if (localList.value.length === 0) return
 
-  const rest = localList.value.slice(1).sort((a, b) => (parseFloat(a.Frame) || 0) - (parseFloat(b.Frame) || 0))
-  localList.value = [first, ...rest]
+  const map = new Map<number, BpmItem>()
+  for (const item of localList.value) {
+    const frame = Math.max(0, Math.round(parseFloat(item.Frame) || 0))
+    map.set(frame, { ...item, Frame: String(frame) })
+  }
+
+  const sortedKeys = Array.from(map.keys()).sort((a, b) => a - b)
+  const result = sortedKeys.map((k) => map.get(k)!)
+
+  if (result.length > 0) {
+    result[0].Frame = '0'
+  }
+
+  localList.value = result
 }
 
 const resetFilter = () => {
@@ -543,28 +545,33 @@ const resetFilter = () => {
   filterForm.maxBpm = ''
 }
 
+// 计算过滤后显示的列表项
 const displayList = computed<DisplayBpmItem[]>(() => {
-  let mappedList: DisplayBpmItem[] = localList.value.map((item, index) => ({
-    ...item,
-    rawIndex: index,
-  }))
-
   const minF = filterForm.minFrame !== '' ? Number(filterForm.minFrame) : -Infinity
   const maxF = filterForm.maxFrame !== '' ? Number(filterForm.maxFrame) : Infinity
   const minB = filterForm.minBpm !== '' ? Number(filterForm.minBpm) : -Infinity
   const maxB = filterForm.maxBpm !== '' ? Number(filterForm.maxBpm) : Infinity
 
-  mappedList = mappedList.filter((item) => {
+  const result: DisplayBpmItem[] = []
+
+  for (let i = 0; i < localList.value.length; i++) {
+    const item = localList.value[i]
     const frameVal = parseFloat(item.Frame) || 0
     const bpmVal = parseFloat(item.BPM) || 0
-    return frameVal >= minF && frameVal <= maxF && bpmVal >= minB && bpmVal <= maxB
-  })
 
-  if (isReversed.value) {
-    mappedList.reverse()
+    if (frameVal >= minF && frameVal <= maxF && bpmVal >= minB && bpmVal <= maxB) {
+      result.push({
+        ...item,
+        rawIndex: i, // 关键：精准记录在原始 localList 中的数组索引
+      })
+    }
   }
 
-  return mappedList
+  if (isReversed.value) {
+    result.reverse()
+  }
+
+  return result
 })
 
 const initLocalData = () => {
@@ -593,10 +600,12 @@ const initLocalData = () => {
   localList.value = rawList
 }
 
+// 单点添加（已支持即时响应与快速录入）
 const addItem = () => {
   errorMessage.value = ''
   const lastItem = localList.value[localList.value.length - 1]
-  const nextFrame = lastItem ? String(Number(lastItem.Frame || 0) + 1000) : ''
+  const lastFrame = lastItem ? (parseFloat(lastItem.Frame) || 0) : 0
+  const nextFrame = String(Math.round(lastFrame + 1000))
   const defaultBpm = lastItem?.BPM || '120'
 
   localList.value.push({
@@ -628,27 +637,25 @@ const handleSave = () => {
       errorMessage.value = `第 ${i + 1} 项的 Frame 不能为空且必须为数字`
       return
     }
-    if (item.BPM === '' || isNaN(bpmNum) || bpmNum <= 0) {
-      errorMessage.value = `第 ${i + 1} 项的 BPM 必须为大于 0 的数字`
+    if (item.BPM === '' || isNaN(bpmNum)) {
+      errorMessage.value = `第 ${i + 1} 项的 BPM 非法`
       return
     }
   }
 
+  sortAndDedupLocalList()
+
   const formattedList: BpmItem[] = localList.value.map((item, index) => {
     const bpmStr = String(parseFloat(item.BPM))
     return {
-      Frame: index === 0 ? '0' : String(parseFloat(item.Frame)),
+      Frame: index === 0 ? '0' : String(Math.round(parseFloat(item.Frame))),
       BPM: bpmStr,
       OriginalBPM: bpmStr,
     }
   })
 
-  const firstItem = formattedList[0]
-  const restItems = formattedList.slice(1).sort((a, b) => parseFloat(a.Frame) - parseFloat(b.Frame))
-  const sortedResult = [firstItem, ...restItems]
-
   if (appStore.currentSong?.xmlObject?.TITLE) {
-    appStore.currentSong.xmlObject.TITLE.BPM = sortedResult
+    appStore.currentSong.xmlObject.TITLE.BPM = formattedList
   }
 
   handleClose(false)

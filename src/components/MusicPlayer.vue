@@ -228,14 +228,21 @@ const currentFrame = computed(() => {
   return Number(raw.toFixed(getDecimalPlaces(globalConfigStore.stepCoord)));
 });
 
-// 整理 BPM 列表（按帧排序）
+// 1. 整理 BPM 列表：正确解析 0 和负数 BPM
 const sortedBpmList = computed<Array<{ frame: number; bpm: number }>>(() => {
   const bpmData = appStore.currentSong?.xmlObject?.TITLE?.BPM as BpmItem[] | BpmItem | undefined
   if (!bpmData) return [{ frame: 0, bpm: 120 }]
   const list: BpmItem[] = Array.isArray(bpmData) ? bpmData : [bpmData]
   if (list.length === 0) return [{ frame: 0, bpm: 120 }]
   const sorted = list
-    .map((item) => ({ frame: Number(item.Frame) || 0, bpm: parseFloat(String(item.BPM)) || 120 }))
+    .map((item) => {
+      const parsedBpm = parseFloat(String(item.BPM))
+      return {
+        frame: Number(item.Frame) || 0,
+        // 🛡️ 修复：只有在解析为 NaN 时才使用 120 兜底，保留 0 和负数值
+        bpm: Number.isNaN(parsedBpm) ? 120 : parsedBpm,
+      }
+    })
     .sort((a, b) => a.frame - b.frame)
   if (sorted[0].frame > 0) sorted.unshift({ frame: 0, bpm: sorted[0].bpm })
   return sorted
@@ -245,11 +252,11 @@ const sortedBpmList = computed<Array<{ frame: number; bpm: number }>>(() => {
 const bpmValue = computed<number>(() => {
   const list = sortedBpmList.value
   const tf = currentFrame.value
-  if (tf < 0) return list[0]?.bpm || 120
+  if (tf < 0) return list[0]?.bpm ?? 120
   for (let i = list.length - 1; i >= 0; i--) {
     if (tf >= list[i].frame) return list[i].bpm
   }
-  return list[0]?.bpm || 120
+  return list[0]?.bpm ?? 120
 })
 
 // 将 BPM 帧变化点转换为播放时间区间（秒）
@@ -290,25 +297,53 @@ const currentCoord = computed(() => {
   }
 })
 
-// Coord 转 时间（逆向计算：Coord -> Time）
+// 3. Coord 转 时间（逆向计算：Coord -> Time）：完整支持 0 和负数 BPM 区间检索
 const getSecondsFromCoord = (targetCoord: number): number => {
+  if (targetCoord <= 0) return 0
+
   const timePoints = bpmTimePoints.value
+  if (timePoints.length === 0) return 0
+
   let accumulatedCoord = 0
 
   for (let i = 0; i < timePoints.length; i++) {
     const curr = timePoints[i]
     const next = timePoints[i + 1]
     const start = curr.time
-    const segDuration = next ? next.time - start : Infinity
-    const coordRate = curr.bpm / 5
-    const maxSegmentCoord = segDuration * coordRate
+    const rate = curr.bpm / 5
 
-    if (targetCoord <= accumulatedCoord + maxSegmentCoord || !next) {
-      const remainingCoord = targetCoord - accumulatedCoord
-      return start + remainingCoord / coordRate
+    // 如果到了最后一个 BPM 变化点（后面没有 next 时间点）
+    if (!next) {
+      if (rate === 0) return start
+      const dt = (targetCoord - accumulatedCoord) / rate
+      return Math.max(0, start + dt)
     }
-    accumulatedCoord += maxSegmentCoord
+
+    const segDuration = next.time - start
+    const maxSegmentCoordChange = segDuration * rate
+    const endCoord = accumulatedCoord + maxSegmentCoordChange
+
+    // 分情况判断目标 Coord 是否落在当前时间段内
+    if (rate > 0) {
+      // 1. 正向增长 (BPM > 0)
+      if (targetCoord >= accumulatedCoord && targetCoord <= endCoord) {
+        return start + (targetCoord - accumulatedCoord) / rate
+      }
+    } else if (rate < 0) {
+      // 2. 反向减少 (BPM < 0)
+      if (targetCoord <= accumulatedCoord && targetCoord >= endCoord) {
+        return start + (targetCoord - accumulatedCoord) / rate
+      }
+    } else {
+      // 3. 保持静止 (BPM = 0)
+      if (Math.abs(targetCoord - accumulatedCoord) < 1e-6) {
+        return start
+      }
+    }
+
+    accumulatedCoord = endCoord
   }
+
   return 0
 }
 
@@ -376,7 +411,6 @@ const bufferToWaveBlob = (abuffer: AudioBuffer): Blob => {
   return new Blob([buffer], { type: 'audio/wav' })
 }
 
-// --- 仅处理 Delay 填充的极速音频生成算法 ---
 // --- 仅处理 Delay 填充的极速音频生成算法 ---
 const updateBufferWithDelay = () => {
   if (!audioCtx || !rawAudioBuffer.value || !audioRef.value) return
