@@ -441,19 +441,23 @@ const updateBufferWithDelay = () => {
   if (!audioCtx || !rawAudioBuffer.value || !audioRef.value) return
 
   const raw = rawAudioBuffer.value
-  const delay = delayFrames.value
+  const delay = delayFrames.value // 👈 依然使用你原本的 delayFrames
   const sampleRate = raw.sampleRate
 
+  // 1. 去掉 Math.ceil，改用 Math.round (四舍五入到最近的采样点)
+  // 60fps 下 1 帧 = 16.6666...ms，直接除以 60 能保留完整的浮点数精度
   const delaySec = delay / 60
-  const delaySamples = Math.ceil(delaySec * sampleRate)
+  const delaySamples = Math.round(delaySec * sampleRate) // 👈 仅改动这里：把 Math.ceil 改成 Math.round
   const totalSamples = delaySamples + raw.length
 
   const finalBuffer = audioCtx.createBuffer(raw.numberOfChannels, totalSamples, sampleRate)
 
+  // 2. 数据填充
   for (let ch = 0; ch < raw.numberOfChannels; ch++) {
     finalBuffer.getChannelData(ch).set(raw.getChannelData(ch), delaySamples)
   }
 
+  // 3. 内存清理与重置...
   if (objectUrl) {
     URL.revokeObjectURL(objectUrl)
     objectUrl = null
