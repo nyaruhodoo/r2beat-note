@@ -17,6 +17,7 @@ import { useEventListener } from '@vueuse/core'
 import { storeToRefs } from 'pinia'
 import * as PIXI from 'pixi.js'
 import { ref, onMounted, onUnmounted, watch, computed } from 'vue'
+import spriteUrl from '@/assets/sprites.png'
 
 export interface Obstacle {
   Coord: string
@@ -642,7 +643,7 @@ function resetSpritePool() {
 
 async function loadSpritesheet() {
   try {
-    baseTexture = await PIXI.Assets.load('/sprites.png')
+    baseTexture = await PIXI.Assets.load(spriteUrl)
     if (!baseTexture) return
 
     for (const [kind, config] of Object.entries(

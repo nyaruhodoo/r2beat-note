@@ -31,7 +31,7 @@
                 <div class="origin-center shrink-0" :style="{
                   width: `${spritesConfig[id].width}px`,
                   height: `${spritesConfig[id].height}px`,
-                  backgroundImage: `url('/sprites.png')`,
+                  backgroundImage: `url('${spriteUrl}')`,
                   backgroundPosition: `-${spritesConfig[id].x}px -${spritesConfig[id].y}px`,
                   backgroundRepeat: 'no-repeat',
                   transform: 'scale(0.5)',
@@ -55,6 +55,8 @@ import { useAppStore } from '@/store/store';
 import { NoteType } from '@/note';
 import { storeToRefs } from 'pinia';
 import ObstacleConfig from './ObstacleConfig.vue';
+import spriteUrl from '@/assets/sprites.png'
+
 
 // 当前视图状态：'selector' (选择器) | 'config' (参数配置)
 const activeView = ref<'selector' | 'config'>('selector');
