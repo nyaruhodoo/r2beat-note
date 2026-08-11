@@ -496,7 +496,10 @@ const applyPitchAndRateConfig = () => {
   el.preservesPitch = isDefaultPitch
     ; (el as any).webkitPreservesPitch = isDefaultPitch
 
-  el.playbackRate = combinedRate.value
+
+  // 🛡️ 限制 combinedRate 落在浏览器安全范围 [0.0625, 16.0] 内，防止抛出 RangeError 异常
+  const safeCombinedRate = Math.min(Math.max(combinedRate.value, 0.0625), 16.0)
+  el.playbackRate = safeCombinedRate
 }
 
 // --- 初始化音频 ---
