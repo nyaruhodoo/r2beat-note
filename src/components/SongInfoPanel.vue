@@ -446,7 +446,8 @@ const updateBufferWithDelay = () => {
 
   // 1. 去掉 Math.ceil，改用 Math.round (四舍五入到最近的采样点)
   // 60fps 下 1 帧 = 16.6666...ms，直接除以 60 能保留完整的浮点数精度
-  const delaySec = delay / 60
+  const delaySec = delay / 60 - 0.1
+
   const delaySamples = Math.round(delaySec * sampleRate) // 👈 仅改动这里：把 Math.ceil 改成 Math.round
   const totalSamples = delaySamples + raw.length
 
