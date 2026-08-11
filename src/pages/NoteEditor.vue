@@ -41,12 +41,16 @@ import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { XMLBuilder } from 'fast-xml-parser'
 import { ElMessage } from 'element-plus'
+import iconv from 'iconv-lite'
+import { Buffer } from 'buffer'
 
 import ObstacleSelector from '@/components/ObstacleSelector.vue'
 import RhythmCanvas from '@/components/RhythmCanvas.vue'
 import SongInfoPanel from '@/components/SongInfoPanel.vue'
 import { useAppStore } from '@/store/store'
 
+// @ts-expect-error  iconv需要这个东西
+window.Buffer = Buffer
 
 const appStore = useAppStore()
 const router = useRouter()
@@ -67,15 +71,18 @@ const handleSaveXml = () => {
       ignoreAttributes: false,
       attributeNamePrefix: '',
       format: true,
-      indentBy: '  ',
-      suppressEmptyNode: true
+      indentBy: '',
+      suppressEmptyNode: false,
+
     })
 
     let rawXmlString = builder.build(xmlObj)
 
+    // 2. 将字符串转换为 EUC-KR 编码的 Buffer
+    const eucKrBuffer = iconv.encode(rawXmlString, 'euc-kr')
 
-    // 纯 UTF-8 Blob 导出，零其它编码依赖
-    const blob = new Blob([rawXmlString], { type: 'application/xml;charset=utf-8' })
+    // 3. 使用 Buffer 生成指定 charset 的 Blob
+    const blob = new Blob([eucKrBuffer], { type: 'application/xml;charset=euc-kr' })
 
     const titleObj = xmlObj.TITLE
     const fileName = titleObj?.Name
