@@ -1,7 +1,7 @@
 <template>
   <!-- 外部容器固定宽度 240px，高100% -->
   <main ref="containerRef"
-    class="relative h-full w-60 shrink-0 select-none overflow-hidden rounded-2xl border border-slate-200/80 bg-slate-900 shadow-sm"
+    class="relative h-full w-60 shrink-0 select-none overflow-hidden rounded-2xl border border-slate-200/80 bg-slate-900"
     @wheel="handleWheel" @contextmenu.prevent>
     <div ref="canvasContainerRef" class="h-full w-full overflow-hidden"></div>
   </main>

@@ -1,5 +1,5 @@
 <template>
-  <aside class="flex h-full w-full flex-col gap-6 rounded-2xl border border-slate-200/80 bg-white p-6 shadow-sm">
+  <aside class="flex h-full w-full flex-col gap-6 rounded-2xl border border-slate-200/80 bg-white p-6">
     <!-- 隐藏的 audio 元素 -->
     <audio ref="audioRef" preload="auto" class="hidden"></audio>
 
@@ -55,13 +55,14 @@
           <span>{{ formattedDuration }}</span>
         </div>
 
-        <div class="min-w-16 flex-1">
+        <!-- 进度条容器，小屏幕隐藏 -->
+        <div class="min-w-16 flex-1 progress-slider-container">
           <el-slider v-model="currentTime" :max="duration" :step="0.001" :format-tooltip="formatTime"
             :show-tooltip="true" :disabled="!isLoaded" size="small" @input="handleSliderInput"
             @change="(val) => handleSeek(val as number)" />
         </div>
 
-        <div class="group/volume relative flex shrink-0 items-center">
+        <div class="group/volume relative flex shrink-0 items-center ml-auto">
           <button type="button"
             class="flex h-8 w-8 items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-slate-200/60 hover:text-slate-800"
             @click="toggleMute">
@@ -98,16 +99,28 @@
       <div class="flex flex-col gap-2 border-t border-slate-200/50 pt-2">
         <!-- 1. Tempo: 变速不变调 -->
         <div class="flex items-center justify-between">
-          <span class="text-xs font-medium text-slate-500">播放节拍 (Tempo)</span>
-          <el-input-number class="w-20!" v-model="playbackRateSafe" :min="0.1" :max="4.0" :step="0.1" :precision="1"
-            :value-on-clear="1.0" size="small" controls-position="right" />
+          <span class="text-xs font-medium text-slate-500">节拍 (Tempo)</span>
+          <div class="flex items-center gap-1.5">
+            <el-input-number v-model="playbackRateSafe" class="w-24!" :min="0.1" :max="4.0" :step="0.1" :precision="1"
+              :value-on-clear="1.0" size="small" />
+            <button type="button" class="text-slate-400 hover:text-slate-700 p-1 rounded transition-colors"
+              @click="playbackRateSafe = 1.0" title="复位到1.0">
+              ↺
+            </button>
+          </div>
         </div>
 
         <!-- 2. Rate: 变速又变调 -->
         <div class="flex items-center justify-between">
-          <span class="text-xs font-medium text-slate-500">播放速率 (Rate)</span>
-          <el-input-number class="w-20!" v-model="pitchRateSafe" :min="0.1" :max="4.0" :step="0.1" :precision="1"
-            :value-on-clear="1.0" size="small" controls-position="right" />
+          <span class="text-xs font-medium text-slate-500">速率 (Rate)</span>
+          <div class="flex items-center gap-1.5">
+            <el-input-number v-model="pitchRateSafe" class="w-24!" :min="0.1" :max="4.0" :step="0.1" :precision="1"
+              :value-on-clear="1.0" size="small" />
+            <button type="button" class="text-slate-400 hover:text-slate-700 p-1 rounded transition-colors"
+              @click="pitchRateSafe = 1.0" title="复位到1.0">
+              ↺
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -127,6 +140,7 @@ import { getDecimalPlaces } from '@/utils/utils.ts'
 
 const appStore = useAppStore()
 const globalConfigStore = useGlobalConfigStore()
+
 
 // --- 歌曲名称 ---
 const inputTitleString = ref('')
@@ -448,7 +462,7 @@ const updateBufferWithDelay = () => {
   // 60fps 下 1 帧 = 16.6666...ms，直接除以 60 能保留完整的浮点数精度
   const delaySec = delay / 60 - 0.1
 
-  const delaySamples = Math.round(delaySec * sampleRate) // 👈 仅改动这里：把 Math.ceil 改成 Math.round
+  const delaySamples = Math.round(delaySec * sampleRate)
   const totalSamples = delaySamples + raw.length
 
   const finalBuffer = audioCtx.createBuffer(raw.numberOfChannels, totalSamples, sampleRate)
@@ -785,5 +799,12 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+/* 小屏幕隐藏进度条 */
+@media (max-width: 1200px) {
+  .progress-slider-container {
+    display: none;
+  }
 }
 </style>

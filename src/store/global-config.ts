@@ -32,6 +32,8 @@ export interface GlobalConfig {
 
   /** 音乐总音量 */
   musicVolume: number
+
+  fixMusicDelay: number
 }
 
 export const defaultGlobalConfig = {
@@ -55,6 +57,9 @@ export const defaultGlobalConfig = {
   selectedBgAlpha: 0.45,
 
   musicVolume: 1,
+
+  // 人工修正歌曲延迟
+  fixMusicDelay: 0.1,
 }
 
 export const useGlobalConfigStore = defineStore('globalConfig', {

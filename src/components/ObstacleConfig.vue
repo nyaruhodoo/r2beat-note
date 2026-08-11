@@ -1,102 +1,100 @@
 <template>
   <div class="relative h-full flex flex-col">
-    <div class="flex-1 overflow-y-auto p-4 pb-16">
-      <el-form label-width="160px" label-position="left" size="default">
-
-        <!-- 1. 判定线 / 激活行设置 -->
-        <div class="mb-6">
-          <h3 class="mb-3 text-sm font-semibold text-blue-500">判定线样式</h3>
-          <el-form-item label="判定线颜色" class="prevent-item-expand">
-            <div class="flex items-center gap-2">
-              <el-color-picker v-model="activeRowColorHex" :show-alpha="false" />
-              <el-button :icon="Refresh" @click="resetField('activeRowColor')" title="重置为默认值" />
-            </div>
-          </el-form-item>
-          <el-form-item label="判定线透明度" class="prevent-item-expand">
-            <div class="flex items-center gap-2">
-              <el-input-number v-model="activeRowAlphaSafe" :min="0" :max="1" :step="0.05" :precision="2"
-                :value-on-clear="0" />
-              <el-button :icon="Refresh" @click="resetField('activeRowAlpha')" title="重置为默认值" />
-            </div>
-          </el-form-item>
-        </div>
-
-        <el-divider />
-
+    <div class="flex-1 overflow-y-auto pb-16">
+      <!-- 添加 size="small"，调小 label-width，减少内部 gap -->
+      <el-form label-width="120px" label-position="left" size="small" class="compact-form">
         <!-- 2. 网格与视口配置 -->
-        <div class="mb-6">
-          <h3 class="mb-3 text-sm font-semibold text-blue-500">网格与视口</h3>
-          <el-form-item label="显示背景网格线" class="prevent-item-expand">
-            <div class="flex items-center gap-2">
-              <el-switch v-model="store.showGridLines" />
-              <el-button :icon="Refresh" @click="resetField('showGridLines')" title="重置为默认值" />
-            </div>
-          </el-form-item>
-          <el-form-item label="网格线颜色" class="prevent-item-expand">
-            <div class="flex items-center gap-2">
-              <el-color-picker v-model="gridLineColorHex" :show-alpha="false" />
-              <el-button :icon="Refresh" @click="resetField('gridLineColor')" title="重置为默认值" />
-            </div>
-          </el-form-item>
+        <div class="mb-4">
           <el-form-item label="视口可见总行数" class="prevent-item-expand">
-            <div class="flex items-center gap-2">
+            <div class="flex items-center gap-1">
               <el-input-number v-model="visibleGridCountSafe" :min="1" :max="200" :step="1" :precision="0"
-                :value-on-clear="1" />
-              <el-button :icon="Refresh" @click="resetField('visibleGridCount')" title="重置为默认值" />
+                :value-on-clear="1" style="width: 100px" />
+              <el-button :icon="Refresh" size="small" @click="resetField('visibleGridCount')" title="重置为默认值" />
             </div>
           </el-form-item>
           <el-form-item label="判定线距离底部行数" class="prevent-item-expand">
-            <div class="flex items-center gap-2">
+            <div class="flex items-center gap-1">
               <el-input-number v-model="activeRowIndexFromBottomSafe" :min="0" :max="store.visibleGridCount" :step="1"
-                :precision="0" :value-on-clear="0" />
-              <el-button :icon="Refresh" @click="resetField('activeRowIndexFromBottom')" title="重置为默认值" />
+                :precision="0" :value-on-clear="0" style="width: 100px" />
+              <el-button :icon="Refresh" size="small" @click="resetField('activeRowIndexFromBottom')" title="重置为默认值" />
             </div>
           </el-form-item>
-          <el-form-item label="滚动条宽度 (px)" class="prevent-item-expand">
-            <div class="flex items-center gap-2">
+          <el-form-item label="滚动条宽度" class="prevent-item-expand">
+            <div class="flex items-center gap-1">
               <el-input-number v-model="scrollbarWidthSafe" :min="0" :max="50" :step="1" :precision="0"
-                :value-on-clear="0" />
-              <el-button :icon="Refresh" @click="resetField('scrollbarWidth')" title="重置为默认值" />
+                :value-on-clear="0" style="width: 100px" />
+              <el-button :icon="Refresh" size="small" @click="resetField('scrollbarWidth')" title="重置为默认值" />
             </div>
           </el-form-item>
+
+          <el-form-item label="网格渲染精度" class="prevent-item-expand">
+            <div class="flex items-center gap-1">
+              <el-input-number v-model="stepCoordSafe" :min="0.1" :max="100" :step="1" :value-on-clear="1"
+                style="width: 100px" />
+              <el-button :icon="Refresh" size="small" @click="resetField('stepCoord')" title="重置为默认值" />
+            </div>
+          </el-form-item>
+
+          <!-- 新增：音乐延迟修正 -->
+          <!-- <el-form-item label="额外延迟修正(秒)" class="prevent-item-expand" title="如果你不知道有什么用请不要改">
+            <div class="flex items-center gap-1">
+              <el-input-number v-model="fixMusicDelaySafe" :min="-1" :max="1" :step="0.01" :precision="2"
+                :value-on-clear="0" style="width: 100px" />
+              <el-button :icon="Refresh" size="small" @click="resetField('fixMusicDelay')" title="重置为默认值" />
+            </div>
+          </el-form-item> -->
         </div>
 
-        <el-divider />
-
-        <!-- 3. 刻度与逻辑坐标配置 -->
-        <div class="mb-6">
-          <h3 class="mb-3 text-sm font-semibold text-blue-500">刻度与逻辑坐标</h3>
-          <el-form-item label="微调刻度线长度 (px)" class="prevent-item-expand">
-            <div class="flex items-center gap-2">
-              <el-input-number v-model="minorTickLengthSafe" :min="0" :max="50" :step="1" :precision="0"
-                :value-on-clear="0" />
-              <el-button :icon="Refresh" @click="resetField('minorTickLength')" title="重置为默认值" />
-            </div>
-          </el-form-item>
-          <el-form-item label="细分网格坐标步长" class="prevent-item-expand">
-            <div class="flex items-center gap-2">
-              <el-input-number v-model="stepCoordSafe" :min="0.1" :max="100" :step="1" :value-on-clear="1" />
-              <el-button :icon="Refresh" @click="resetField('stepCoord')" title="重置为默认值" />
-            </div>
-          </el-form-item>
-        </div>
-
-        <el-divider />
+        <el-divider class="my-2" />
 
         <!-- 4. 选中态样式配置 -->
-        <div class="mb-6">
-          <h3 class="mb-3 text-sm font-semibold text-blue-500">选中高亮样式</h3>
+        <div class="mb-4">
           <el-form-item label="选中背景颜色" class="prevent-item-expand">
-            <div class="flex items-center gap-2">
-              <el-color-picker v-model="selectedBgColorHex" :show-alpha="false" />
-              <el-button :icon="Refresh" @click="resetField('selectedBgColor')" title="重置为默认值" />
+            <div class="flex items-center gap-1">
+              <el-color-picker v-model="selectedBgColorHex" :show-alpha="false" class="w-7 h-7" />
+              <el-button :icon="Refresh" size="small" @click="resetField('selectedBgColor')" title="重置为默认值" />
             </div>
           </el-form-item>
           <el-form-item label="选中背景透明度" class="prevent-item-expand">
-            <div class="flex items-center gap-2">
+            <div class="flex items-center gap-1">
               <el-input-number v-model="selectedBgAlphaSafe" :min="0" :max="1" :step="0.05" :precision="2"
-                :value-on-clear="0" />
-              <el-button :icon="Refresh" @click="resetField('selectedBgAlpha')" title="重置为默认值" />
+                :value-on-clear="0" style="width: 100px" />
+              <el-button :icon="Refresh" size="small" @click="resetField('selectedBgAlpha')" title="重置为默认值" />
+            </div>
+          </el-form-item>
+        </div>
+
+        <div class="mb-4">
+          <el-form-item label="判定线颜色" class="prevent-item-expand">
+            <div class="flex items-center gap-1">
+              <el-color-picker v-model="activeRowColorHex" :show-alpha="false" class="w-7 h-7" />
+              <el-button :icon="Refresh" size="small" @click="resetField('activeRowColor')" title="重置为默认值" />
+            </div>
+          </el-form-item>
+          <el-form-item label="判定线透明度" class="prevent-item-expand">
+            <div class="flex items-center gap-1">
+              <el-input-number v-model="activeRowAlphaSafe" :min="0" :max="1" :step="0.05" :precision="2"
+                :value-on-clear="0" style="width: 100px" />
+              <el-button :icon="Refresh" size="small" @click="resetField('activeRowAlpha')" title="重置为默认值" />
+            </div>
+          </el-form-item>
+          <el-form-item label="显示背景网格线" class="prevent-item-expand">
+            <div class="flex items-center gap-1">
+              <el-switch v-model="store.showGridLines" size="small" />
+              <el-button :icon="Refresh" size="small" @click="resetField('showGridLines')" title="重置为默认值" />
+            </div>
+          </el-form-item>
+          <el-form-item label="网格线颜色" class="prevent-item-expand">
+            <div class="flex items-center gap-1">
+              <el-color-picker v-model="gridLineColorHex" :show-alpha="false" class="w-7 h-7" />
+              <el-button :icon="Refresh" size="small" @click="resetField('gridLineColor')" title="重置为默认值" />
+            </div>
+          </el-form-item>
+          <el-form-item label="刻度线长度" class="prevent-item-expand">
+            <div class="flex items-center gap-1">
+              <el-input-number v-model="minorTickLengthSafe" :min="0" :max="50" :step="1" :precision="0"
+                :value-on-clear="0" style="width: 100px" />
+              <el-button :icon="Refresh" size="small" @click="resetField('minorTickLength')" title="重置为默认值" />
             </div>
           </el-form-item>
         </div>
@@ -104,7 +102,7 @@
       </el-form>
     </div>
 
-    <!-- 重置全部按钮（绝对定位在右下角） -->
+    <!-- 重置全部按钮也调小 -->
     <el-button type="primary" plain class="absolute bottom-4 right-4" @click="resetAll">
       <el-icon>
         <Refresh />
@@ -165,6 +163,8 @@ const scrollbarWidthSafe = createSafeNumericComputed('scrollbarWidth', 0, 50, 10
 const minorTickLengthSafe = createSafeNumericComputed('minorTickLength', 0, 50, 5)
 const stepCoordSafe = createSafeNumericComputed('stepCoord', 0.1, 100, 1)
 const selectedBgAlphaSafe = createSafeNumericComputed('selectedBgAlpha', 0, 1, 0.2)
+// 新增：音乐延迟修正安全计算属性 (-1 到 1，步幅 0.01，默认值 0)
+const fixMusicDelaySafe = createSafeNumericComputed('fixMusicDelay', -1, 1, 0)
 
 // 颜色绑定
 const activeRowColorHex = computed({

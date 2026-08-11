@@ -1,7 +1,6 @@
 <template>
   <div class="flex h-screen w-full flex-col bg-slate-100 p-6">
-    <header
-      class="mb-4 flex items-center justify-between rounded-2xl border border-slate-200/80 bg-white px-6 py-3 shadow-sm">
+    <header class="mb-4 flex items-center justify-between rounded-2xl border border-slate-200/80 bg-white px-6 py-3">
       <div class="flex items-center gap-3">
         <el-button circle @click="router.replace('/')" class="border-none">
           <el-icon>
@@ -29,7 +28,7 @@
         :duration="songInfoPanelRef?.duration" />
 
       <!-- 右侧：障碍物选择器 -->
-      <div class="min-w-70 flex-1">
+      <div class="min-w-120 flex-1">
         <ObstacleSelector />
       </div>
     </div>
@@ -56,7 +55,6 @@ const appStore = useAppStore()
 const router = useRouter()
 const songInfoPanelRef = ref<InstanceType<typeof SongInfoPanel> | null>(null)
 
-console.log(appStore.currentSong?.xmlObject)
 
 const handleSaveXml = () => {
   const xmlObj = appStore.currentSong?.xmlObject

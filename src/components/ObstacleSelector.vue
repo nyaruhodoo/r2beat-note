@@ -1,5 +1,5 @@
 <template>
-  <aside class="flex h-full w-full flex-col gap-6 rounded-2xl border border-slate-200/80 bg-white p-6 shadow-sm">
+  <aside class="flex h-full w-full flex-col gap-6 rounded-2xl border border-slate-200/80 bg-white p-6">
     <!-- 头部标题区：右侧添加视图切换按钮 -->
     <div class="flex items-center justify-between border-b border-slate-100 pb-4">
       <h2 class="text-base font-bold text-slate-800">
@@ -11,31 +11,21 @@
       </button>
     </div>
 
-    <!-- 主体区域：二选一渲染 -->
+    <!-- 主体区域-->
     <div class="flex-1 overflow-auto">
-      <!-- 视图 1：障碍物选择网格 -->
-      <div v-if="activeView === 'selector'" class="flex flex-col gap-2.5 pr-1">
+      <div v-if="activeView === 'selector'" class="flex flex-col gap-2.5">
         <div v-for="(row, rowIndex) in layoutConfig" :key="rowIndex"
           class="flex flex-row items-center gap-2.5 shrink-0">
           <template v-for="id in row" :key="id">
-            <button v-if="spritesConfig[id]" @click="selectObstacle(id)"
-              class="group flex items-center justify-center rounded-xl border p-1.5 transition-all shrink-0" :class="[
+            <button @click="selectObstacle(id)"
+              class="group flex items-center justify-center rounded-xl p-2 transition-all shrink-0" :class="[
                 selectedObstacle?.Kind === String(id)
-                  ? 'border-indigo-600 bg-indigo-50/50 ring-2 ring-indigo-500/20'
-                  : 'border-slate-200/80 bg-slate-50/40 hover:border-slate-300 hover:bg-slate-100/60'
+                  ? 'bg-indigo-200'  // 选中：实色靛蓝 + 深色边框
+                  : 'border-slate-200 bg-slate-100 hover:border-slate-300 hover:bg-slate-200/70' // 未选中：实色浅灰
               ]">
-              <div class="relative flex items-center justify-center shrink-0 overflow-hidden" :style="{
-                width: `${spritesConfig[id].width / 2}px`,
-                height: `${spritesConfig[id].height / 2}px`
-              }">
-                <div class="origin-center shrink-0" :style="{
-                  width: `${spritesConfig[id].width}px`,
-                  height: `${spritesConfig[id].height}px`,
-                  backgroundImage: `url('${spriteUrl}')`,
-                  backgroundPosition: `-${spritesConfig[id].x}px -${spritesConfig[id].y}px`,
-                  backgroundRepeat: 'no-repeat',
-                  transform: 'scale(0.5)',
-                }"></div>
+              <div class="relative flex items-center justify-center shrink-0 max-w-20">
+                <img :src="getObstacleImageUrl(id)" :alt="`Obstacle ${id}`"
+                  class="h-full w-full object-contain pointer-events-none" />
               </div>
             </button>
           </template>
@@ -50,13 +40,10 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import { spritesConfig } from '@/sprites';
 import { useAppStore } from '@/store/store';
 import { NoteType } from '@/note';
 import { storeToRefs } from 'pinia';
 import ObstacleConfig from './ObstacleConfig.vue';
-import spriteUrl from '@/assets/sprites.png'
-
 
 // 当前视图状态：'selector' (选择器) | 'config' (参数配置)
 const activeView = ref<'selector' | 'config'>('selector');
@@ -64,7 +51,7 @@ const activeView = ref<'selector' | 'config'>('selector');
 const store = useAppStore();
 const { selectedObstacle } = storeToRefs(store);
 
-const layoutConfig = ref<(keyof typeof spritesConfig)[][]>([
+const layoutConfig = ref<string[][]>([
   ['19', '18', '145', '142'],
   ['26', '27'],
   ['22', '23'],
@@ -72,6 +59,11 @@ const layoutConfig = ref<(keyof typeof spritesConfig)[][]>([
   ['16', '17', '136', '139'],
   ['24'],
 ]);
+
+// 动态匹配 `src/assets/note/${id}.png` 路径
+function getObstacleImageUrl(id: string) {
+  return new URL(`../assets/note/${id}.png`, import.meta.url).href;
+}
 
 function selectObstacle(id: string) {
   const note = NoteType[id];
