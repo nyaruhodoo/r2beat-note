@@ -1,4 +1,5 @@
 import { defineStore } from 'pinia'
+import { markRaw } from 'vue'
 
 // 定义当前音乐的数据接口
 export interface SongData {
@@ -25,8 +26,8 @@ export interface BpmItem {
 
 export interface SongXmlData {
   '?xml': {
-    version: '1.0'
-    encoding: 'euc-kr'
+    version: string
+    encoding: string
   }
   TITLE: {
     Name: string
@@ -50,6 +51,11 @@ interface AppState {
   selectedObstacle: NoteData | null
 }
 
+// 辅助函数：专门脱敏 File / Blob 对象，保留数组和对象的响应性
+function sanitizeFile<T>(file: T): T {
+  return file instanceof Blob || file instanceof File ? (markRaw(file) as T) : file
+}
+
 export const useAppStore = defineStore('store', {
   state: (): AppState => {
     return {
@@ -62,14 +68,31 @@ export const useAppStore = defineStore('store', {
   },
 
   actions: {
-    // 设置当前音乐
+    // 设置当前音乐：在这里直接完成 File 对象的脱敏
     setCurrentSong(song: SongData) {
-      this.currentSong = song
-    },
+      this.currentSong = {
+        ...song,
+        // 1. 标记音频文件本身为 raw（非响应式），防止 Proxy 包装 File
+        audioFile: sanitizeFile(song.audioFile),
 
+        // 2. 数组保留响应式！仅对里面的每个 File 节点进行 markRaw
+        backingTracks: song.backingTracks
+          ? song.backingTracks.map((file) => sanitizeFile(file))
+          : [],
+
+        // 3. xmlObject 保持正常响应式，方便编辑器实时修改谱面
+        xmlObject: song.xmlObject,
+      }
+    },
     // 重置音乐数据
     resetCurrentSong() {
       this.currentSong = null
+    },
+    // 追加副音轨（数组依然响应式，新增的 File 也会自动脱敏）
+    addBackingTrack(file: File) {
+      if (this.currentSong) {
+        this.currentSong.backingTracks.push(sanitizeFile(file))
+      }
     },
   },
 })

@@ -1,8 +1,9 @@
 <template>
-  <div class="flex h-screen w-full flex-col bg-slate-100 p-6">
+  <!-- 1. 最外层 div 挂载 v-loading 指令 -->
+  <div v-loading="comLoading" class="flex h-screen w-full flex-col bg-slate-100 p-6">
     <header class="mb-4 flex items-center justify-between rounded-2xl border border-slate-200/80 bg-white px-6 py-3">
       <div class="flex items-center gap-3">
-        <el-button circle @click="router.replace('/')" class="border-none">
+        <el-button circle @click="router.back()" class="border-none">
           <el-icon>
             <Back />
           </el-icon>
@@ -10,11 +11,12 @@
         <h1 class="text-lg font-bold text-slate-800">谱面编辑器</h1>
       </div>
       <div class="flex items-center gap-3">
-        <el-button type="primary" @click="handleSaveXml">导出谱面</el-button>
+        <el-button type="primary" :disabled="loading" @click="handleSaveXml">导出谱面</el-button>
       </div>
     </header>
 
-    <div class="flex flex-1 gap-6 overflow-hidden">
+    <!-- 2. 加载未完成时不渲染核心编辑区域 -->
+    <div v-if="!comLoading" class="flex flex-1 gap-6 overflow-hidden">
       <!-- 左侧：歌曲信息 -->
       <div class="min-w-70 flex-1">
         <SongInfoPanel ref="songInfoPanelRef" />
@@ -36,8 +38,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { onUnmounted, ref, toRaw, watch } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
 import { XMLBuilder } from 'fast-xml-parser'
 import { ElMessage } from 'element-plus'
 import iconv from 'iconv-lite'
@@ -47,14 +49,63 @@ import ObstacleSelector from '@/components/ObstacleSelector.vue'
 import RhythmCanvas from '@/components/RhythmCanvas.vue'
 import SongInfoPanel from '@/components/SongInfoPanel.vue'
 import { useAppStore } from '@/store/store'
+import { useSongStorage } from '@/db/useSongStorage'
+import { deepToRaw } from '@/utils/utils'
 
 // @ts-expect-error  iconv需要这个东西
 window.Buffer = Buffer
 
+const route = useRoute()
 const appStore = useAppStore()
 const router = useRouter()
 const songInfoPanelRef = ref<InstanceType<typeof SongInfoPanel> | null>(null)
+const comLoading = ref(true)
+const { loading, getSongById, updateSong } = useSongStorage()
+const id = Number(Array.isArray(route.params.id) ? route.params.id[0] : route.params.id)
 
+// 监听初始加载完毕
+watch(
+  [loading],
+  async () => {
+    if (loading) {
+      const song = await getSongById(id)
+      if (song) {
+        appStore.setCurrentSong(song)
+        comLoading.value = false
+      }
+
+    }
+  },
+  { immediate: true }
+)
+
+
+watch(
+  () => appStore.currentSong,
+  (newSong, oldSong) => {
+    if (newSong && oldSong) {
+      // 1. toRaw 获取当前 Song 的原始普通对象
+      const rawSong = toRaw(newSong)
+
+      // 2. 组合为纯净数据结构，既支持 File 存储，也不会触发 DataCloneError
+      const cleanData = {
+        ...rawSong,
+        audioFile: toRaw(rawSong.audioFile),
+        backingTracks: (rawSong.backingTracks || []).map(f => toRaw(f)),
+        xmlObject: deepToRaw(rawSong.xmlObject)
+      }
+
+
+      updateSong(newSong.id, cleanData)
+    }
+
+  },
+  { deep: true }
+)
+
+onUnmounted(() => {
+  appStore.currentSong = null
+})
 
 const handleSaveXml = () => {
   const xmlObj = appStore.currentSong?.xmlObject
@@ -71,7 +122,6 @@ const handleSaveXml = () => {
       format: true,
       indentBy: '',
       suppressEmptyNode: false,
-
     })
 
     let rawXmlString = builder.build(xmlObj)

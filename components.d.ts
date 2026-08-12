@@ -21,6 +21,7 @@ declare module 'vue' {
     ElIcon: typeof import('element-plus/es')['ElIcon']
     ElInput: typeof import('element-plus/es')['ElInput']
     ElInputNumber: typeof import('element-plus/es')['ElInputNumber']
+    ElPopconfirm: typeof import('element-plus/es')['ElPopconfirm']
     ElSlider: typeof import('element-plus/es')['ElSlider']
     ElSwitch: typeof import('element-plus/es')['ElSwitch']
     ElUpload: typeof import('element-plus/es')['ElUpload']
@@ -32,5 +33,8 @@ declare module 'vue' {
     RouterView: typeof import('vue-router')['RouterView']
     SongInfoPanel: typeof import('./src/components/SongInfoPanel.vue')['default']
     SongMetaCard: typeof import('./src/components/SongMetaCard.vue')['default']
+  }
+  export interface GlobalDirectives {
+    vLoading: typeof import('element-plus/es')['ElLoadingDirective']
   }
 }

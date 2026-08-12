@@ -14,13 +14,15 @@
       </div>
     </div>
 
-    <!-- 主卡片容器 -->
-    <div class="w-full max-w-2xl space-y-6 rounded-2xl border border-slate-200/80 bg-white p-8 shadow-sm">
+    <!-- 主卡片容器：优化阴影(shadow-lg + fine ring)和圆角 -->
+    <div
+      class="w-full max-w-2xl space-y-6 rounded-3xl bg-white p-10 shadow-lg shadow-slate-950/5 ring-1 ring-slate-100">
       <el-form ref="formRef" :model="songForm" :rules="rules" label-position="top" size="large">
+
         <!-- 1. 音频文件上传与播放区域 -->
         <el-form-item prop="audioFile">
           <template #label>
-            <span class="inline-flex items-center gap-1.5 text-sm font-semibold text-slate-700">
+            <span class="inline-flex items-center gap-1.5 font-medium text-slate-700">
               <el-icon class="text-emerald-500">
                 <Headset />
               </el-icon>
@@ -28,40 +30,41 @@
             </span>
           </template>
 
-          <!-- 未上传：拖拽上传框 -->
+          <!-- 未上传：拖拽上传框（添加固定高度 class 防止抖动） -->
           <el-upload v-if="!audioUrl" drag action="#" :auto-upload="false" :show-file-list="false"
-            accept="audio/*,.mp3,.wav,.ogg,.flac" class="audio-uploader w-full" :on-change="handleAudioChange">
-            <div class="flex flex-col items-center justify-center space-y-3 py-6">
+            accept="audio/*,.mp3,.wav,.ogg,.flac" class="audio-uploader fixed-height-dragger w-full"
+            :on-change="handleAudioChange">
+            <div class="flex flex-col items-center justify-center space-y-3">
               <div
-                class="flex h-14 w-14 items-center justify-center rounded-full bg-emerald-50 text-emerald-500 shadow-inner">
-                <el-icon :size="28">
+                class="flex h-16 w-16 items-center justify-center rounded-full bg-emerald-50 text-emerald-500 shadow-inner ring-4 ring-emerald-50/50">
+                <el-icon :size="32">
                   <UploadFilled />
                 </el-icon>
               </div>
               <div class="text-center">
-                <p class="text-sm font-medium text-slate-700">点击或将音频文件拖拽至此处上传</p>
+                <p class="text-base font-semibold text-slate-800">点击或将音频文件拖拽至此处</p>
               </div>
             </div>
           </el-upload>
 
           <!-- 已上传：音频预览 -->
           <div v-else
-            class="flex w-full flex-col gap-3 rounded-2xl border border-emerald-100 bg-emerald-50/40 p-4 transition-all">
-            <div class="flex items-center justify-between">
-              <div class="flex items-center gap-3 overflow-hidden">
+            class="flex w-full flex-col gap-4 rounded-2xl border border-emerald-100 bg-emerald-50/50 p-5 transition-all shadow-inner shadow-emerald-100/50">
+            <div class="flex items-center justify-between gap-4">
+              <div class="flex items-center gap-3.5 overflow-hidden">
                 <div
-                  class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-500 text-white shadow-md shadow-emerald-500/20">
-                  <el-icon :size="20">
+                  class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-emerald-500 text-white shadow-lg shadow-emerald-500/30">
+                  <el-icon :size="24">
                     <VideoPlay />
                   </el-icon>
                 </div>
                 <div class="truncate">
-                  <p class="truncate text-sm font-semibold text-slate-800">{{ audioFileName }}</p>
-                  <p class="text-xs text-slate-400">音频就绪，点击下方播放器进行预览</p>
+                  <p class="truncate text-base font-semibold text-slate-900">{{ audioFileName }}</p>
+                  <p class="text-xs text-emerald-700/80 font-medium">音频就绪，点击下方播放器进行预览</p>
                 </div>
               </div>
-              <el-button circle size="small"
-                class="border-none bg-slate-200/60 text-slate-600 hover:bg-rose-100 hover:text-rose-600"
+              <el-button circle
+                class="border-none bg-white/80 text-slate-500 hover:bg-rose-50 hover:text-rose-600 shadow-sm"
                 @click="removeAudio">
                 <el-icon>
                   <Delete />
@@ -69,14 +72,14 @@
               </el-button>
             </div>
 
-            <audio controls :src="audioUrl" class="mt-1 w-full rounded-lg accent-emerald-500"></audio>
+            <audio controls :src="audioUrl" class="w-full rounded-full accent-emerald-500"></audio>
           </div>
         </el-form-item>
 
         <!-- 2. XML 谱面文件上传与解析区域 -->
         <el-form-item prop="xmlObject">
           <template #label>
-            <span class="inline-flex items-center gap-1.5 text-sm font-semibold text-slate-700">
+            <span class="inline-flex items-center gap-1.5 font-medium text-slate-700">
               <el-icon class="text-blue-500">
                 <Document />
               </el-icon>
@@ -84,41 +87,41 @@
             </span>
           </template>
 
-          <!-- 未上传 XML -->
+          <!-- 未上传 XML（添加固定高度 class 防止抖动） -->
           <el-upload v-if="!songForm.xmlObject" drag action="#" :auto-upload="false" :show-file-list="false"
-            accept=".xml" class="xml-uploader w-full" :on-change="handleXmlChange">
-            <div class="flex flex-col items-center justify-center space-y-3 py-6">
+            accept=".xml" class="xml-uploader fixed-height-dragger-blue w-full" :on-change="handleXmlChange">
+            <div class="flex flex-col items-center justify-center space-y-3">
               <div
-                class="flex h-14 w-14 items-center justify-center rounded-full bg-blue-50 text-blue-500 shadow-inner">
-                <el-icon :size="28">
+                class="flex h-16 w-16 items-center justify-center rounded-full bg-blue-50 text-blue-500 shadow-inner ring-4 ring-blue-50/50">
+                <el-icon :size="32">
                   <Document />
                 </el-icon>
               </div>
               <div class="text-center">
-                <p class="text-sm font-medium text-slate-700">点击或将 XML 文件拖拽至此处上传</p>
+                <p class="text-base font-semibold text-slate-800">点击或将 XML 文件拖拽至此处</p>
               </div>
             </div>
           </el-upload>
 
           <!-- 已解析 XML 信息展示 -->
           <div v-else
-            class="flex w-full items-center justify-between rounded-2xl border border-blue-100 bg-blue-50/40 p-4 transition-all">
-            <div class="flex items-center gap-3 overflow-hidden">
+            class="flex w-full items-center justify-between rounded-2xl border border-blue-100 bg-blue-50/50 p-5 transition-all shadow-inner shadow-blue-100/50">
+            <div class="flex items-center gap-3.5 overflow-hidden">
               <div
-                class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-500 text-white shadow-md shadow-blue-500/20">
-                <el-icon :size="20">
+                class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-blue-500 text-white shadow-lg shadow-blue-500/30">
+                <el-icon :size="24">
                   <DocumentChecked />
                 </el-icon>
               </div>
               <div class="truncate">
-                <p class="truncate text-sm font-semibold text-slate-800">{{ xmlFileName }}</p>
-                <p class="text-xs text-slate-400">
+                <p class="truncate text-base font-semibold text-slate-900">{{ xmlFileName }}</p>
+                <p class="text-xs text-blue-700/80 font-medium">
                   BGM: {{ songForm.xmlObject.TITLE?.BGM?.Name || '未标明' }}
                 </p>
               </div>
             </div>
-            <el-button circle size="small"
-              class="border-none bg-slate-200/60 text-slate-600 hover:bg-rose-100 hover:text-rose-600"
+            <el-button circle
+              class="border-none bg-white/80 text-slate-500 hover:bg-rose-50 hover:text-rose-600 shadow-sm"
               @click="removeXml">
               <el-icon>
                 <Delete />
@@ -128,9 +131,11 @@
         </el-form-item>
 
         <!-- 底部操作按钮 -->
-        <div class="mt-8 flex items-center justify-end gap-3 border-t border-slate-100 pt-4">
-          <el-button size="large" class="rounded-xl" @click="handleBack">取消</el-button>
-          <el-button type="primary" size="large" class="rounded-xl border-none bg-emerald-500 hover:bg-emerald-600"
+        <div class="mt-10 flex items-center justify-end gap-3 border-t border-slate-100 pt-6">
+          <el-button size="large" class="rounded-xl px-6 border-slate-200 text-slate-700 hover:bg-slate-50"
+            @click="handleBack">取消</el-button>
+          <el-button type="primary" size="large"
+            class="rounded-xl px-8 border-none bg-emerald-500 hover:bg-emerald-600 shadow-md shadow-emerald-500/20"
             @click="handleSave">
             导入并编辑
           </el-button>
@@ -153,14 +158,13 @@ import {
 import type { FormInstance, FormRules, UploadFile } from 'element-plus'
 import { ElMessage } from 'element-plus'
 import { XMLParser } from 'fast-xml-parser'
-import { ref, reactive, onUnmounted } from 'vue'
+import { ref, reactive, onUnmounted, toRaw } from 'vue'
 import { useRouter } from 'vue-router'
 
 import { useSongStorage } from '@/db/useSongStorage'
-import { useAppStore, type SongXmlData } from '@/store/store'
+import { type SongXmlData } from '@/store/store'
 
 const router = useRouter()
-const { setCurrentSong } = useAppStore()
 const { addSong } = useSongStorage()
 
 const formRef = ref<FormInstance>()
@@ -216,6 +220,7 @@ const removeAudio = () => {
   audioUrl.value = ''
   audioFileName.value = ''
   songForm.audioFile = null
+  formRef.value?.validateField('audioFile')
 }
 
 // 将 File 对象转为指定编码字符串的辅助函数
@@ -227,7 +232,7 @@ const readFileAsTextWithSmartEncoding = (file: File): Promise<string> => {
       try {
         const buffer = e.target?.result as ArrayBuffer
 
-        // 1. 默认使用兼容性最强的中文字符集解码（GB18030 覆盖了 GBK、GB2312 和大部分韩文字符）
+        // 1. 默认使用 GB18030（覆盖 GBK, GB2312 和大部分韩文字符）
         let currentEncoding = 'gb18030'
         let decoder = new TextDecoder(currentEncoding)
         let text = decoder.decode(buffer)
@@ -236,8 +241,7 @@ const readFileAsTextWithSmartEncoding = (file: File): Promise<string> => {
         const match = text.match(/<\?xml[^?>]*encoding=["']([^"']+)["']/i)
         const declaredEncoding = match?.[1]?.toLowerCase()
 
-        // 3. 如果 XML 明确声明了 UTF-8，并且文件确实是 UTF-8，才重新解码
-        // (注意：如果声明是 euc-kr，但包含了 GBK 中文，则继续保留 gb18030 以防乱码)
+        // 3. 明确声明 utf-8 时重新解码
         if (declaredEncoding && declaredEncoding === 'utf-8') {
           currentEncoding = 'utf-8'
           decoder = new TextDecoder(currentEncoding)
@@ -260,10 +264,8 @@ const handleXmlChange = async (uploadFile: UploadFile) => {
   if (!uploadFile.raw) return
 
   try {
-    // 替换原有的 await uploadFile.raw.text()
     const xmlText = await readFileAsTextWithSmartEncoding(uploadFile.raw)
 
-    // 配置 XMLParser 保持属性与节点的正确提取
     const parser = new XMLParser({
       ignoreAttributes: false,
       attributeNamePrefix: '',
@@ -288,15 +290,19 @@ const handleXmlChange = async (uploadFile: UploadFile) => {
 const removeXml = () => {
   songForm.xmlObject = null
   xmlFileName.value = ''
+  formRef.value?.validateField('xmlObject')
 }
-
-import { toRaw } from 'vue'
 
 // 保存并跳转
 const handleSave = async () => {
   if (!formRef.value) return
 
-  await formRef.value.validate()
+  try {
+    await formRef.value.validate()
+  } catch (error) {
+    console.log('校验未通过', error)
+    return
+  }
 
   if (!songForm.audioFile || !songForm.xmlObject) return
 
@@ -309,17 +315,8 @@ const handleSave = async () => {
   }
 
   try {
-    // 1. 存入 Dexie 数据库获取真实生成的主键 id
     const newId = await addSong(songPayload)
-
-    // 2. 写入 Pinia
-    setCurrentSong({
-      ...songPayload,
-      id: newId,
-    })
-
-    // 3. 路由跳转
-    router.push('/note-editor')
+    router.replace(`/note-editor/${newId}`)
   } catch (err) {
     console.error('存储失败:', err)
     ElMessage.error('数据库存储失败')
@@ -327,24 +324,53 @@ const handleSave = async () => {
 }
 
 onUnmounted(() => {
-  removeAudio()
+  if (audioUrl.value) {
+    URL.revokeObjectURL(audioUrl.value)
+  }
 })
 </script>
 
 <style scoped>
-:deep(.el-upload-dragger) {
-  border-radius: 1rem;
-  border-color: #cbd5e1;
+/* 1. 消除拖拽时的抖动：固定拖拽框高度 */
+:deep(.fixed-height-dragger .el-upload-dragger),
+:deep(.fixed-height-dragger-blue .el-upload-dragger) {
+  height: 180px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 1.25rem;
+  border-width: 2px;
+  border-color: #e2e8f0;
   background-color: #f8fafc;
-  transition: all 0.2s ease;
+  transition: all 0.25s ease-in-out;
 }
 
-:deep(.el-upload-dragger:hover) {
+/* 音频上传框 Hover / Dragover 逻辑 */
+:deep(.fixed-height-dragger .el-upload-dragger:hover),
+:deep(.fixed-height-dragger .el-upload--text.is-dragover .el-upload-dragger) {
+  border-color: #10b981;
+  /* emerald-500 */
+  background-color: #f0fdf4;
+  /* emerald-50 */
+  box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.1);
+}
+
+/* XML 上传框 Hover / Dragover 逻辑（主题蓝色） */
+:deep(.fixed-height-dragger-blue .el-upload-dragger:hover),
+:deep(.fixed-height-dragger-blue .el-upload--text.is-dragover .el-upload-dragger) {
   border-color: #3b82f6;
+  /* blue-500 */
   background-color: #eff6ff;
+  /* blue-50 */
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
 }
 
+/* 2. 优化表单项间距 */
 :deep(.el-form-item) {
-  margin-bottom: 1.25rem;
+  margin-bottom: 1.75rem;
+}
+
+:deep(.el-form-item__label) {
+  padding-bottom: 6px !important;
 }
 </style>

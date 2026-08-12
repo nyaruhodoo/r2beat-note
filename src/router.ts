@@ -8,7 +8,7 @@ import NoteEditor from './pages/NoteEditor.vue'
 const routes = [
   { path: '/', component: Home },
   { path: '/new-music', component: NewMusic },
-  { path: '/note-editor', component: NoteEditor },
+  { path: '/note-editor/:id', component: NoteEditor },
   { path: '/import-music', component: ImportMusic },
 ]
 
