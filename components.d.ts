@@ -22,6 +22,7 @@ declare module 'vue' {
     ElInput: typeof import('element-plus/es')['ElInput']
     ElInputNumber: typeof import('element-plus/es')['ElInputNumber']
     ElPopconfirm: typeof import('element-plus/es')['ElPopconfirm']
+    ElPopover: typeof import('element-plus/es')['ElPopover']
     ElSlider: typeof import('element-plus/es')['ElSlider']
     ElSwitch: typeof import('element-plus/es')['ElSwitch']
     ElUpload: typeof import('element-plus/es')['ElUpload']
@@ -35,6 +36,7 @@ declare module 'vue' {
     RouterView: typeof import('vue-router')['RouterView']
     SongInfoPanel: typeof import('./src/components/SongInfoPanel.vue')['default']
     SongMetaCard: typeof import('./src/components/SongMetaCard.vue')['default']
+    TrackManagerPopover: typeof import('./src/components/TrackManagerPopover.vue')['default']
     ViewportConfig: typeof import('./src/components/ViewportConfig.vue')['default']
   }
   export interface GlobalDirectives {

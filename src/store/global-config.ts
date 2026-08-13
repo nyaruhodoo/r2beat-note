@@ -38,6 +38,8 @@ export interface GlobalConfig {
 
   // 允许的随机障碍物类型
   randomType: number[]
+
+  // 随机障碍物重复概率取值0-100
   repeatChance: number
 }
 
@@ -66,7 +68,7 @@ export const defaultGlobalConfig = {
   fixMusicDelay: 0.1,
 
   randomType: [16, 17, 18, 19, 20, 21, 22, 23, 26, 27],
-  repeatChance: 0.1,
+  repeatChance: 10,
 }
 
 export const useGlobalConfigStore = defineStore('globalConfig', {
