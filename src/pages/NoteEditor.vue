@@ -38,12 +38,13 @@
 </template>
 
 <script setup lang="ts">
-import { onUnmounted, ref, toRaw, watch } from 'vue'
+import { onUnmounted, ref, toRaw, toRef, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { XMLBuilder } from 'fast-xml-parser'
 import { ElMessage } from 'element-plus'
 import iconv from 'iconv-lite'
 import { Buffer } from 'buffer'
+import { useRefHistory, onKeyStroke } from '@vueuse/core'
 
 import ObstacleSelector from '@/components/ObstacleSelector.vue'
 import RhythmCanvas from '@/components/RhythmCanvas.vue'
@@ -63,6 +64,43 @@ const comLoading = ref(true)
 const { loading, getSongById, updateSong } = useSongStorage()
 const id = Number(Array.isArray(route.params.id) ? route.params.id[0] : route.params.id)
 
+// ==================== 历史记录与撤回重做逻辑 ====================
+const currentSongRef = toRef(appStore, 'currentSong')
+
+const { undo, redo, clear } = useRefHistory(currentSongRef, {
+  deep: true,
+  // 使用 deepToRaw + structuredClone 避免 Vue Proxy 导致 DataCloneError，同时深拷贝状态
+  clone: (val) => (val ? structuredClone(deepToRaw(val)) : null)
+})
+
+// 监听键盘快捷键：Ctrl/Cmd + Z (撤回), Ctrl/Cmd + Y 或 Ctrl/Cmd + Shift + Z (重做)
+onKeyStroke((e: KeyboardEvent) => {
+  // 当用户在输入框/文本域中编辑时，保留原生的文本撤回行为
+  const target = e.target as HTMLElement | null
+  if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable)) {
+    return
+  }
+
+  const isCtrlOrCmd = e.ctrlKey || e.metaKey
+  if (!isCtrlOrCmd) return
+
+  const key = e.key.toLowerCase()
+
+  if (key === 'z') {
+    if (e.shiftKey) {
+      e.preventDefault()
+      redo()
+    } else {
+      e.preventDefault()
+      undo()
+    }
+  } else if (key === 'y') {
+    e.preventDefault()
+    redo()
+  }
+})
+// ================================================================
+
 // 监听初始加载完毕
 watch(
   [loading],
@@ -71,14 +109,13 @@ watch(
       const song = await getSongById(id)
       if (song) {
         appStore.setCurrentSong(song)
+        clear() // 初始数据加载完成后清空历史栈，防止撤回至 null 状态
         comLoading.value = false
       }
-
     }
   },
   { immediate: true }
 )
-
 
 watch(
   () => appStore.currentSong,
@@ -95,10 +132,8 @@ watch(
         xmlObject: deepToRaw(rawSong.xmlObject)
       }
 
-
       updateSong(newSong.id, cleanData)
     }
-
   },
   { deep: true }
 )
