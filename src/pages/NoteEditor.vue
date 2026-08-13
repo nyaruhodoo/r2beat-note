@@ -152,6 +152,7 @@ watch(
 
 onUnmounted(() => {
   appStore.currentSong = null
+  appStore.selectedCoords.clear()
 })
 
 const handleSaveXml = () => {
