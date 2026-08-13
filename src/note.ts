@@ -41,3 +41,13 @@ export const NoteType: Record<
   // 特殊处理随机
   '161': { Coord: '0', Kind: '161', Level: '0', FxSndIndex: '0' },
 }
+
+/**
+ * 同按键进行转换映射
+ */
+export const StarNotetransformMap = {
+  '18': '27',
+  '19': '26',
+  '26': '18',
+  '27': '19',
+}

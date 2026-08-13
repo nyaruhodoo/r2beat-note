@@ -18,7 +18,7 @@
     <!-- 2. 加载未完成时不渲染核心编辑区域 -->
     <div v-if="!comLoading" class="flex flex-1 gap-6 overflow-hidden">
       <!-- 左侧：歌曲信息 -->
-      <div class="min-w-70 flex-1">
+      <div class="flex-1">
         <SongInfoPanel ref="songInfoPanelRef" />
       </div>
 
@@ -30,7 +30,7 @@
         :duration="songInfoPanelRef?.duration" />
 
       <!-- 右侧：障碍物选择器 -->
-      <div class="min-w-120 flex-1">
+      <div class="flex-1">
         <ObstacleSelector />
       </div>
     </div>

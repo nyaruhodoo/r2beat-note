@@ -36,7 +36,7 @@
 
                 <!-- 特殊障碍物 ID 161 专属配置按钮 -->
                 <button v-if="String(id) === '161'" @click.stop="toggle161Popover"
-                  class="absolute -top-1.5 -right-1.5 z-10 flex h-6 w-6 items-center justify-center rounded-full bg-gradient-to-tr from-indigo-600 to-violet-500 text-white shadow-md transition-all hover:scale-110 hover:shadow-indigo-500/30 active:scale-95"
+                  class="absolute -top-1.5 -right-1.5 z-10 flex h-6 w-6 items-center justify-center rounded-full bg-linear-to-tr from-indigo-600 to-violet-500 text-white shadow-md transition-all hover:scale-110 hover:shadow-indigo-500/30 active:scale-95"
                   title="配置随机障碍物池">
                   <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -216,7 +216,7 @@
 <script setup lang="ts">
 import { computed, ref, Teleport, type CSSProperties } from 'vue';
 import { useAppStore, type NoteData } from '@/store/store';
-import { NoteType } from '@/note';
+import { NoteType, StarNotetransformMap } from '@/note';
 import { storeToRefs } from 'pinia';
 import ObstacleConfig from './ObstacleConfig.vue';
 import { twMerge } from 'tailwind-merge';
@@ -458,6 +458,75 @@ function handleClearSelection() {
   selectedCoords.value.clear();
 }
 
+/**
+ * 功能：消除星星
+ * 将选中障碍物中的 26、27 类型转换为对应的 18、19
+ */
+function handleRemoveStars() {
+  const area = currentSong.value?.xmlObject?.TITLE?.AREA;
+  if (!area || selectedCoords.value.size === 0) return;
+
+  const selectedSet = selectedCoords.value;
+
+  if (currentSong.value)
+    currentSong.value.xmlObject.TITLE.AREA = area.map((item) => {
+      const coord = +item.Coord;
+      if (selectedSet.has(coord)) {
+        // 兼容 xmlObject 中的 Type 或 type 字段
+        const currentType = String(item.Kind ?? item.Kind);
+        if (currentType === '26' || currentType === '27') {
+          const newKind = StarNotetransformMap[currentType];
+          const newNote = NoteType[newKind]
+
+          return {
+            ...item,
+            Kind: newNote.Kind,
+            Level: newNote.Level,
+          };
+        }
+      }
+      return item;
+    });
+
+  is161PopoverOpen.value = false;
+  activePopover.value = null;
+}
+/**
+ * 功能：随机夹星
+ * 对选中障碍物中的 18, 19, 26, 27，按 50% 概率进行转换
+ */
+function handleAddStars() {
+  const area = currentSong.value?.xmlObject?.TITLE?.AREA;
+  if (!area || selectedCoords.value.size === 0) return;
+
+  const selectedSet = selectedCoords.value;
+  const targetTypes = new Set(['18', '19', '26', '27']);
+
+  if (currentSong.value)
+    currentSong.value.xmlObject.TITLE.AREA = area.map((item) => {
+      const coord = +item.Coord;
+      if (selectedSet.has(coord)) {
+        const currentType = String(item.Kind ?? item.Kind) as '18' | '19' | '26' | '27';
+        if (targetTypes.has(currentType)) {
+          // 50% 概率触发类型转换
+          if (Math.random() < 0.5) {
+            const newKind = StarNotetransformMap[currentType];
+            const newNote = NoteType[newKind]
+            return {
+              ...item,
+              Kind: newNote.Kind,
+              Level: newNote.Level,
+            };
+          }
+        }
+      }
+      return item;
+    });
+
+  is161PopoverOpen.value = false;
+  activePopover.value = null;
+}
+
 const actionButtons = computed(() => [
   {
     id: 'align',
@@ -484,6 +553,16 @@ const actionButtons = computed(() => [
         activePopover.value = null;
       }
     }
+  },
+  {
+    id: 'remove-star',
+    label: '消除星星',
+    action: handleRemoveStars
+  },
+  {
+    id: 'add-star',
+    label: '随机夹星',
+    action: handleAddStars
   },
   {
     id: 'delete',
