@@ -19,7 +19,6 @@
         @save="submitDelayChange" />
     </div>
 
-    <!-- 引入刚刚提取出来的独立的音乐播放器组件 -->
     <MusicPlayer ref="playerRef" />
 
     <BpmEditModal v-model="isBpmModalOpen" />

@@ -25,7 +25,7 @@
                 <button @click="selectObstacle(id)"
                   class="group flex items-center justify-center rounded-xl p-2 transition-all shrink-0" :class="[
                     selectedObstacle?.Kind === String(id)
-                      ? 'border border-slate-200 bg-indigo-200'
+                      ? 'border border-zinc-800 bg-zinc-900'
                       : 'border border-slate-200 bg-slate-100 hover:border-slate-300 hover:bg-slate-200/70'
                   ]">
                   <div class="relative flex items-center justify-center shrink-0 max-w-20">
