@@ -174,51 +174,54 @@
         </div>
       </div>
 
-      <!-- 表头 (固定) -->
-      <div
-        class="grid grid-cols-12 gap-2 px-3 py-1.5 text-[11px] font-semibold text-slate-400 border-b border-slate-100">
-        <div class="col-span-2">原序号</div>
-        <div class="col-span-4">Frame (帧)</div>
-        <div class="col-span-4">BPM</div>
-        <div class="col-span-2 text-center">操作</div>
-      </div>
-
-      <!-- BPM 节点列表 -->
-      <div class="max-h-[300px] min-h-[180px] overflow-y-auto space-y-1.5 pr-1 text-xs">
+      <!-- BPM 虚拟列表 (Element Plus el-table-v2) -->
+      <div class="h-[300px] w-full border border-slate-100 rounded-xl overflow-hidden text-xs">
         <template v-if="displayList.length > 0">
-          <div v-for="item in displayList" :key="item.rawIndex"
-            class="grid grid-cols-12 gap-2 items-center rounded-lg border border-slate-100 bg-slate-50/50 p-1.5 transition-all hover:border-slate-200 hover:bg-slate-50">
-            <div class="col-span-2 pl-1 font-mono text-slate-400 font-medium">
-              #{{ item.rawIndex + 1 }}
-            </div>
+          <el-auto-resizer>
+            <template #default="{ height, width }">
+              <el-table-v2 :columns="columns" :data="displayList" :width="width" :height="height" :row-height="40"
+                row-key="rawIndex" fixed>
+                <template #cell="{ column, rowData }">
+                  <!-- 原序号 -->
+                  <template v-if="column.key === 'rawIndex'">
+                    <span class="font-mono text-slate-400 font-medium pl-1">
+                      #{{ rowData.rawIndex + 1 }}
+                    </span>
+                  </template>
 
-            <!-- 修复点：直接响应式绑定 localList 对应的项 -->
-            <div class="col-span-4">
-              <input v-model="localList[item.rawIndex].Frame" type="number" min="0" step="1"
-                :disabled="item.rawIndex === 0" :placeholder="item.rawIndex === 0 ? '0 (固定)' : 'Frame'"
-                class="w-full rounded-md border border-slate-200 bg-white px-2 py-1 font-mono text-xs font-semibold text-slate-700 transition-all focus:border-slate-500 focus:outline-none disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none" />
-            </div>
+                  <!-- Frame 输入框 -->
+                  <template v-else-if="column.key === 'frame'">
+                    <input v-model="localList[rowData.rawIndex].Frame" type="number" min="0" step="1"
+                      :disabled="rowData.rawIndex === 0" :placeholder="rowData.rawIndex === 0 ? '0 (固定)' : 'Frame'"
+                      class="w-full rounded-md border border-slate-200 bg-white px-2 py-1 font-mono text-xs font-semibold text-slate-700 transition-all focus:border-slate-500 focus:outline-none disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none" />
+                  </template>
 
-            <!-- 修复点：直接响应式绑定 localList 对应的项 -->
-            <div class="col-span-4">
-              <input v-model="localList[item.rawIndex].BPM" type="number" min="1" step="0.01" placeholder="BPM"
-                class="w-full rounded-md border border-slate-200 bg-white px-2 py-1 font-mono text-xs font-semibold text-slate-700 transition-all focus:border-slate-500 focus:outline-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none" />
-            </div>
+                  <!-- BPM 输入框 -->
+                  <template v-else-if="column.key === 'bpm'">
+                    <input v-model="localList[rowData.rawIndex].BPM" type="number" min="1" step="0.01" placeholder="BPM"
+                      class="w-full rounded-md border border-slate-200 bg-white px-2 py-1 font-mono text-xs font-semibold text-slate-700 transition-all focus:border-slate-500 focus:outline-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none" />
+                  </template>
 
-            <div class="col-span-2 flex justify-center">
-              <button type="button" :disabled="item.rawIndex === 0"
-                class="flex h-7 w-7 items-center justify-center rounded-md text-slate-400 transition-colors hover:bg-rose-50 hover:text-rose-600 disabled:cursor-not-allowed disabled:opacity-20 disabled:hover:bg-transparent disabled:hover:text-slate-400 cursor-pointer"
-                title="删除此 BPM 节点" @click="removeItemByRawIndex(item.rawIndex)">
-                <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round"
-                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                </svg>
-              </button>
-            </div>
-          </div>
+                  <!-- 操作按钮 -->
+                  <template v-else-if="column.key === 'action'">
+                    <div class="flex justify-center w-full">
+                      <button type="button" :disabled="rowData.rawIndex === 0"
+                        class="flex h-7 w-7 items-center justify-center rounded-md text-slate-400 transition-colors hover:bg-rose-50 hover:text-rose-600 disabled:cursor-not-allowed disabled:opacity-20 disabled:hover:bg-transparent disabled:hover:text-slate-400 cursor-pointer"
+                        title="删除此 BPM 节点" @click="removeItemByRawIndex(rowData.rawIndex)">
+                        <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round"
+                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                      </button>
+                    </div>
+                  </template>
+                </template>
+              </el-table-v2>
+            </template>
+          </el-auto-resizer>
         </template>
 
-        <div v-else class="py-8 text-center text-slate-400">
+        <div v-else class="py-12 text-center text-slate-400">
           未检索到符合条件的 BPM 节点
         </div>
       </div>
@@ -307,6 +310,14 @@ const isReversed = ref(false)
 const showRampPanel = ref(false)
 const showDeletePanel = ref(false)
 
+// Element Plus el-table-v2 列配置
+const columns = [
+  { key: 'rawIndex', title: '原序号', dataKey: 'rawIndex', width: 90 },
+  { key: 'frame', title: 'Frame (帧)', dataKey: 'Frame', width: 220 },
+  { key: 'bpm', title: 'BPM', dataKey: 'BPM', width: 200 },
+  { key: 'action', title: '操作', width: 80, align: 'center' as const },
+]
+
 // 列表筛选表单
 const filterForm = reactive({
   minFrame: '' as number | '',
@@ -362,12 +373,18 @@ const pendingDeleteCount = computed(() => {
     return 0
   }
 
-  return localList.value.filter((item, index) => {
-    if (index === 0) return false
+  let count = 0
+  const list = localList.value
+  const len = list.length
+  for (let i = 1; i < len; i++) {
+    const item = list[i]
     const frameVal = parseFloat(item.Frame) || 0
     const bpmVal = parseFloat(item.BPM) || 0
-    return frameVal >= minF && frameVal <= maxF && bpmVal >= minB && bpmVal <= maxB
-  }).length
+    if (frameVal >= minF && frameVal <= maxF && bpmVal >= minB && bpmVal <= maxB) {
+      count++
+    }
+  }
+  return count
 })
 
 const executeBatchDelete = () => {
@@ -387,7 +404,7 @@ const executeBatchDelete = () => {
   toggleDeletePanel(false)
 }
 
-// 三阶贝塞尔曲线求解器 (已修复二分循环死锁)
+// 三阶贝塞尔曲线求解器
 const cubicBezier = (mX1: number, mY1: number, mX2: number, mY2: number) => {
   if (mX1 === mY1 && mX2 === mY2) return (t: number) => t
 
@@ -462,7 +479,7 @@ const getEasingFunction = (): ((t: number) => number) | null => {
   return cubicBezier(x1, y1, x2, y2)
 }
 
-// 批量生成渐变 BPM 节点
+// 批量生成渐变 BPM 节点 (优化算法)
 const generateRampNodes = () => {
   errorMessage.value = ''
   const startF = parseFloat(rampForm.startFrame)
@@ -492,25 +509,29 @@ const generateRampNodes = () => {
 
   const totalFrameDiff = endF - startF
   const totalBpmDiff = endB - startB
-  const newNodes: BpmItem[] = []
+  const count = Math.floor(totalFrameDiff / stepF) + 1
+  const newNodes: BpmItem[] = new Array(count)
 
+  let idx = 0
   for (let currentF = startF; currentF < endF; currentF += stepF) {
     const t = (currentF - startF) / totalFrameDiff
-    const progress = easeFn(Math.min(Math.max(t, 0), 1))
+    const progress = easeFn(t < 0 ? 0 : t > 1 ? 1 : t)
     const currentBpm = startB + totalBpmDiff * progress
+    const bpmFormatted = String(Math.round(currentBpm * 100) / 100)
 
-    newNodes.push({
+    newNodes[idx++] = {
       Frame: String(Math.round(currentF)),
-      BPM: String(Number(currentBpm.toFixed(2))),
-      OriginalBPM: String(Number(currentBpm.toFixed(2))),
-    })
+      BPM: bpmFormatted,
+      OriginalBPM: bpmFormatted,
+    }
   }
 
-  newNodes.push({
+  const endBpmFormatted = String(Math.round(endB * 100) / 100)
+  newNodes[idx] = {
     Frame: String(Math.round(endF)),
-    BPM: String(Number(endB.toFixed(2))),
-    OriginalBPM: String(Number(endB.toFixed(2))),
-  })
+    BPM: endBpmFormatted,
+    OriginalBPM: endBpmFormatted,
+  }
 
   localList.value = [...localList.value, ...newNodes]
   sortAndDedupLocalList()
@@ -518,18 +539,26 @@ const generateRampNodes = () => {
   toggleRampPanel(false)
 }
 
-// 排序 & 按 Frame 帧进行去重 (相同 Frame 留后者)
+// 排序 & 按 Frame 帧去重
 const sortAndDedupLocalList = () => {
   if (localList.value.length === 0) return
 
   const map = new Map<number, BpmItem>()
-  for (const item of localList.value) {
+  const list = localList.value
+  const len = list.length
+  for (let i = 0; i < len; i++) {
+    const item = list[i]
     const frame = Math.max(0, Math.round(parseFloat(item.Frame) || 0))
     map.set(frame, { ...item, Frame: String(frame) })
   }
 
   const sortedKeys = Array.from(map.keys()).sort((a, b) => a - b)
-  const result = sortedKeys.map((k) => map.get(k)!)
+  const sortedLen = sortedKeys.length
+  const result: BpmItem[] = new Array(sortedLen)
+
+  for (let i = 0; i < sortedLen; i++) {
+    result[i] = map.get(sortedKeys[i])!
+  }
 
   if (result.length > 0) {
     result[0].Frame = '0'
@@ -545,7 +574,7 @@ const resetFilter = () => {
   filterForm.maxBpm = ''
 }
 
-// 计算过滤后显示的列表项
+// 计算过滤后给 el-table-v2 渲染的全量数据
 const displayList = computed<DisplayBpmItem[]>(() => {
   const minF = filterForm.minFrame !== '' ? Number(filterForm.minFrame) : -Infinity
   const maxF = filterForm.maxFrame !== '' ? Number(filterForm.maxFrame) : Infinity
@@ -553,16 +582,20 @@ const displayList = computed<DisplayBpmItem[]>(() => {
   const maxB = filterForm.maxBpm !== '' ? Number(filterForm.maxBpm) : Infinity
 
   const result: DisplayBpmItem[] = []
+  const list = localList.value
+  const len = list.length
 
-  for (let i = 0; i < localList.value.length; i++) {
-    const item = localList.value[i]
+  for (let i = 0; i < len; i++) {
+    const item = list[i]
     const frameVal = parseFloat(item.Frame) || 0
     const bpmVal = parseFloat(item.BPM) || 0
 
     if (frameVal >= minF && frameVal <= maxF && bpmVal >= minB && bpmVal <= maxB) {
       result.push({
-        ...item,
-        rawIndex: i, // 关键：精准记录在原始 localList 中的数组索引
+        Frame: item.Frame,
+        BPM: item.BPM,
+        OriginalBPM: item.OriginalBPM,
+        rawIndex: i, // 维持原数组下标引用
       })
     }
   }
@@ -600,7 +633,7 @@ const initLocalData = () => {
   localList.value = rawList
 }
 
-// 单点添加（已支持即时响应与快速录入）
+// 单点添加
 const addItem = () => {
   errorMessage.value = ''
   const lastItem = localList.value[localList.value.length - 1]
@@ -628,7 +661,8 @@ const handleClose = (val: boolean) => {
 const handleSave = () => {
   errorMessage.value = ''
 
-  for (let i = 0; i < localList.value.length; i++) {
+  const len = localList.value.length
+  for (let i = 0; i < len; i++) {
     const item = localList.value[i]
     const frameNum = parseFloat(item.Frame)
     const bpmNum = parseFloat(item.BPM)

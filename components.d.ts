@@ -12,6 +12,7 @@ export {}
 declare module 'vue' {
   export interface GlobalComponents {
     BpmEditModal: typeof import('./src/components/BpmEditModal.vue')['default']
+    ElAutoResizer: typeof import('element-plus/es')['ElAutoResizer']
     ElButton: typeof import('element-plus/es')['ElButton']
     ElColorPicker: typeof import('element-plus/es')['ElColorPicker']
     ElDialog: typeof import('element-plus/es')['ElDialog']
@@ -25,6 +26,7 @@ declare module 'vue' {
     ElPopover: typeof import('element-plus/es')['ElPopover']
     ElSlider: typeof import('element-plus/es')['ElSlider']
     ElSwitch: typeof import('element-plus/es')['ElSwitch']
+    ElTableV2: typeof import('element-plus/es')['ElTableV2']
     ElUpload: typeof import('element-plus/es')['ElUpload']
     GridConfigPanel: typeof import('./src/components/GridConfigPanel.vue')['default']
     MusicPlayer: typeof import('./src/components/MusicPlayer.vue')['default']
