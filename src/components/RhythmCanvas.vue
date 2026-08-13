@@ -16,6 +16,7 @@ import { storeToRefs } from 'pinia'
 import * as PIXI from 'pixi.js'
 import { ref, onMounted, onUnmounted, watch, computed } from 'vue'
 import spriteUrl from '@/assets/sprites.png'
+import { NoteType } from '@/note'
 
 export interface Obstacle {
   Coord: string
@@ -57,6 +58,8 @@ const {
   selectedBgAlpha,
   scrollbarWidth,
   gridLineColor,
+  randomType,
+  repeatChance
 } = storeToRefs(globalConfigStore)
 
 const hoverState = ref<{ coord: number; offsetXRatio: number } | null>(null)
@@ -115,6 +118,30 @@ function generateObstacle(
 
   const prevObsKind = +(prevObs?.Kind ?? 0)
   const selectedObstacleKind = +selectedObstacle.value.Kind
+
+  /**
+   * 抽取随机障碍物
+   */
+  if (selectedObstacleKind === 161) {
+    let actualKind = selectedObstacleKind;
+
+
+    // 1. 检查上一个障碍物是否存在，且是否在当前可抽取的随机池里
+    const canRepeat = prevObsKind != null && randomType.value.includes(prevObsKind);
+
+    if (canRepeat && Math.random() < repeatChance.value / 100) {
+      actualKind = prevObsKind; // 触发重复
+    } else {
+      // 过滤掉上一个类型，只在“剩下的”类型里抽
+      const otherPool = randomType.value.filter(kind => kind !== prevObsKind);
+      const targetPool = otherPool.length > 0 ? otherPool : randomType.value; // 兜底防止池子被过滤空了
+      actualKind = targetPool[Math.floor(Math.random() * targetPool.length)];
+    }
+
+    return NoteType[actualKind];
+  }
+
+
 
   console.log({
     prevObs, nextObs, offsetXRatio, selectedObstacle: selectedObstacle.value
@@ -218,11 +245,13 @@ function computePreviewObstacle() {
     }
 
     previewObstacleState.value = { obstacle: obs, error: null }
-  } catch (err: any) {
-    previewObstacleState.value = {
-      obstacle: null,
-      error: err?.message || '非法位置',
-    }
+  } catch (err) {
+    if (err instanceof Error)
+      previewObstacleState.value = {
+        obstacle: null,
+        error: err?.message || '非法位置',
+      }
+    console.error(err)
   }
 }
 

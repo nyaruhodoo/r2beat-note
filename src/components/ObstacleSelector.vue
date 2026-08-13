@@ -15,22 +15,37 @@
     <div class="flex flex-1 flex-col overflow-hidden min-h-0">
       <!-- 滚动视图区：上面的内容溢出时在此处出现滚动条 -->
       <div class="flex-1 overflow-y-auto pr-1">
-        <!-- 视图 1：选择器列表 -->
+        <!-- 视图 1：选择器列表 (主列表保持默认布局) -->
         <div v-show="activeView === 'selector'" class="flex flex-col gap-2.5">
           <div v-for="(row, rowIndex) in layoutConfig" :key="rowIndex"
             class="flex flex-row items-center gap-2.5 shrink-0">
             <template v-for="id in row" :key="id">
-              <button @click="selectObstacle(id)"
-                class="group flex items-center justify-center rounded-xl p-2 transition-all shrink-0" :class="[
-                  selectedObstacle?.Kind === String(id)
-                    ? 'border border-slate-200 bg-indigo-200'
-                    : 'border border-slate-200 bg-slate-100 hover:border-slate-300 hover:bg-slate-200/70'
-                ]">
-                <div class="relative flex items-center justify-center shrink-0 max-w-20">
-                  <img :src="getObstacleImageUrl(id)" :alt="`Obstacle ${id}`"
-                    class="h-full w-full object-contain pointer-events-none" />
-                </div>
-              </button>
+              <div class="relative shrink-0">
+                <!-- 障碍物主选择按钮 -->
+                <button @click="selectObstacle(id)"
+                  class="group flex items-center justify-center rounded-xl p-2 transition-all shrink-0" :class="[
+                    selectedObstacle?.Kind === String(id)
+                      ? 'border border-slate-200 bg-indigo-200'
+                      : 'border border-slate-200 bg-slate-100 hover:border-slate-300 hover:bg-slate-200/70'
+                  ]">
+                  <div class="relative flex items-center justify-center shrink-0 max-w-20">
+                    <img :src="getObstacleImageUrl(id)" :alt="`Obstacle ${id}`"
+                      class="h-full w-full object-contain pointer-events-none" />
+                  </div>
+                </button>
+
+                <!-- 特殊障碍物 ID 161 专属配置按钮 -->
+                <button v-if="String(id) === '161'" @click.stop="toggle161Popover"
+                  class="absolute -top-1.5 -right-1.5 z-10 flex h-6 w-6 items-center justify-center rounded-full bg-gradient-to-tr from-indigo-600 to-violet-500 text-white shadow-md transition-all hover:scale-110 hover:shadow-indigo-500/30 active:scale-95"
+                  title="配置随机障碍物池">
+                  <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                </button>
+              </div>
             </template>
           </div>
         </div>
@@ -72,7 +87,7 @@
           <!-- 点击气泡框外部遮罩关闭Popover -->
           <div v-if="activePopover" class="fixed inset-0 z-10" @click="activePopover = null"></div>
 
-          <!-- 1. 对齐/平移障碍 气泡弹出框 (带平滑过渡动画) -->
+          <!-- 1. 对齐/平移障碍 气泡弹出框 -->
           <Transition enter-active-class="transition duration-150 ease-out"
             enter-from-class="opacity-0 translate-y-1 scale-95" enter-to-class="opacity-100 translate-y-0 scale-100"
             leave-active-class="transition duration-100 ease-in" leave-from-class="opacity-100 translate-y-0 scale-100"
@@ -96,7 +111,7 @@
             </div>
           </Transition>
 
-          <!-- 2. 复制副本 气泡弹出框 (带平滑过渡动画) -->
+          <!-- 2. 复制副本 气泡弹出框 -->
           <Transition enter-active-class="transition duration-150 ease-out"
             enter-from-class="opacity-0 translate-y-1 scale-95" enter-to-class="opacity-100 translate-y-0 scale-100"
             leave-active-class="transition duration-100 ease-in" leave-from-class="opacity-100 translate-y-0 scale-100"
@@ -130,193 +145,301 @@
         </div>
       </div>
     </div>
+
+    <!-- 161 专属随机障碍池配置框 (使用 Teleport 挂载到 body 下) -->
+    <Teleport to="body">
+      <!-- 弹框全屏遮罩：点击空白处关闭 -->
+      <div v-if="is161PopoverOpen" class="fixed inset-0 z-[9998]" @click="is161PopoverOpen = false"></div>
+
+      <!-- 弹框主体 -->
+      <Transition enter-active-class="transition duration-150 ease-out"
+        enter-from-class="opacity-0 translate-y-1 scale-95" enter-to-class="opacity-100 translate-y-0 scale-100"
+        leave-active-class="transition duration-100 ease-in" leave-from-class="opacity-100 translate-y-0 scale-100"
+        leave-to-class="opacity-0 translate-y-1 scale-95">
+        <div v-if="is161PopoverOpen" :style="popoverStyle"
+          class="fixed z-[9999] w-64 rounded-2xl border border-slate-200/90 bg-white/95 p-3.5 shadow-2xl backdrop-blur-md ring-1 ring-black/5"
+          @click.stop>
+          <!-- 头部标题 -->
+          <div class="flex items-center justify-between pb-2 mb-2.5 border-b border-slate-100">
+            <div class="flex items-center gap-1.5">
+              <span class="text-xs font-bold text-slate-800">随机障碍配置</span>
+            </div>
+            <button @click="is161PopoverOpen = false"
+              class="text-slate-400 hover:text-slate-600 text-xs p-0.5 rounded hover:bg-slate-100 transition-colors">✕</button>
+          </div>
+
+          <!-- 1. 障碍物选择区 -->
+          <div class="mb-3">
+            <div class="flex items-center justify-between mb-1.5">
+              <span class="text-[11px] font-semibold text-slate-500">候选障碍池</span>
+              <span class="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold text-slate-700">
+                已选 {{ globalConfigStore.randomType?.length || 0 }} 项
+              </span>
+            </div>
+
+            <!-- 1. 添加 p-1 给四周留出边框缓冲，解决滚动条/边缘裁切问题 -->
+            <div class="grid grid-cols-2 gap-1.5 max-h-60 overflow-y-auto p-1">
+              <button v-for="item in defaultGlobalConfig.randomType" :key="item" @click="toggleRandomType(item)"
+                class="group flex h-10 w-full items-center justify-center rounded-lg border p-1 transition-all shrink-0 active:scale-95"
+                :class="[
+                  isRandomTypeSelected(item)
+                    ? 'border-slate-900 bg-slate-900 shadow-md ring-2 ring-slate-900/20'
+                    : 'border-slate-200/80 bg-slate-50 hover:border-slate-300 hover:bg-slate-100'
+                ]">
+                <img :src="getObstacleImageUrl(String(item))" :alt="`Obstacle ${item}`"
+                  class="h-full w-full object-contain pointer-events-none" />
+              </button>
+            </div>
+          </div>
+
+          <!-- 2. 重复概率控制区 (新增) -->
+          <div class="pt-2.5 border-t border-slate-100">
+            <div class="flex items-center justify-between mb-1.5">
+              <span class="text-[11px] font-semibold text-slate-500">重复出现概率</span>
+              <div class="flex items-center gap-1">
+                <input type="number" min="0" max="100" v-model.number="globalConfigStore.repeatChance"
+                  class="w-12 rounded-md border border-slate-200 bg-slate-50 px-1 py-0.5 text-center text-xs font-bold text-indigo-600 focus:border-indigo-500 focus:bg-white focus:outline-none" />
+                <span class="text-[11px] text-slate-400 font-medium">%</span>
+              </div>
+            </div>
+            <div class="flex items-center gap-2">
+              <input type="range" min="0" max="100" step="1" v-model.number="globalConfigStore.repeatChance"
+                class="h-1.5 w-full cursor-pointer appearance-none rounded-lg bg-slate-200 accent-indigo-600 focus:outline-none" />
+            </div>
+          </div>
+        </div>
+      </Transition>
+    </Teleport>
   </aside>
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue';
-import { useAppStore } from '@/store/store';
+import { computed, ref, Teleport, type CSSProperties } from 'vue';
+import { useAppStore, type NoteData } from '@/store/store';
 import { NoteType } from '@/note';
 import { storeToRefs } from 'pinia';
 import ObstacleConfig from './ObstacleConfig.vue';
 import { twMerge } from 'tailwind-merge';
+import { useGlobalConfigStore, defaultGlobalConfig } from '@/store/global-config';
 
-export interface NoteData {
-  Coord: string
-  Kind: string
-  Level: string
-  FxSndIndex: string
-}
 
 const activeView = ref<'selector' | 'config'>('selector');
 const activePopover = ref<'align' | 'duplicate' | null>(null);
 
+// 161 专属配置弹窗状态与定位
+const is161PopoverOpen = ref(false);
+const popoverStyle = ref<CSSProperties>({});
+
 const alignOffset = ref<number>(0);
 const duplicateBaseCoord = ref<number>(0);
 
+const globalConfigStore = useGlobalConfigStore();
 const store = useAppStore();
 const { selectedObstacle, selectedCoords, currentSong } = storeToRefs(store);
 
-const obstacles = computed<NoteData[]>(() => {
-  const areaData = currentSong.value?.xmlObject?.TITLE?.AREA
-  if (!areaData) return []
-  return areaData
-})
+const obstacles = computed(() => {
+  const areaData = currentSong.value?.xmlObject?.TITLE?.AREA;
+  if (!areaData) return [];
+  return areaData;
+});
 
+// 主选择器布局恢复原结构
 const layoutConfig = ref<string[][]>([
   ['19', '18', '145', '142'],
   ['26', '27'],
   ['22', '23'],
   ['20', '21', '130', '133'],
   ['16', '17', '136', '139'],
-  ['24'],
+  ['24', '161'],
 ]);
 
 function getObstacleImageUrl(id: string) {
   return new URL(`../assets/note/${id}.png`, import.meta.url).href;
 }
 
+/** 切换 161 配置气泡框开合，并计算 Body Teleport 的 Fixed 绝对定位 */
+function toggle161Popover(event: MouseEvent) {
+  activePopover.value = null;
+
+  if (is161PopoverOpen.value) {
+    is161PopoverOpen.value = false;
+    return;
+  }
+
+  // 获取触发按钮在页面中的位置
+  const target = event.currentTarget as HTMLElement;
+  if (target) {
+    const rect = target.getBoundingClientRect();
+    const popoverWidth = 256; // 对应 w-64 (256px)
+
+    // 计算水平位置：避免超界
+    let left = rect.right - popoverWidth;
+    if (left < 10) left = 10;
+    if (left + popoverWidth > window.innerWidth - 10) {
+      left = window.innerWidth - popoverWidth - 10;
+    }
+
+    // 默认在按钮上方 8px 显示
+    const bottom = window.innerHeight - rect.top + 8;
+
+    popoverStyle.value = {
+      position: 'fixed',
+      left: `${left}px`,
+      bottom: `${bottom}px`,
+    };
+  }
+
+  is161PopoverOpen.value = true;
+}
+
+/** 判断随机障碍物选项是否已在 store 中被选中 */
+function isRandomTypeSelected(item: number): boolean {
+  return globalConfigStore.randomType?.includes(item) ?? false;
+}
+
+/** 切换某个随机障碍物项的选择状态并同步至 Store (最少保留 1 项) */
+function toggleRandomType(item: number) {
+  const current = globalConfigStore.randomType || [];
+  if (current.includes(item)) {
+    // 只有当选中项大于 1 时才可以取消勾选，保证至少选择 1 项
+    if (current.length > 1) {
+      globalConfigStore.randomType = current.filter(id => id !== item);
+    }
+  } else {
+    globalConfigStore.randomType = [...current, item];
+  }
+}
+
 /**
  * 双指针获取已选障碍物
  */
 function getSelectedObstacles(): NoteData[] {
-  const coordsList = Array.from(selectedCoords.value).sort((a, b) => a - b)
-  const obs = obstacles.value
-  const result: NoteData[] = []
+  const coordsList = Array.from(selectedCoords.value).sort((a, b) => a - b);
+  const obs = obstacles.value;
+  const result: NoteData[] = [];
 
-  let i = 0
-  let j = 0
+  let i = 0;
+  let j = 0;
 
   while (i < coordsList.length && j < obs.length) {
-    const targetCoord = coordsList[i]
-    const currentCoord = +obs[j].Coord
+    const targetCoord = coordsList[i];
+    const currentCoord = +obs[j].Coord;
 
     if (currentCoord === targetCoord) {
-      result.push(obs[j])
-      i++
-      j++
+      result.push(obs[j]);
+      i++;
+      j++;
     } else if (currentCoord < targetCoord) {
-      j++
+      j++;
     } else {
-      i++
+      i++;
     }
   }
 
-  return result
+  return result;
 }
 
 /**
  * 批量删除
  */
 function handleBatchDelete() {
-  if (!currentSong.value?.xmlObject?.TITLE?.AREA || selectedCoords.value.size === 0) return
+  if (!currentSong.value?.xmlObject?.TITLE?.AREA || selectedCoords.value.size === 0) return;
 
-  const selectedSet = selectedCoords.value
+  const selectedSet = selectedCoords.value;
   const plainArea = currentSong.value.xmlObject.TITLE.AREA.filter(
     (item: NoteData) => !selectedSet.has(+item.Coord)
-  )
+  );
 
-  currentSong.value.xmlObject.TITLE.AREA = plainArea
-  handleClearSelection()
+  currentSong.value.xmlObject.TITLE.AREA = plainArea;
+  handleClearSelection();
 }
 
 /**
  * 功能 1：对齐/偏移障碍物 (自动碰撞检测与覆盖)
  */
 function handleAlignSubmit() {
-  const area = currentSong.value?.xmlObject?.TITLE?.AREA
-  if (!area || selectedCoords.value.size === 0) return
+  const area = currentSong.value?.xmlObject?.TITLE?.AREA;
+  if (!area || selectedCoords.value.size === 0) return;
 
-  const offset = Number(alignOffset.value) || 0
+  const offset = Number(alignOffset.value) || 0;
   if (offset === 0) {
-    activePopover.value = null
-    return
+    activePopover.value = null;
+    return;
   }
 
-  const selectedSet = selectedCoords.value
-  const selectedObs = getSelectedObstacles()
-  if (selectedObs.length === 0) return
+  const selectedSet = selectedCoords.value;
+  const selectedObs = getSelectedObstacles();
+  if (selectedObs.length === 0) return;
 
-  // 1. 计算移动后的目标 Coord 列表 (保持唯一性)
-  const movedMap = new Map<number, NoteData>()
-  const newSelectedCoords = new Set<number>()
+  const movedMap = new Map<number, NoteData>();
+  const newSelectedCoords = new Set<number>();
 
   selectedObs.forEach(note => {
-    const newCoord = Math.max(0, +note.Coord + offset)
-    movedMap.set(newCoord, { ...note, Coord: String(newCoord) })
-    newSelectedCoords.add(newCoord)
-  })
+    const newCoord = Math.max(0, +note.Coord + offset);
+    movedMap.set(newCoord, { ...note, Coord: String(newCoord) });
+    newSelectedCoords.add(newCoord);
+  });
 
-  // 2. 在纯 JS 数组中剔除:
-  //    - 原本选中的障碍物
-  //    - 与新位置发生冲突/重叠的障碍物 (覆盖机制)
   const plainArea = (area as NoteData[]).filter((item: NoteData) => {
-    const coord = +item.Coord
-    if (selectedSet.has(coord)) return false
-    if (movedMap.has(coord)) return false
-    return true
-  })
+    const coord = +item.Coord;
+    if (selectedSet.has(coord)) return false;
+    if (movedMap.has(coord)) return false;
+    return true;
+  });
 
-  // 3. 将平移后的障碍物插入纯 JS 数组
-  plainArea.push(...Array.from(movedMap.values()))
+  plainArea.push(...Array.from(movedMap.values()));
+  plainArea.sort((a, b) => +a.Coord - +b.Coord);
 
-  // 4. 一次性进行非响应式排序并赋值，避免 Proxy 频繁触发
-  plainArea.sort((a, b) => +a.Coord - +b.Coord)
   if (currentSong.value?.xmlObject.TITLE.AREA)
-    currentSong.value.xmlObject.TITLE.AREA = plainArea
+    currentSong.value.xmlObject.TITLE.AREA = plainArea;
 
-  selectedCoords.value = newSelectedCoords
-  activePopover.value = null
+  selectedCoords.value = newSelectedCoords;
+  activePopover.value = null;
 }
 
 /**
  * 功能 2：区间清空 + 高性能等间隔复制
  */
 function handleDuplicateSubmit() {
-  const area = currentSong.value?.xmlObject?.TITLE?.AREA
-  if (!area || selectedCoords.value.size === 0) return
+  const area = currentSong.value?.xmlObject?.TITLE?.AREA;
+  if (!area || selectedCoords.value.size === 0) return;
 
-  const targetBase = Math.max(0, Number(duplicateBaseCoord.value) || 0)
-  const selectedObs = getSelectedObstacles()
-  if (selectedObs.length === 0) return
+  const targetBase = Math.max(0, Number(duplicateBaseCoord.value) || 0);
+  const selectedObs = getSelectedObstacles();
+  if (selectedObs.length === 0) return;
 
-  // 1. 获取原选中障碍物的基准与覆盖区间 [targetBase, targetEnd]
-  const coords = selectedObs.map(item => +item.Coord)
-  const minCoord = Math.min(...coords)
-  const maxCoord = Math.max(...coords)
-  const span = maxCoord - minCoord
-  const targetEnd = targetBase + span
+  const coords = selectedObs.map(item => +item.Coord);
+  const minCoord = Math.min(...coords);
+  const maxCoord = Math.max(...coords);
+  const span = maxCoord - minCoord;
+  const targetEnd = targetBase + span;
 
-  // 2. 映射出目标副本数据
-  const newObstacles: NoteData[] = []
-  const newSelectedCoords = new Set<number>()
+  const newObstacles: NoteData[] = [];
+  const newSelectedCoords = new Set<number>();
 
   selectedObs.forEach(item => {
-    const relativeOffset = +item.Coord - minCoord
-    const newCoord = targetBase + relativeOffset
+    const relativeOffset = +item.Coord - minCoord;
+    const newCoord = targetBase + relativeOffset;
     newObstacles.push({
       ...item,
       Coord: String(newCoord)
-    })
-    newSelectedCoords.add(newCoord)
-  })
+    });
+    newSelectedCoords.add(newCoord);
+  });
 
-  // 3. 先清空目标区间 [targetBase, targetEnd] 内的所有原有障碍物
   const plainArea = (area as NoteData[]).filter((item: NoteData) => {
-    const c = +item.Coord
-    return c < targetBase || c > targetEnd
-  })
+    const c = +item.Coord;
+    return c < targetBase || c > targetEnd;
+  });
 
-  // 4. 追加新复制的障碍物
-  plainArea.push(...newObstacles)
+  plainArea.push(...newObstacles);
+  plainArea.sort((a, b) => +a.Coord - +b.Coord);
 
-  // 5. 使用纯 JS 数组完成排序后统一更新，大幅提升性能
-  plainArea.sort((a, b) => +a.Coord - +b.Coord)
   if (currentSong.value?.xmlObject.TITLE.AREA)
-    currentSong.value.xmlObject.TITLE.AREA = plainArea
+    currentSong.value.xmlObject.TITLE.AREA = plainArea;
 
-  selectedCoords.value = newSelectedCoords
-  activePopover.value = null
+  selectedCoords.value = newSelectedCoords;
+  activePopover.value = null;
 }
 
 function selectObstacle(id: string) {
@@ -327,12 +450,12 @@ function selectObstacle(id: string) {
 }
 
 function handleSelectAll() {
-  const newSet = new Set(obstacles.value.map(obs => +obs.Coord))
-  selectedCoords.value = newSet
+  const newSet = new Set(obstacles.value.map(obs => +obs.Coord));
+  selectedCoords.value = newSet;
 }
 
 function handleClearSelection() {
-  selectedCoords.value.clear()
+  selectedCoords.value.clear();
 }
 
 const actionButtons = computed(() => [
@@ -340,11 +463,12 @@ const actionButtons = computed(() => [
     id: 'align',
     label: '对齐障碍',
     action: () => {
+      is161PopoverOpen.value = false;
       if (activePopover.value !== 'align') {
-        alignOffset.value = 0 // 打开时重置为 0
-        activePopover.value = 'align'
+        alignOffset.value = 0;
+        activePopover.value = 'align';
       } else {
-        activePopover.value = null
+        activePopover.value = null;
       }
     }
   },
@@ -352,11 +476,12 @@ const actionButtons = computed(() => [
     id: 'duplicate',
     label: '复制副本',
     action: () => {
+      is161PopoverOpen.value = false;
       if (activePopover.value !== 'duplicate') {
-        duplicateBaseCoord.value = 0 // 打开时重置为 0
-        activePopover.value = 'duplicate'
+        duplicateBaseCoord.value = 0;
+        activePopover.value = 'duplicate';
       } else {
-        activePopover.value = null
+        activePopover.value = null;
       }
     }
   },
@@ -364,7 +489,10 @@ const actionButtons = computed(() => [
     id: 'delete',
     label: '批量删除',
     customClass: 'bg-rose-50 text-rose-600 hover:bg-rose-100 active:bg-rose-200',
-    action: handleBatchDelete
+    action: () => {
+      is161PopoverOpen.value = false;
+      handleBatchDelete();
+    }
   }
-])
+]);
 </script>

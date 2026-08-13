@@ -37,4 +37,7 @@ export const NoteType: Record<
   '135': { Coord: '0', Kind: '135', Level: '5', FxSndIndex: '0' },
   '136': { Coord: '0', Kind: '136', Level: '5', FxSndIndex: '0' },
   '24': { Coord: '0', Kind: '24', Level: '4', FxSndIndex: '0' }, // 原 jumpPlatform
+
+  // 特殊处理随机
+  '161': { Coord: '0', Kind: '161', Level: '0', FxSndIndex: '0' },
 }

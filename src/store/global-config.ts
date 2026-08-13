@@ -33,7 +33,12 @@ export interface GlobalConfig {
   /** 音乐总音量 */
   musicVolume: number
 
+  // 人工修正歌曲延迟
   fixMusicDelay: number
+
+  // 允许的随机障碍物类型
+  randomType: number[]
+  repeatChance: number
 }
 
 export const defaultGlobalConfig = {
@@ -58,8 +63,10 @@ export const defaultGlobalConfig = {
 
   musicVolume: 1,
 
-  // 人工修正歌曲延迟
   fixMusicDelay: 0.1,
+
+  randomType: [16, 17, 18, 19, 20, 21, 22, 23, 26, 27],
+  repeatChance: 0.1,
 }
 
 export const useGlobalConfigStore = defineStore('globalConfig', {
