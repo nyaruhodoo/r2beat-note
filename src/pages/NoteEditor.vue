@@ -38,7 +38,7 @@
 </template>
 
 <script setup lang="ts">
-import { onUnmounted, ref, toRaw, toRef, watch } from 'vue'
+import { computed, onUnmounted, ref, toRaw, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { XMLBuilder } from 'fast-xml-parser'
 import { ElMessage } from 'element-plus'
@@ -53,7 +53,7 @@ import { useAppStore } from '@/store/store'
 import { useSongStorage } from '@/db/useSongStorage'
 import { deepToRaw } from '@/utils/utils'
 
-// @ts-expect-error  iconv需要这个东西
+// @ts-expect-error iconv需要这个东西
 window.Buffer = Buffer
 
 const route = useRoute()
@@ -65,12 +65,24 @@ const { loading, getSongById, updateSong } = useSongStorage()
 const id = Number(Array.isArray(route.params.id) ? route.params.id[0] : route.params.id)
 
 // ==================== 历史记录与撤回重做逻辑 ====================
-const currentSongRef = toRef(appStore, 'currentSong')
+// 使用 computed 将历史记录精确限定在 appStore.currentSong.xmlObject.AREA 上
+const areaRef = computed({
+  get: () => appStore.currentSong?.xmlObject?.TITLE.AREA,
+  set: (val) => {
+    if (appStore.currentSong?.xmlObject) {
+      appStore.currentSong.xmlObject.TITLE.AREA = val!
+    }
+  }
+})
 
-const { undo, redo, clear } = useRefHistory(currentSongRef, {
+// 仅记录 xmlObject 的变化历史
+const { undo, redo, clear } = useRefHistory(areaRef, {
   deep: true,
-  // 使用 deepToRaw + structuredClone 避免 Vue Proxy 导致 DataCloneError，同时深拷贝状态
-  clone: (val) => (val ? structuredClone(deepToRaw(val)) : null)
+  // 仅对 xmlObject 纯 JavaScript 对象执行深拷贝，性能高且不会触发 DataCloneError
+  clone: (val) => {
+    if (!val) return
+    return structuredClone(deepToRaw(val))
+  }
 })
 
 // 监听键盘快捷键：Ctrl/Cmd + Z (撤回), Ctrl/Cmd + Y 或 Ctrl/Cmd + Shift + Z (重做)

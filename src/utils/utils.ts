@@ -1,4 +1,4 @@
-import { toRaw } from 'vue'
+import { markRaw, toRaw } from 'vue'
 
 export const getDecimalPlaces = (num: number) => {
   if (Math.floor(num) === num) return 0
@@ -30,4 +30,9 @@ export function deepToRaw<T>(val: T): T {
     res[key] = deepToRaw((unwrapped as Record<string, any>)[key])
   }
   return res as T
+}
+
+// 辅助函数：专门脱敏 File / Blob 对象，保留数组和对象的响应性
+export function sanitizeFile<T>(file: T): T {
+  return file instanceof Blob || file instanceof File ? (markRaw(file) as T) : file
 }

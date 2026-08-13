@@ -42,7 +42,7 @@ const props = withDefaults(
 )
 
 const appStore = useAppStore()
-const { currentSong, selectedObstacle } = storeToRefs(appStore)
+const { currentSong, selectedObstacle, selectedCoords } = storeToRefs(appStore)
 
 const globalConfigStore = useGlobalConfigStore()
 const {
@@ -65,12 +65,13 @@ const isLeftMouseDown = ref(false)
 
 let lastProcessedDragCoord: number | null = null
 
-const selectedCoords = ref<Set<number>>(new Set())
 const shiftAnchorCoord = ref<number | null>(null)
 
 const setPendingObstacle = (obs: Obstacle | null) => {
   appStore.selectedObstacle = obs
 }
+
+
 
 defineExpose({
   setPendingObstacle,
@@ -78,10 +79,10 @@ defineExpose({
   selectedCoords,
 })
 
-const obstacles = computed<Obstacle[]>(() => {
+const obstacles = computed(() => {
   const areaData = currentSong.value?.xmlObject?.TITLE?.AREA
   if (!areaData) return []
-  return Array.isArray(areaData) ? areaData : [areaData]
+  return areaData
 })
 
 function updateSongObstacles(newObstacles: Obstacle[]) {
@@ -608,16 +609,7 @@ watch(
   }
 )
 
-// 当坐标范围或 song 变化时，确保 PIXI 初始化
-watch(
-  [coordRange, () => currentSong.value],
-  ([range]) => {
-    if (range.span > 0 && !app && !isInitializing) {
-      initPixi()
-    }
-  },
-  { immediate: true }
-)
+
 
 const initPixi = async () => {
   if (!canvasContainerRef.value || app || isInitializing) return
@@ -670,6 +662,17 @@ const initPixi = async () => {
   app.ticker.add(renderEditor)
   isInitializing = false
 }
+
+// 当坐标范围或 song 变化时，确保 PIXI 初始化
+watch(
+  [coordRange, () => currentSong.value],
+  ([range]) => {
+    if (range.span > 0 && !app && !isInitializing) {
+      initPixi()
+    }
+  },
+  { immediate: true }
+)
 
 function getPointerGridState(
   x: number,

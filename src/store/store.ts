@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
-import { markRaw } from 'vue'
+
+import { sanitizeFile } from '@/utils/utils'
 
 // 定义当前音乐的数据接口
 export interface SongData {
@@ -49,11 +50,7 @@ export interface SongXmlData {
 interface AppState {
   currentSong: SongData | null
   selectedObstacle: NoteData | null
-}
-
-// 辅助函数：专门脱敏 File / Blob 对象，保留数组和对象的响应性
-function sanitizeFile<T>(file: T): T {
-  return file instanceof Blob || file instanceof File ? (markRaw(file) as T) : file
+  selectedCoords: Set<number>
 }
 
 export const useAppStore = defineStore('store', {
@@ -64,6 +61,8 @@ export const useAppStore = defineStore('store', {
 
       // 当前选中的障碍物
       selectedObstacle: null,
+
+      selectedCoords: new Set(),
     }
   },
 

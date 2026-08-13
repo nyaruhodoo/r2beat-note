@@ -25,7 +25,9 @@ declare module 'vue' {
     ElSlider: typeof import('element-plus/es')['ElSlider']
     ElSwitch: typeof import('element-plus/es')['ElSwitch']
     ElUpload: typeof import('element-plus/es')['ElUpload']
+    GridConfigPanel: typeof import('./src/components/GridConfigPanel.vue')['default']
     MusicPlayer: typeof import('./src/components/MusicPlayer.vue')['default']
+    Obstacle: typeof import('./src/components/Obstacle.vue')['default']
     ObstacleConfig: typeof import('./src/components/ObstacleConfig.vue')['default']
     ObstacleSelector: typeof import('./src/components/ObstacleSelector.vue')['default']
     RhythmCanvas: typeof import('./src/components/RhythmCanvas.vue')['default']
@@ -33,6 +35,7 @@ declare module 'vue' {
     RouterView: typeof import('vue-router')['RouterView']
     SongInfoPanel: typeof import('./src/components/SongInfoPanel.vue')['default']
     SongMetaCard: typeof import('./src/components/SongMetaCard.vue')['default']
+    ViewportConfig: typeof import('./src/components/ViewportConfig.vue')['default']
   }
   export interface GlobalDirectives {
     vLoading: typeof import('element-plus/es')['ElLoadingDirective']
