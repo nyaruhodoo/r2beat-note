@@ -100,6 +100,27 @@
           </button>
         </div>
       </div>
+
+      <!-- 3. 快捷跳转: Frame / Coord -->
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-1">
+          <span class="text-xs font-medium text-slate-500">跳转</span>
+          <select v-model="quickSeekType"
+            class="rounded border border-slate-200 bg-transparent px-1 py-0.5 text-xs text-slate-600 focus:outline-hidden focus:border-slate-400">
+            <option value="frame">Frame</option>
+            <option value="coord">Coord</option>
+          </select>
+        </div>
+        <div class="flex items-center gap-1.5">
+          <el-input-number v-model="quickSeekValue" class="w-24!" :controls="false" size="small"
+            @keydown.enter="handleQuickSeek" />
+          <button type="button" :disabled="!isLoaded"
+            class="rounded bg-slate-200 hover:bg-slate-300 text-slate-700 px-2 py-0.5 text-xs transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+            @click="handleQuickSeek">
+            GO
+          </button>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -113,6 +134,15 @@ import { getDecimalPlaces } from '@/utils/utils.ts'
 
 const appStore = useAppStore()
 const globalConfigStore = useGlobalConfigStore()
+
+// --- 快捷跳转 ---
+const quickSeekType = ref<'frame' | 'coord'>('frame')
+const quickSeekValue = ref<number | undefined>(undefined)
+
+const handleQuickSeek = () => {
+  if (quickSeekValue.value === undefined || quickSeekValue.value === null || Number.isNaN(quickSeekValue.value)) return
+  seekTo(quickSeekValue.value, quickSeekType.value)
+}
 
 // --- 延迟数据读取 ---
 const delayFrames = computed<number>(() => {
@@ -764,24 +794,3 @@ onUnmounted(() => {
   audioCtx?.close()
 })
 </script>
-
-<style scoped>
-:deep(.volume-slider .el-slider__button) {
-  width: 10px;
-  height: 10px;
-  border-width: 1.5px;
-}
-
-:deep(.volume-slider .el-slider__button-wrapper) {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-/* 小屏幕隐藏进度条 */
-@media (max-width: 1200px) {
-  .progress-slider-container {
-    display: none;
-  }
-}
-</style>
