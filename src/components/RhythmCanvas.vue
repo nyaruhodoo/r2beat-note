@@ -71,8 +71,6 @@ const setPendingObstacle = (obs: Obstacle | null) => {
   appStore.selectedObstacle = obs
 }
 
-
-
 defineExpose({
   setPendingObstacle,
   pendingObstacle: selectedObstacle,
@@ -84,6 +82,23 @@ const obstacles = computed(() => {
   if (!areaData) return []
   return areaData
 })
+
+/**
+ * 辅助函数：二分查找第一个 Coord >= targetCoord 的索引
+ */
+function lowerBound(arr: Obstacle[], targetCoord: number): number {
+  let low = 0
+  let high = arr.length
+  while (low < high) {
+    const mid = (low + high) >>> 1
+    if (Number(arr[mid].Coord) < targetCoord) {
+      low = mid + 1
+    } else {
+      high = mid
+    }
+  }
+  return low
+}
 
 function updateSongObstacles(newObstacles: Obstacle[]) {
   if (!currentSong.value?.xmlObject?.TITLE) return
@@ -120,22 +135,30 @@ function generateObstacle(
 function getSurroundingObstacles(targetCoord: number) {
   const step = stepCoord.value
   const sorted = obstacles.value
+  if (sorted.length === 0) return { prevObs: null, nextObs: null }
 
   let prevObs: Obstacle | null = null
   let nextObs: Obstacle | null = null
 
-  for (const obs of sorted) {
+  const idx = lowerBound(sorted, targetCoord)
+
+  // 向左扫描找到前一个不与 targetCoord 重叠的障碍物
+  for (let i = idx - 1; i >= 0; i--) {
+    const obs = sorted[i]
     const c = Number(obs.Coord)
     const rowSpan = obs.Kind === '24' ? 3 : 1
     const maxObsCoord = c + (rowSpan - 1) * step
-
-    if (targetCoord >= c && targetCoord <= maxObsCoord) {
-      continue
-    }
-
-    if (c < targetCoord) {
+    if (targetCoord > maxObsCoord) {
       prevObs = obs
-    } else if (c > targetCoord) {
+      break
+    }
+  }
+
+  // 向右扫描找到下一个障碍物
+  for (let i = idx; i < sorted.length; i++) {
+    const obs = sorted[i]
+    const c = Number(obs.Coord)
+    if (c > targetCoord) {
       nextObs = obs
       break
     }
@@ -166,6 +189,34 @@ function computePreviewObstacle() {
   const { prevObs, nextObs } = getSurroundingObstacles(coord)
   try {
     const obs = generateObstacle(prevObs, nextObs, offsetXRatio)
+
+    if (obs && obs.Kind === '24') {
+      const step = stepCoord.value
+      const checkEndCoord = coord + 2 * step
+      const currentList = obstacles.value
+      const startCheckIdx = lowerBound(currentList, coord - 2 * step)
+      let hasConflict = false
+
+      for (let i = startCheckIdx; i < currentList.length; i++) {
+        const o = currentList[i]
+        const oCoord = Number(o.Coord)
+        if (oCoord > checkEndCoord) break
+
+        const oSpan = o.Kind === '24' ? 3 : 1
+        const oMaxCoord = oCoord + (oSpan - 1) * step
+
+        if (Math.max(coord, oCoord) <= Math.min(checkEndCoord, oMaxCoord)) {
+          hasConflict = true
+          break
+        }
+      }
+
+      if (hasConflict) {
+        previewObstacleState.value = { obstacle: null, error: '范围已有障碍物' }
+        return
+      }
+    }
+
     previewObstacleState.value = { obstacle: obs, error: null }
   } catch (err: any) {
     previewObstacleState.value = {
@@ -185,21 +236,34 @@ watch(
 
 function removeObstacleAtCoord(coord: number): boolean {
   const currentList = obstacles.value
+  if (currentList.length === 0) return false
+
   const step = stepCoord.value
   const PROTECTED_KINDS = new Set(['129', '132', '144', '141', '138', '135'])
 
   const minThreshold = coord - step / 2
   const maxThreshold = coord + step / 2
 
-  const obstaclesToRemove = currentList.filter((obs) => {
-    if (PROTECTED_KINDS.has(obs.Kind)) return false
+  // 利用二分查找快速缩小搜索范围
+  const startIdx = lowerBound(currentList, coord - 2 * step)
+  const obstaclesToRemove: Obstacle[] = []
+
+  for (let i = startIdx; i < currentList.length; i++) {
+    const obs = currentList[i]
     const obsCoord = Number(obs.Coord)
+    if (obsCoord > maxThreshold) break
+
+    if (PROTECTED_KINDS.has(obs.Kind)) continue
+
     const rowSpan = obs.Kind === '24' ? 3 : 1
     const maxObsCoord = obsCoord + (rowSpan - 1) * step
     const isInsideRange = obsCoord > minThreshold && obsCoord < maxThreshold
     const isOverlapping = obsCoord <= maxThreshold && maxObsCoord >= minThreshold
-    return isInsideRange || isOverlapping
-  })
+
+    if (isInsideRange || isOverlapping) {
+      obstaclesToRemove.push(obs)
+    }
+  }
 
   if (obstaclesToRemove.length === 0) return false
 
@@ -207,7 +271,8 @@ function removeObstacleAtCoord(coord: number): boolean {
     selectedCoords.value.delete(Number(obs.Coord))
   })
 
-  let updatedList = currentList.filter((obs) => !obstaclesToRemove.includes(obs))
+  const removeSet = new Set(obstaclesToRemove)
+  let updatedList = currentList.filter((obs) => !removeSet.has(obs))
 
   const hasRemovedIntervalBoundary = obstaclesToRemove.some(
     (obs) => Number(obs.Kind) > 100 && obs.Level === '5'
@@ -257,10 +322,40 @@ function placeObstacleAtCoord(coord: number, offsetXRatio: number) {
 
   const step = stepCoord.value
 
-  const isAlreadyPresent = currentList.some(
-    (obs) => Number(obs.Coord) === coord && obs.Kind === finalObs?.Kind
-  )
-  if (isAlreadyPresent) return
+  // 检测 Kind 24 障碍物：当前行与后两行 (coord ~ coord + 2*step) 是否有任何障碍物
+  if (finalObs.Kind === '24') {
+    const checkEndCoord = coord + 2 * step
+    const startCheckIdx = lowerBound(currentList, coord - 2 * step)
+    let hasConflict = false
+
+    for (let i = startCheckIdx; i < currentList.length; i++) {
+      const obs = currentList[i]
+      const obsCoord = Number(obs.Coord)
+      if (obsCoord > checkEndCoord) break
+
+      const obsSpan = obs.Kind === '24' ? 3 : 1
+      const obsMaxCoord = obsCoord + (obsSpan - 1) * step
+
+      if (Math.max(coord, obsCoord) <= Math.min(checkEndCoord, obsMaxCoord)) {
+        hasConflict = true
+        break
+      }
+    }
+
+    if (hasConflict) {
+      console.warn(`[放置拦截] 类型24障碍物放置位置 [${coord}, ${checkEndCoord}] 范围内已有障碍物。`)
+      return
+    }
+  }
+
+  const exactIdx = lowerBound(currentList, coord)
+  if (
+    exactIdx < currentList.length &&
+    Number(currentList[exactIdx].Coord) === coord &&
+    currentList[exactIdx].Kind === finalObs.Kind
+  ) {
+    return
+  }
 
   let newObsList = currentList.filter((obs) => {
     const obsCoord = Number(obs.Coord)
@@ -417,16 +512,13 @@ function timeToCoord(time: number): number {
   return activeSegment.startCoord + deltaFrames * coordPerFrame
 }
 
-// 计算出整首曲子的 raw 坐标范围（用于滚动条、视口限制）
 const coordRange = computed(() => {
   const segments = bpmSegments.value
   if (segments.length === 0) return { min: 0, max: 0, span: 0 }
 
-  // 计算曲子开头和结尾的坐标
-  const startCoord = 0 // 时间 0 的坐标，由 bpmSegments 保证为 0
-  const endCoord = timeToCoord(props.duration) // 时间 duration 的坐标
+  const startCoord = 0
+  const endCoord = timeToCoord(props.duration)
 
-  // 收集所有分段边界点的坐标（包含开头和结尾）
   const coords = [startCoord, endCoord]
   for (const seg of segments) {
     coords.push(seg.startCoord)
@@ -438,9 +530,6 @@ const coordRange = computed(() => {
 
   return { min, max, span }
 })
-
-// 原 maxCoord 不再直接使用，改为从 coordRange 获取
-// const maxCoord = computed(() => coordRange.value.max)
 
 const CONFIG = computed(() => ({
   visibleGridCount: visibleGridCount.value,
@@ -609,8 +698,6 @@ watch(
   }
 )
 
-
-
 const initPixi = async () => {
   if (!canvasContainerRef.value || app || isInitializing) return
   const range = coordRange.value
@@ -663,7 +750,6 @@ const initPixi = async () => {
   isInitializing = false
 }
 
-// 当坐标范围或 song 变化时，确保 PIXI 初始化
 watch(
   [coordRange, () => currentSong.value],
   ([range]) => {
@@ -788,7 +874,7 @@ const renderEditor = () => {
   g.rect(trackStartX, 0, trackWidth, viewHeight)
   g.fill({ color: 0x000000 })
 
-  // 网格与刻度（允许负坐标）
+  // 网格与刻度
   const startCoordIndex = Math.floor(minVisibleCoord / cfg.stepCoord)
   const maxCoordIndex = Math.ceil(maxVisibleCoord / cfg.stepCoord)
   const isShowGridLines = showGridLines.value
@@ -863,12 +949,14 @@ const renderEditor = () => {
     }
   }
 
-  // 现存障碍物
+  // 现存障碍物：使用二分查找直接定位到视口底部的起始索引
   const obstacleList = obstacles.value
   const currentHoverCoord = hoverState.value?.coord ?? null
   const hasSelectedObstacle = !!selectedObstacle.value
 
-  for (let i = 0; i < obstacleList.length; i++) {
+  const startRenderIdx = lowerBound(obstacleList, minVisibleCoord - 2 * cfg.stepCoord)
+
+  for (let i = startRenderIdx; i < obstacleList.length; i++) {
     const obs = obstacleList[i]
     const obsCoord = Number(obs.Coord)
 
@@ -932,7 +1020,7 @@ const renderEditor = () => {
     }
   }
 
-  // 滚动条（基于 raw 坐标范围）
+  // 滚动条
   const { min: rawMin, span: rawSpan } = range
   const trackHeight = viewHeight - 20
   const trackY0 = 10
@@ -942,7 +1030,6 @@ const renderEditor = () => {
 
   const thumbHeight = Math.max(30, (viewHeight / (rawSpan * rowHPerCoord)) * trackHeight)
   const availableTrackLength = trackHeight - thumbHeight
-  // 当前坐标在 raw 范围中的比例（0~1）
   const progressRatio =
     rawSpan > 0 ? Math.min(1, Math.max(0, (currentCoord.raw - rawMin) / rawSpan)) : 0
 
@@ -1022,12 +1109,22 @@ const handleCanvasClick = (e: PIXI.FederatedPointerEvent) => {
     }
 
     if (e.shiftKey) {
-      const targetObs = obstacles.value.find((obs) => {
+      const currentList = obstacles.value
+      const startSearchIdx = lowerBound(currentList, clickedCoord - 2 * cfg.stepCoord)
+      let targetObs: Obstacle | undefined
+
+      for (let i = startSearchIdx; i < currentList.length; i++) {
+        const obs = currentList[i]
         const c = Number(obs.Coord)
+        if (c > clickedCoord) break
+
         const rowSpan = obs.Kind === '24' ? 3 : 1
         const maxObsCoord = c + (rowSpan - 1) * cfg.stepCoord
-        return clickedCoord >= c && clickedCoord <= maxObsCoord
-      })
+        if (clickedCoord >= c && clickedCoord <= maxObsCoord) {
+          targetObs = obs
+          break
+        }
+      }
 
       if (shiftAnchorCoord.value === null) {
         shiftAnchorCoord.value = clickedCoord
@@ -1041,15 +1138,19 @@ const handleCanvasClick = (e: PIXI.FederatedPointerEvent) => {
         const start = Math.min(shiftAnchorCoord.value, clickedCoord)
         const end = Math.max(shiftAnchorCoord.value, clickedCoord)
 
-        obstacles.value.forEach((obs) => {
+        const startIdx = lowerBound(currentList, start - 2 * cfg.stepCoord)
+        for (let i = startIdx; i < currentList.length; i++) {
+          const obs = currentList[i]
           const c = Number(obs.Coord)
+          if (c > end) break
+
           const rowSpan = obs.Kind === '24' ? 3 : 1
           const maxObsCoord = c + (rowSpan - 1) * cfg.stepCoord
 
           if (c <= end && maxObsCoord >= start) {
             selectedCoords.value.add(c)
           }
-        })
+        }
       }
 
       if (selectedCoords.value.size > 0 && selectedObstacle.value) {
@@ -1094,7 +1195,6 @@ const handlePointerMove = (e: PIXI.FederatedPointerEvent) => {
   const availableTrackLength = trackHeight - thumbHeight
 
   const deltaY = e.global.y - dragStartY
-  // 拖拽位移对应 raw 坐标变化
   const deltaCoord = -(deltaY / availableTrackLength) * range.span
 
   const rawTargetCoord = dragStartCoord + deltaCoord
