@@ -4,7 +4,7 @@
 
   <!-- 音频播放器面板 -->
   <div
-    class="relative mt-auto flex flex-col gap-3 rounded-xl border border-slate-200/60 bg-linear-to-b from-slate-50 to-slate-100/50 p-3.5 shadow-inner">
+    class="relative flex flex-col gap-3 rounded-xl border border-slate-200/60 bg-linear-to-b from-slate-50 to-slate-100/50 p-3.5 shadow-inner">
     <!-- 音频合成 Loading 遮罩层 -->
     <div v-if="isAudioLoading"
       class="absolute inset-0 z-20 flex items-center justify-center bg-white/80 backdrop-blur-xs transition-opacity">

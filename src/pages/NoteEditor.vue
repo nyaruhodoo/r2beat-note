@@ -8,7 +8,7 @@
             <Back />
           </el-icon>
         </el-button>
-        <h1 class="text-lg font-bold text-slate-800">谱面编辑器</h1>
+        <h1 class="text-lg font-bold text-slate-800">{{ appStore.currentSong?.xmlObject.TITLE.Name }}</h1>
       </div>
       <div class="flex items-center gap-3">
         <el-button type="primary" :disabled="loading" @click="handleSaveXml">导出谱面</el-button>
@@ -150,10 +150,7 @@ watch(
   { deep: true }
 )
 
-onUnmounted(() => {
-  appStore.currentSong = null
-  appStore.selectedCoords.clear()
-})
+
 
 const handleSaveXml = () => {
   const xmlObj = appStore.currentSong?.xmlObject
@@ -199,4 +196,9 @@ const handleSaveXml = () => {
     ElMessage.error('谱面导出失败，请检查控制台输出')
   }
 }
+
+onUnmounted(() => {
+  appStore.currentSong = null
+  appStore.selectedCoords.clear()
+}) 
 </script>

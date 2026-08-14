@@ -1,23 +1,22 @@
 <template>
   <aside class="flex h-full w-full flex-col gap-6 rounded-2xl border border-slate-200/80 bg-white p-6">
-    <div class="border-b border-slate-100 pb-4">
-      <h2 class="text-base font-bold text-slate-800">歌曲信息</h2>
-    </div>
 
     <!-- 1. 歌曲元数据列表 -->
     <div class="grid grid-cols-2 gap-3">
-      <SongMetaCard label="歌曲名称" v-model="inputTitleString" :show-edit-button="true" @save="submitTitleChange" />
+      <!-- <SongMetaCard v-model="songTitle" label="歌曲名称" :show-edit-button="true" /> -->
 
       <SongMetaCard label="BPM" :model-value="bpmValue" :show-edit-button="true"
         :custom-edit-action="() => { isBpmModalOpen = true }" />
+      <SongMetaCard v-model="songDelay" label="延迟(Frame)" :show-edit-button="true" input-type="number" />
+
 
       <SongMetaCard label="Frame" :model-value="currentFrame" />
 
       <SongMetaCard label="Coord" :model-value="currentCoord.rounded" />
 
-      <SongMetaCard label="延迟(Frame)" v-model="inputDelayString" :show-edit-button="true" input-type="number"
-        @save="submitDelayChange" />
     </div>
+
+    <div class="flex-1"></div>
 
     <MusicPlayer ref="playerRef" />
 
@@ -26,7 +25,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
+import { ref, computed } from 'vue'
 import { useAppStore } from '@/store/store.ts'
 import BpmEditModal from './BpmEditModal.vue'
 import SongMetaCard from './SongMetaCard.vue'
@@ -37,49 +36,41 @@ const appStore = useAppStore()
 // 引入子组件的ref实例
 const playerRef = ref<InstanceType<typeof MusicPlayer> | null>(null)
 
-// --- 歌曲名称逻辑 ---
-const inputTitleString = ref('')
+// --- 歌曲名称逻辑 (通过计算属性安全读写) ---
+// const songTitle = computed<string>({
+//   get() {
+//     return appStore.currentSong?.xmlObject?.TITLE?.Name ?? '未知'
+//   },
+//   set(val) {
+//     const titleObj = appStore.currentSong?.xmlObject?.TITLE
+//     if (titleObj) {
+//       titleObj.Name = String(val).trim()
+//     }
+//   },
+// })
 
-watch(
-  () => appStore.currentSong?.xmlObject?.TITLE?.Name,
-  (val) => {
-    inputTitleString.value = val || '未知'
+// --- 延迟逻辑 (通过计算属性安全读写) ---
+const songDelay = computed<number>({
+  get() {
+    const rawVal = appStore.currentSong?.xmlObject?.TITLE?.DELAY?.Value
+    if (!rawVal) return 0
+    const parsed = Number(rawVal)
+    return isNaN(parsed) ? 0 : parsed
   },
-  { immediate: true },
-)
+  set(val) {
+    const titleObj = appStore.currentSong?.xmlObject?.TITLE
+    if (!titleObj) return
 
-const submitTitleChange = (val: any) => {
-  const newName = String(val).trim()
-  if (newName && appStore.currentSong?.xmlObject?.TITLE) {
-    appStore.currentSong.xmlObject.TITLE.Name = newName
-  } else {
-    inputTitleString.value = appStore.currentSong?.xmlObject?.TITLE?.Name || '未知'
-  }
-}
+    const numVal = Number(val)
+    if (isNaN(numVal)) return
 
-// --- 延迟逻辑（保留在此处，因为受此处的卡片编辑驱动） ---
-const inputDelayString = ref<string | number>('')
-
-watch(
-  () => appStore.currentSong?.xmlObject?.TITLE?.DELAY?.Value,
-  (val) => {
-    inputDelayString.value = val ?? 0
+    if (!titleObj.DELAY) {
+      titleObj.DELAY = { Value: String(numVal) }
+    } else {
+      titleObj.DELAY.Value = String(numVal)
+    }
   },
-  { immediate: true },
-)
-
-const submitDelayChange = (val: any) => {
-  const parsed = parseFloat(String(val))
-  const titleObj = appStore.currentSong?.xmlObject?.TITLE
-
-  if (!isNaN(parsed) && titleObj) {
-    if (!titleObj.DELAY) titleObj.DELAY = { Value: parsed + '' }
-    else titleObj.DELAY.Value = parsed + ''
-    inputDelayString.value = parsed
-  } else {
-    inputDelayString.value = titleObj?.DELAY?.Value ?? 0
-  }
-}
+})
 
 // --- BPM 弹窗 ---
 const isBpmModalOpen = ref(false)
@@ -105,13 +96,8 @@ defineExpose({
   playbackRate,
   pitchRate,
   bpmValue,
-  inputDelayString, // 父组件直接托管该数据
   isPlaying,
   pause,
   duration,
 })
 </script>
-
-<style scoped>
-/* 无样式，之前的样式全部移至 MusicPlayer 中了 */
-</style>
