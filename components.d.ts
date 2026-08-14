@@ -11,6 +11,7 @@ export {}
 /* prettier-ignore */
 declare module 'vue' {
   export interface GlobalComponents {
+    BatchActionBar: typeof import('./src/components/BatchActionBar.vue')['default']
     BpmEditModal: typeof import('./src/components/BpmEditModal.vue')['default']
     ElAutoResizer: typeof import('element-plus/es')['ElAutoResizer']
     ElButton: typeof import('element-plus/es')['ElButton']
@@ -38,6 +39,7 @@ declare module 'vue' {
     RouterView: typeof import('vue-router')['RouterView']
     SongInfoPanel: typeof import('./src/components/SongInfoPanel.vue')['default']
     SongMetaCard: typeof import('./src/components/SongMetaCard.vue')['default']
+    SongVisualization: typeof import('./src/components/SongVisualization.vue')['default']
     TrackManagerPopover: typeof import('./src/components/TrackManagerPopover.vue')['default']
     ViewportConfig: typeof import('./src/components/ViewportConfig.vue')['default']
   }

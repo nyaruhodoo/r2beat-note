@@ -16,7 +16,9 @@
 
     </div>
 
-    <div class="flex-1"></div>
+    <div class="flex flex-1 items-end">
+      <ObstacleSelector></ObstacleSelector>
+    </div>
 
     <MusicPlayer ref="playerRef" />
 
@@ -30,6 +32,8 @@ import { useAppStore } from '@/store/store.ts'
 import BpmEditModal from './BpmEditModal.vue'
 import SongMetaCard from './SongMetaCard.vue'
 import MusicPlayer from './MusicPlayer.vue'
+import ObstacleSelector from './ObstacleSelector.vue';
+
 
 const appStore = useAppStore()
 

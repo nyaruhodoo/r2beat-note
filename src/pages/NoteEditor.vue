@@ -29,9 +29,9 @@
         :seek-to="songInfoPanelRef?.seekTo" :isPlaying="songInfoPanelRef?.isPlaying" :pause="songInfoPanelRef?.pause"
         :duration="songInfoPanelRef?.duration" />
 
-      <!-- 右侧：障碍物选择器 -->
+      <!-- 右侧：音频可视化区域 -->
       <div class="flex-1">
-        <ObstacleSelector />
+        <SongVisualization />
       </div>
     </div>
   </div>
@@ -46,7 +46,7 @@ import iconv from 'iconv-lite'
 import { Buffer } from 'buffer'
 import { useRefHistory, onKeyStroke } from '@vueuse/core'
 
-import ObstacleSelector from '@/components/ObstacleSelector.vue'
+import SongVisualization from '@/components/SongVisualization.vue'
 import RhythmCanvas from '@/components/RhythmCanvas.vue'
 import SongInfoPanel from '@/components/SongInfoPanel.vue'
 import { useAppStore } from '@/store/store'
