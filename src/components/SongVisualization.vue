@@ -1,28 +1,23 @@
 <template>
   <aside class="flex h-full w-full flex-col gap-4 rounded-2xl border border-slate-200/80 bg-white p-6 overflow-hidden">
-    <!-- 头部标题区 -->
-    <div class="flex items-center justify-between border-b border-slate-100 pb-4 shrink-0">
-      <h2 class="text-base font-bold text-slate-800">
-        {{ activeView === 'selector' ? '障碍物选择器' : '参数配置' }}
-      </h2>
-      <button @click="activeView = activeView === 'selector' ? 'config' : 'selector'"
-        class="rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-medium text-slate-600 transition-all hover:border-slate-300 hover:bg-slate-100 hover:text-slate-900 active:bg-slate-200">
-        {{ activeView === 'selector' ? '切换至参数配置' : '返回障碍物选择' }}
-      </button>
-    </div>
+    <el-tabs v-model="activeTab" class="flex-1 flex flex-col overflow-hidden min-h-0 custom-tabs">
+      <el-tab-pane label="音频可视化" name="selector" class="h-full overflow-hidden">
+        <div class="h-full overflow-y-auto">
+          <!-- <AudioWaveformVisualizer :musicObjectUrl="musicObjectUrl" :current-time="currentTime" :duration="duration"
+            :seek-to="seekTo"></AudioWaveformVisualizer> -->
+        </div>
+      </el-tab-pane>
 
-    <!-- 主体内容与底部容器 -->
-    <div class="flex flex-1 flex-col overflow-hidden min-h-0">
-      <!-- 滚动视图区 -->
-      <div class="flex-1 overflow-y-auto pr-1">
+      <el-tab-pane label="参数配置" name="config" class="h-full overflow-hidden">
+        <div class="h-full overflow-y-auto">
+          <ObstacleConfig />
+        </div>
+      </el-tab-pane>
 
-        <!-- 视图 2：参数配置组件 -->
-        <ObstacleConfig v-show="activeView === 'config'" />
-      </div>
+    </el-tabs>
 
-      <!-- 抽离出的批量操作组件 -->
-      <BatchActionBar />
-    </div>
+    <!-- 底部批量操作组件固定在底部 -->
+    <BatchActionBar />
   </aside>
 </template>
 
@@ -30,6 +25,29 @@
 import { ref } from 'vue';
 import ObstacleConfig from './ObstacleConfig.vue';
 import BatchActionBar from './BatchActionBar.vue';
+// import AudioWaveformVisualizer from './AudioWaveformVisualizer.vue';
 
-const activeView = ref<'selector' | 'config'>('selector');
+
+defineProps<{
+  musicObjectUrl?: string
+  currentTime?: number
+  duration?: number
+  seekTo?: (target: number | string, type: 'time' | 'frame' | 'coord') => void
+}>()
+
+// 仅保留当前选中的 Tab 标识
+const activeTab = ref<'selector' | 'config'>('selector');
 </script>
+
+<style scoped>
+/* 确保 Tabs 内部容器能够正确撑满 flex 布局并实现局部滚动 */
+:deep(.el-tabs__content) {
+  flex: 1;
+  overflow: hidden;
+  min-height: 0;
+}
+
+:deep(.el-tab-pane) {
+  height: 100%;
+}
+</style>

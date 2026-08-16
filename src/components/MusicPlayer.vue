@@ -23,7 +23,7 @@
       <button type="button" :disabled="!isLoaded || isAudioLoading"
         class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-slate-900 text-white transition-all hover:bg-slate-800 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
         @click="togglePlay">
-        <svg v-if="isPlaying" class="h-4 w-4 fill-current" viewBox="0 0 24 24">
+        <svg v-if="currentSongInfo.isPlaying" class="h-4 w-4 fill-current" viewBox="0 0 24 24">
           <rect x="6" y="4" width="4" height="16" rx="1" />
           <rect x="14" y="4" width="4" height="16" rx="1" />
         </svg>
@@ -49,11 +49,11 @@
         <span>{{ formattedDuration }}</span>
       </div>
 
-      <!-- 进度条容器 -->
+      <!-- 进度条容器：直接 v-model 绑定 currentSongInfo.currentTime -->
       <div class="min-w-16 flex-1 progress-slider-container">
-        <el-slider v-model="currentTime" :max="duration" :step="0.001" :format-tooltip="formatTime" :show-tooltip="true"
-          :disabled="!isLoaded || isAudioLoading" size="small" @input="handleSliderInput"
-          @change="(val) => handleSeek(val as number)" />
+        <el-slider v-model="currentSongInfo.currentTime" :max="currentSongInfo.duration" :step="0.001"
+          :format-tooltip="formatTime" :show-tooltip="true" :disabled="!isLoaded || isAudioLoading" size="small"
+          @input="handleSliderInput" @change="(val) => handleSeek(val as number)" />
       </div>
 
       <!-- 音轨管理弹出按钮 -->
@@ -144,15 +144,15 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onUnmounted } from 'vue'
+import { ref, computed, watch, watchEffect, onUnmounted } from 'vue'
 import { useMagicKeys } from '@vueuse/core'
 import { useAppStore, type BpmItem } from '@/store/store.ts'
 import { useGlobalConfigStore } from '@/store/global-config.ts'
-import { getDecimalPlaces } from '@/utils/utils.ts'
+import { formatTime, getDecimalPlaces } from '@/utils/utils.ts'
 import TrackManagerPopover from './TrackManagerPopover.vue'
 import AudioWorker from '../audio-worker.ts?worker'
 
-const appStore = useAppStore()
+const { currentSong, currentSongInfo } = useAppStore()
 const globalConfigStore = useGlobalConfigStore()
 
 // --- Vite 标准语法初始化 Web Worker ---
@@ -177,20 +177,17 @@ const handleQuickSeek = () => {
 
 // --- 延迟数据读取 ---
 const delayFrames = computed<number>(() => {
-  const val = appStore.currentSong?.xmlObject?.TITLE?.DELAY?.Value
+  const val = currentSong?.xmlObject?.TITLE?.DELAY?.Value
   const parsed = parseFloat(String(val ?? '0'))
   return isNaN(parsed) ? 0 : parsed
 })
 
 const delaySeconds = computed(() => delayFrames.value / 60)
 
-// --- 音频核心变量 ---
+// --- 音频核心 DOM & 内部逻辑变量 ---
 const audioRef = ref<HTMLAudioElement | null>(null)
 const isLoaded = ref(false)
-const isPlaying = ref(false)
 const isDragging = ref(false)
-const currentTime = ref(0)
-const duration = ref(0)
 
 const playbackRate = ref(1.0)
 const pitchRate = ref(1.0)
@@ -209,8 +206,8 @@ const playbackRateSafe = computed<number>({
       playbackRate.value = sanitizeRate(val)
       applyPitchAndRateConfig()
 
-      if (isPlaying.value && audioCtx) {
-        startOffset = currentTime.value
+      if (currentSongInfo.isPlaying && audioCtx) {
+        startOffset = currentSongInfo.currentTime
         startTimestamp = audioCtx.currentTime
       }
     }
@@ -224,8 +221,8 @@ const pitchRateSafe = computed<number>({
       pitchRate.value = sanitizeRate(val)
       applyPitchAndRateConfig()
 
-      if (isPlaying.value && audioCtx) {
-        startOffset = currentTime.value
+      if (currentSongInfo.isPlaying && audioCtx) {
+        startOffset = currentSongInfo.currentTime
         startTimestamp = audioCtx.currentTime
       }
     }
@@ -241,7 +238,6 @@ let splitterNode: ChannelSplitterNode | null = null
 let mergerNode: ChannelMergerNode | null = null
 let trackGainNodes: GainNode[] = []
 let masterGainNode: GainNode | null = null
-let objectUrl: string | null = null
 let animationFrameId: number | null = null
 
 let startTimestamp = 0
@@ -251,13 +247,13 @@ const pause = () => {
   if (audioRef.value) {
     audioRef.value.pause()
   }
-  isPlaying.value = false
+  currentSongInfo.isPlaying = false
   if (animationFrameId) cancelAnimationFrame(animationFrameId)
 }
 
 const resetPlayback = () => {
   pause()
-  currentTime.value = 0
+  currentSongInfo.currentTime = 0
   if (audioRef.value) {
     audioRef.value.currentTime = 0
   }
@@ -268,7 +264,7 @@ const resetPlayback = () => {
 }
 
 watch(
-  () => appStore.currentSong?.xmlObject?.TITLE?.BPM,
+  () => currentSong?.xmlObject?.TITLE?.BPM,
   () => {
     if (isLoaded.value && isAudioReady.value) {
       resetPlayback()
@@ -277,13 +273,17 @@ watch(
   { deep: true }
 )
 
-const currentFrame = computed(() => {
-  const raw = currentTime.value * 60 - delayFrames.value
-  return Number(raw.toFixed(getDecimalPlaces(globalConfigStore.stepCoord)))
+// --- 依赖于 currentTime 的核心派生计算 ---
+const calculatedFrame = computed(() => {
+  const raw = (currentSongInfo.currentTime ?? 0) * 60 - delayFrames.value
+  return {
+    raw,
+    rounded: Number(raw.toFixed(getDecimalPlaces(globalConfigStore.stepCoord))),
+  }
 })
 
 const sortedBpmList = computed<Array<{ frame: number; bpm: number }>>(() => {
-  const bpmData = appStore.currentSong?.xmlObject?.TITLE?.BPM as BpmItem[] | BpmItem | undefined
+  const bpmData = currentSong?.xmlObject?.TITLE?.BPM as BpmItem[] | BpmItem | undefined
   if (!bpmData) return [{ frame: 0, bpm: 120 }]
   const list: BpmItem[] = Array.isArray(bpmData) ? bpmData : [bpmData]
   if (list.length === 0) return [{ frame: 0, bpm: 120 }]
@@ -300,14 +300,14 @@ const sortedBpmList = computed<Array<{ frame: number; bpm: number }>>(() => {
   return sorted
 })
 
-const bpmValue = computed<number>(() => {
+const calculatedBpmValue = computed<number>(() => {
   const list = sortedBpmList.value
-  const tf = currentFrame.value
-  if (tf < 0) return list[0]?.bpm ?? 120
+  const tf = calculatedFrame.value.raw
+  if (tf < 0) return list[0]?.bpm
   for (let i = list.length - 1; i >= 0; i--) {
     if (tf >= list[i].frame) return list[i].bpm
   }
-  return list[0]?.bpm ?? 120
+  return list[0]?.bpm
 })
 
 const bpmTimePoints = computed(() => {
@@ -322,8 +322,8 @@ const bpmTimePoints = computed(() => {
   return timePoints
 })
 
-const currentCoord = computed(() => {
-  const t = currentTime.value
+const calculatedCoord = computed(() => {
+  const t = currentSongInfo.currentTime ?? 0
   const timePoints = bpmTimePoints.value
   let totalCoord = 0
 
@@ -344,6 +344,13 @@ const currentCoord = computed(() => {
     raw: totalCoord,
     rounded: Number(totalCoord.toFixed(getDecimalPlaces(globalConfigStore.stepCoord))),
   }
+})
+
+// 监听并实时写回 currentSongInfo，保证与外部实时同步
+watchEffect(() => {
+  currentSongInfo.currentFrame = calculatedFrame.value
+  currentSongInfo.currentCoord = calculatedCoord.value
+  currentSongInfo.bpmValue = calculatedBpmValue.value
 })
 
 const getSecondsFromCoord = (targetCoord: number): number => {
@@ -469,7 +476,6 @@ watch([mainVolume, backingVolumes], () => {
 audioWorker.onmessage = (e: MessageEvent) => {
   const { taskId, wavBuffer, duration: calcDuration, error } = e.data
 
-  // 过期任务跳过
   if (taskId !== currentTaskId) return
 
   if (error) {
@@ -479,14 +485,13 @@ audioWorker.onmessage = (e: MessageEvent) => {
     return
   }
 
-  // 接收二进制并生成 Blob URL
   const blob = new Blob([wavBuffer], { type: 'audio/wav' })
-  if (objectUrl) {
-    URL.revokeObjectURL(objectUrl)
+  if (currentSongInfo.musicObjectUrl) {
+    URL.revokeObjectURL(currentSongInfo.musicObjectUrl)
   }
-  objectUrl = URL.createObjectURL(blob)
+  currentSongInfo.musicObjectUrl = URL.createObjectURL(blob)
 
-  const totalTracks = (appStore.currentSong?.backingTracks?.length || 0) + 1
+  const totalTracks = (currentSong?.backingTracks?.length || 0) + 1
   setupAudioNodes(totalTracks)
 
   isAudioReady.value = false
@@ -494,20 +499,20 @@ audioWorker.onmessage = (e: MessageEvent) => {
     const el = audioRef.value
     el.onloadedmetadata = null
     applyPitchAndRateConfig()
-    el.src = objectUrl
+    el.src = currentSongInfo.musicObjectUrl
 
     el.onloadedmetadata = () => {
-      duration.value = el.duration
+      currentSongInfo.duration = el.duration
       isAudioReady.value = true
-      if (!isFinite(duration.value) || duration.value <= 0) {
-        duration.value = calcDuration
+      if (!isFinite(currentSongInfo.duration) || currentSongInfo.duration <= 0) {
+        currentSongInfo.duration = calcDuration
       }
       isAudioLoading.value = false
     }
 
     el.onended = () => {
-      isPlaying.value = false
-      currentTime.value = duration.value
+      currentSongInfo.isPlaying = false
+      currentSongInfo.currentTime = currentSongInfo.duration
       if (animationFrameId) cancelAnimationFrame(animationFrameId)
     }
   }
@@ -521,12 +526,12 @@ audioWorker.onerror = (err) => {
   isAudioLoading.value = false
 }
 
-// 核心：使用 Worker 异步合成音频，不阻塞主线程
+// 核心：使用 Worker 异步合成音频
 const buildAndApplyMultiChannelAudio = async () => {
   resetPlayback()
 
-  const mainFile = appStore.currentSong?.audioFile
-  const backingFiles = appStore.currentSong?.backingTracks || []
+  const mainFile = currentSong?.audioFile
+  const backingFiles = currentSong?.backingTracks || []
 
   if (!mainFile) {
     isLoaded.value = false
@@ -544,7 +549,6 @@ const buildAndApplyMultiChannelAudio = async () => {
       await audioCtx.resume()
     }
 
-    // 主线程仅负责并发 decodeAudioData (C++ 层加速)
     const filesToDecode = [mainFile, ...backingFiles]
     const decodedBuffers: AudioBuffer[] = await Promise.all(
       filesToDecode.map(async (file) => {
@@ -555,12 +559,10 @@ const buildAndApplyMultiChannelAudio = async () => {
 
     if (taskId !== currentTaskId) return
 
-    // 提取 Float32Array 数组并进行 Transferable 传递
     const transferables: Transferable[] = []
     const trackPayloads = decodedBuffers.map((buf) => {
       const channels: Float32Array[] = []
       for (let i = 0; i < buf.numberOfChannels; i++) {
-        // 创建副本并零拷贝传送给 Worker
         const copy = new Float32Array(buf.getChannelData(i))
         channels.push(copy)
         transferables.push(copy.buffer)
@@ -572,7 +574,6 @@ const buildAndApplyMultiChannelAudio = async () => {
       }
     })
 
-    // 将重度对齐 & WAV 编码彻底转移至 Worker 执行
     audioWorker.postMessage(
       {
         taskId,
@@ -594,13 +595,13 @@ const buildAndApplyMultiChannelAudio = async () => {
 
 watch(
   [
-    () => appStore.currentSong?.audioFile,
-    () => appStore.currentSong?.backingTracks?.length,
+    () => currentSong?.audioFile,
+    () => currentSong?.backingTracks?.length,
     () => globalConfigStore.fixMusicDelay,
     delayFrames,
   ],
   () => {
-    const backingLen = appStore.currentSong?.backingTracks?.length || 0
+    const backingLen = currentSong?.backingTracks?.length || 0
     while (backingVolumes.value.length < backingLen) {
       backingVolumes.value.push(0)
     }
@@ -629,7 +630,7 @@ const playAt = (offset: number) => {
   if (!audioRef.value || !audioCtx || isAudioLoading.value) return
   audioCtx.resume().catch((e) => console.warn('AudioContext 恢复失败', e))
 
-  if (offset >= duration.value - 0.01) {
+  if (offset >= currentSongInfo.duration - 0.01) {
     offset = 0
   }
 
@@ -643,23 +644,21 @@ const playAt = (offset: number) => {
   if (playPromise !== undefined) {
     playPromise.catch((e) => {
       console.warn('播放被阻止:', e)
-      isPlaying.value = false
+      currentSongInfo.isPlaying = false
     })
   }
 
-  isPlaying.value = true
+  currentSongInfo.isPlaying = true
   updateProgress()
 }
 
-
-
 const togglePlay = () => {
   if (!isLoaded.value || !audioRef.value || !isAudioReady.value || isAudioLoading.value) return
-  if (isPlaying.value) {
+  if (currentSongInfo.isPlaying) {
     pause()
   } else {
     const el = audioRef.value
-    const isAtEnd = el.currentTime >= duration.value - 0.05
+    const isAtEnd = el.currentTime >= currentSongInfo.duration - 0.05
     const startPos = isAtEnd ? 0 : el.currentTime
     playAt(startPos)
   }
@@ -685,18 +684,18 @@ useMagicKeys({
 })
 
 const updateProgress = () => {
-  if (!isPlaying.value || !audioCtx) return
+  if (!currentSongInfo.isPlaying || !audioCtx) return
 
   if (!isDragging.value) {
     const elapsed = (audioCtx.currentTime - startTimestamp) * combinedRate.value
-    currentTime.value = Math.min(startOffset + elapsed, duration.value)
+    currentSongInfo.currentTime = Math.min(startOffset + elapsed, currentSongInfo.duration)
   }
 
-  if (currentTime.value < duration.value) {
+  if (currentSongInfo.currentTime < currentSongInfo.duration) {
     animationFrameId = requestAnimationFrame(updateProgress)
   } else {
-    isPlaying.value = false
-    currentTime.value = duration.value
+    currentSongInfo.isPlaying = false
+    currentSongInfo.currentTime = currentSongInfo.duration
   }
 }
 
@@ -725,11 +724,11 @@ const handleSliderInput = () => {
 
 const handleSeek = (val: number) => {
   if (isAudioLoading.value) return
-  currentTime.value = val
+  currentSongInfo.currentTime = val
   if (audioRef.value) {
     audioRef.value.currentTime = val
   }
-  if (isPlaying.value && audioCtx) {
+  if (currentSongInfo.isPlaying && audioCtx) {
     startOffset = val
     startTimestamp = audioCtx.currentTime
   }
@@ -759,7 +758,7 @@ const submitTimeChange = () => {
   const inputDisplayTime = parseTimeToSeconds(inputTimeString.value)
   if (inputDisplayTime !== null) {
     const actualTime = inputDisplayTime + delaySeconds.value
-    handleSeek(Math.max(0, Math.min(actualTime, duration.value)))
+    handleSeek(Math.max(0, Math.min(actualTime, currentSongInfo.duration)))
   }
   isEditingTime.value = false
 }
@@ -768,16 +767,8 @@ const cancelTimeEdit = () => {
   isEditingTime.value = false
 }
 
-const formatTime = (s: number) => {
-  if (!s || isNaN(s) || s < 0) return '00:00.000'
-  const m = Math.floor(s / 60).toString().padStart(2, '0')
-  const sec = Math.floor(s % 60).toString().padStart(2, '0')
-  const ms = Math.floor((s % 1) * 1000).toString().padStart(3, '0')
-  return `${m}:${sec}.${ms}`
-}
-
-const formattedDuration = computed(() => formatTime(Math.max(0, duration.value - delaySeconds.value)))
-const formattedCurrentTime = computed(() => formatTime(Math.max(0, currentTime.value - delaySeconds.value)))
+const formattedDuration = computed(() => formatTime(Math.max(0, (currentSongInfo.duration ?? 0) - delaySeconds.value)))
+const formattedCurrentTime = computed(() => formatTime(Math.max(0, (currentSongInfo.currentTime ?? 0) - delaySeconds.value)))
 
 const seekTo = (target: number | string, type: 'time' | 'frame' | 'coord') => {
   if (isAudioLoading.value) return
@@ -800,27 +791,20 @@ const seekTo = (target: number | string, type: 'time' | 'frame' | 'coord') => {
   }
 
   if (seconds !== null && !isNaN(seconds)) {
-    handleSeek(Math.max(0, Math.min(seconds, duration.value)))
+    handleSeek(Math.max(0, Math.min(seconds, currentSongInfo.duration)))
   }
 }
 
+// 组件仅暴露 seekTo 与 pause
 defineExpose({
   seekTo,
-  currentTime,
-  currentFrame,
-  currentCoord,
-  playbackRate,
-  pitchRate,
-  bpmValue,
-  isPlaying,
   pause,
-  duration,
 })
 
 onUnmounted(() => {
   pause()
   audioWorker.terminate()
-  if (objectUrl) URL.revokeObjectURL(objectUrl)
+  if (currentSongInfo.musicObjectUrl) URL.revokeObjectURL(currentSongInfo.musicObjectUrl)
   if (mediaElementSource) {
     mediaElementSource.disconnect()
     mediaElementSource = null

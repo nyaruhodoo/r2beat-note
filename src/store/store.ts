@@ -51,6 +51,21 @@ interface AppState {
   currentSong: SongData | null
   selectedObstacle: NoteData | null
   selectedCoords: Set<number>
+  currentSongInfo: {
+    currentTime: number
+    currentFrame: {
+      raw: number
+      rounded: number
+    }
+    currentCoord: {
+      raw: number
+      rounded: number
+    }
+    bpmValue: number
+    isPlaying: boolean
+    duration: number
+    musicObjectUrl?: string
+  }
 }
 
 export const useAppStore = defineStore('store', {
@@ -59,9 +74,26 @@ export const useAppStore = defineStore('store', {
       // 当前正在播放/编辑的音乐数据
       currentSong: null,
 
-      // 当前选中的障碍物
+      currentSongInfo: {
+        currentTime: 0,
+        currentFrame: {
+          raw: 0,
+          rounded: 0,
+        },
+        currentCoord: {
+          raw: 0,
+          rounded: 0,
+        },
+        bpmValue: 0,
+        duration: 0,
+        isPlaying: false,
+        musicObjectUrl: '',
+      },
+
+      // 当前选中的摆放障碍物
       selectedObstacle: null,
 
+      // 当前选中的已有障碍物
       selectedCoords: new Set(),
     }
   },
@@ -81,16 +113,6 @@ export const useAppStore = defineStore('store', {
 
         // 3. xmlObject 保持正常响应式，方便编辑器实时修改谱面
         xmlObject: song.xmlObject,
-      }
-    },
-    // 重置音乐数据
-    resetCurrentSong() {
-      this.currentSong = null
-    },
-    // 追加副音轨（数组依然响应式，新增的 File 也会自动脱敏）
-    addBackingTrack(file: File) {
-      if (this.currentSong) {
-        this.currentSong.backingTracks.push(sanitizeFile(file))
       }
     },
   },

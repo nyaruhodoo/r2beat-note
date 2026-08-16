@@ -134,9 +134,7 @@
         <div class="mt-10 flex items-center justify-end gap-3 border-t border-slate-100 pt-6">
           <el-button size="large" class="rounded-xl px-6 border-slate-200 text-slate-700 hover:bg-slate-50"
             @click="handleBack">取消</el-button>
-          <el-button type="primary" size="large"
-            class="rounded-xl px-8 border-none bg-emerald-500 hover:bg-emerald-600 shadow-md shadow-emerald-500/20"
-            @click="handleSave">
+          <el-button type="primary" size="large" class="rounded-xl px-8 border-none" @click="handleSave">
             导入并编辑
           </el-button>
         </div>

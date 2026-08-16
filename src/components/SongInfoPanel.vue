@@ -5,18 +5,18 @@
     <div class="grid grid-cols-2 gap-3">
       <!-- <SongMetaCard v-model="songTitle" label="歌曲名称" :show-edit-button="true" /> -->
 
-      <SongMetaCard label="BPM" :model-value="bpmValue" :show-edit-button="true"
+      <SongMetaCard label="BPM" :model-value="appStore.currentSongInfo.bpmValue" :show-edit-button="true"
         :custom-edit-action="() => { isBpmModalOpen = true }" />
       <SongMetaCard v-model="songDelay" label="延迟(Frame)" :show-edit-button="true" input-type="number" />
 
 
-      <SongMetaCard label="Frame" :model-value="currentFrame" />
+      <SongMetaCard label="Frame" :model-value="appStore.currentSongInfo.currentFrame.rounded" />
 
-      <SongMetaCard label="Coord" :model-value="currentCoord.rounded" />
+      <SongMetaCard label="Coord" :model-value="appStore.currentSongInfo.currentCoord.rounded" />
 
     </div>
 
-    <div class="flex flex-1 items-end">
+    <div class="flex flex-1 items-center justify-center">
       <ObstacleSelector></ObstacleSelector>
     </div>
 
@@ -81,27 +81,11 @@ const isBpmModalOpen = ref(false)
 
 // --- 桥接子组件的数据供模板使用，并且用于对外暴露 ---
 const seekTo = (target: number | string, type: 'time' | 'frame' | 'coord') => playerRef.value?.seekTo(target, type)
-const currentTime = computed(() => playerRef.value?.currentTime ?? 0)
-const currentFrame = computed(() => playerRef.value?.currentFrame ?? 0)
-const currentCoord = computed(() => playerRef.value?.currentCoord ?? { raw: 0, rounded: 0 })
-const playbackRate = computed(() => playerRef.value?.playbackRate ?? 1.0)
-const pitchRate = computed(() => playerRef.value?.pitchRate ?? 1.0)
-const bpmValue = computed(() => playerRef.value?.bpmValue ?? 120)
-const isPlaying = computed(() => playerRef.value?.isPlaying ?? false)
 const pause = () => playerRef.value?.pause()
-const duration = computed(() => playerRef.value?.duration ?? 0)
 
 // 继续向更外层的父级抛出原本暴露的所有方法和参数
 defineExpose({
   seekTo,
-  currentTime,
-  currentFrame,
-  currentCoord,
-  playbackRate,
-  pitchRate,
-  bpmValue,
-  isPlaying,
   pause,
-  duration,
 })
 </script>

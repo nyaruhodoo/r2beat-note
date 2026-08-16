@@ -1,7 +1,7 @@
 <template>
   <main ref="containerRef"
-    class="relative h-full w-60 shrink-0 select-none overflow-hidden rounded-2xl border border-slate-200/80 bg-slate-900"
-    @wheel="handleWheel" @contextmenu.prevent>
+    class="relative h-full w-60 shrink-0 select-none overflow-hidden rounded-2xl border border-slate-200/80"
+    :style="{ backgroundColor: cssCanvasBgColor }" @wheel="handleWheel" @contextmenu.prevent>
     <div ref="canvasContainerRef" class="h-full w-full overflow-hidden"></div>
   </main>
 </template>
@@ -10,7 +10,7 @@
 import { spritesConfig } from '@/sprites'
 import { useGlobalConfigStore } from '@/store/global-config'
 import { useAppStore } from '@/store/store'
-import { getDecimalPlaces } from '@/utils/utils'
+import { getDecimalPlaces, hslToHex, parseColor, toCssHex8 } from '@/utils/utils'
 import { useEventListener } from '@vueuse/core'
 import { storeToRefs } from 'pinia'
 import * as PIXI from 'pixi.js'
@@ -27,14 +27,7 @@ export interface Obstacle {
 
 const props = withDefaults(
   defineProps<{
-    currentTime: number
-    currentFrame: number
-    currentCoord: { raw: number; rounded: number }
-    playbackRate: number
-    bpm: number
-    isPlaying?: boolean
     seekTo: (target: number | string, type: 'time' | 'frame' | 'coord') => void
-    duration: number
     gridAspect?: number
   }>(),
   {
@@ -43,24 +36,32 @@ const props = withDefaults(
 )
 
 const appStore = useAppStore()
-const { currentSong, selectedObstacle, selectedCoords } = storeToRefs(appStore)
+const { currentSong, selectedObstacle, selectedCoords, currentSongInfo } = storeToRefs(appStore)
 
 const globalConfigStore = useGlobalConfigStore()
 const {
   activeRowColor,
-  activeRowAlpha,
   showGridLines,
   visibleGridCount,
   activeRowIndexFromBottom,
   minorTickLength,
   stepCoord,
   selectedBgColor,
-  selectedBgAlpha,
   scrollbarWidth,
   gridLineColor,
   randomType,
-  repeatChance
+  repeatChance,
+  canvasBgColor,
+  trackBgColor,
+  tickColor,
 } = storeToRefs(globalConfigStore)
+
+/**
+ * 将 32 位 0xRRGGBBAA 数值转换为 CSS 兼容的 8位 Hex 字符串 (#RRGGBBAA)
+ */
+const cssCanvasBgColor = computed(() => {
+  return toCssHex8(canvasBgColor.value)
+})
 
 const hoverState = ref<{ coord: number; offsetXRatio: number } | null>(null)
 const isRightMouseDown = ref(false)
@@ -125,7 +126,6 @@ function generateObstacle(
   if (selectedObstacleKind === 161) {
     let actualKind = selectedObstacleKind;
 
-
     // 1. 检查上一个障碍物是否存在，且是否在当前可抽取的随机池里
     const canRepeat = prevObsKind != null && randomType.value.includes(prevObsKind);
 
@@ -140,8 +140,6 @@ function generateObstacle(
 
     return NoteType[actualKind];
   }
-
-
 
   console.log({
     prevObs, nextObs, offsetXRatio, selectedObstacle: selectedObstacle.value
@@ -479,7 +477,7 @@ const filledIntervals = computed(() => {
 // BPM 分段计算
 const bpmSegments = computed(() => {
   const bpmData = currentSong.value?.xmlObject?.TITLE?.BPM
-  const defaultBpm = props.bpm ?? 120
+  const defaultBpm = currentSongInfo.value.bpmValue ?? 120
 
   let sortedNodes: Array<{ frame: number; bpm: number }> = []
 
@@ -546,7 +544,7 @@ const coordRange = computed(() => {
   if (segments.length === 0) return { min: 0, max: 0, span: 0 }
 
   const startCoord = 0
-  const endCoord = timeToCoord(props.duration)
+  const endCoord = timeToCoord(currentSongInfo.value.duration ?? 0)
 
   const coords = [startCoord, endCoord]
   for (const seg of segments) {
@@ -567,14 +565,19 @@ const CONFIG = computed(() => ({
   stepCoord: stepCoord.value,
   gridAspect: props.gridAspect,
   scrollbarWidth: scrollbarWidth.value,
+  activeRowColor: activeRowColor.value,
+  selectedBgColor: selectedBgColor.value,
   gridLineColor: gridLineColor.value,
+  canvasBgColor: canvasBgColor.value,
+  trackBgColor: trackBgColor.value,
+  tickColor: tickColor.value,
 }))
 
 const kindColorMap = new Map<string, number>()
 function getKindColor(kind: string): number {
   if (!kindColorMap.has(kind)) {
     const hue = (Math.abs(hashCode(kind)) % 360) / 360
-    kindColorMap.set(kind, hslToHex(hue, 0.75, 0.55))
+    kindColorMap.set(kind, (hslToHex(hue, 0.75, 0.55) << 8) | 0xff)
   }
   return kindColorMap.get(kind)!
 }
@@ -586,28 +589,6 @@ function hashCode(str: string): number {
     hash |= 0
   }
   return hash
-}
-
-function hslToHex(h: number, s: number, l: number): number {
-  let r: number, g: number, b: number
-  if (s === 0) {
-    r = g = b = l
-  } else {
-    const q = l < 0.5 ? l * (1 + s) : l + s - l * s
-    const p = 2 * l - q
-    const hue2rgb = (p: number, q: number, t: number) => {
-      if (t < 0) t += 1
-      if (t > 1) t -= 1
-      if (t < 1 / 6) return p + (q - p) * 6 * t
-      if (t < 1 / 2) return q
-      if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6
-      return p
-    }
-    r = hue2rgb(p, q, h + 1 / 3)
-    g = hue2rgb(p, q, h)
-    b = hue2rgb(p, q, h - 1 / 3)
-  }
-  return (Math.round(r * 255) << 16) + (Math.round(g * 255) << 8) + Math.round(b * 255)
 }
 
 const canvasContainerRef = ref<HTMLDivElement | null>(null)
@@ -630,18 +611,18 @@ let textPoolIndex = 0
 const spritePool: PIXI.Sprite[] = []
 let spritePoolIndex = 0
 
-function getTextNode(content: string, x: number, y: number, fontSize = 11, color = 0x94a3b8) {
+function getTextNode(content: string, x: number, y: number, fontSize = 11, color = CONFIG.value.tickColor) {
   let textNode: PIXI.Text
   if (textPoolIndex < textPool.length) {
     textNode = textPool[textPoolIndex]
     textNode.visible = true
     textNode.text = content
     textNode.style.fontSize = fontSize
-    textNode.style.fill = color
+    textNode.style.fill = parseColor(color).color
   } else {
     textNode = new PIXI.Text({
       text: content,
-      style: { fontFamily: 'monospace', fontSize, fill: color, align: 'right' },
+      style: { fontFamily: 'monospace', fontSize, fill: parseColor(color).color, align: 'right' },
     })
     textContainer?.addChild(textNode)
     textPool.push(textNode)
@@ -715,13 +696,13 @@ async function loadSpritesheet() {
 }
 
 const snapToNearestTick = () => {
-  const currentCoord = props.currentCoord
-  const snappedCoord = Math.round(currentCoord.raw / stepCoord.value) * stepCoord.value
-  props.seekTo(snappedCoord, 'coord')
+  const currentCoord = currentSongInfo.value.currentCoord
+  const snappedCoord = Math.round((currentCoord?.raw ?? 0) / stepCoord.value) * stepCoord.value
+  props.seekTo?.(snappedCoord, 'coord')
 }
 
 watch(
-  () => props.isPlaying,
+  () => currentSongInfo.value.isPlaying,
   (playing) => {
     if (!playing) snapToNearestTick()
   }
@@ -737,7 +718,7 @@ const initPixi = async () => {
   const instance = new PIXI.Application()
   await instance.init({
     resizeTo: canvasContainerRef.value,
-    backgroundColor: 0x0f172a,
+    backgroundColor: cssCanvasBgColor.value,
     antialias: true,
     resolution: window.devicePixelRatio || 1,
     autoDensity: true,
@@ -779,6 +760,13 @@ const initPixi = async () => {
   isInitializing = false
 }
 
+// 动态响应背景色的改变
+watch(cssCanvasBgColor, (newColor) => {
+  if (app) {
+    app.renderer.background.color = newColor
+  }
+})
+
 watch(
   [coordRange, () => currentSong.value],
   ([range]) => {
@@ -812,7 +800,8 @@ function getPointerGridState(
   const targetBaselineY = viewHeight - (cfg.activeRowIndexFromBottom - 0.5) * gridHeight
 
   const relativeY = targetBaselineY - y
-  const rawCoord = props.currentCoord.raw + relativeY / rowHPerCoord
+  const currentCoordRaw = currentSongInfo.value.currentCoord?.raw ?? 0
+  const rawCoord = currentCoordRaw + relativeY / rowHPerCoord
 
   const snapped = Math.round(rawCoord / cfg.stepCoord) * cfg.stepCoord
   const { min, max } = coordRange.value
@@ -840,9 +829,10 @@ function renderObstacleItem(
   const cellTopY = startCenterY - gridHeight / 2 - (rowSpan - 1) * gridHeight
 
   if (isSelected) {
+    const selColor = parseColor(CONFIG.value.selectedBgColor)
     g.rect(trackStartX, cellTopY, trackWidth, totalHeight)
-    g.fill({ color: selectedBgColor.value, alpha: selectedBgAlpha.value })
-    g.stroke({ width: 2, color: selectedBgColor.value, alpha: 0.9 })
+    g.fill(selColor)
+    g.stroke({ width: 2, ...selColor })
   }
 
   const texture = obstacleTexturesMap.get(kind)
@@ -850,14 +840,14 @@ function renderObstacleItem(
   if (texture) {
     getSpriteNode(texture, trackStartX, cellTopY, trackWidth, totalHeight, alpha)
   } else {
-    const color = getKindColor(kind)
+    const color32 = getKindColor(kind)
     g.rect(trackStartX, cellTopY, trackWidth, totalHeight)
-    g.fill({ color, alpha: 0.9 * alpha })
-    g.stroke({ width: 1.5, color: 0x000000, alpha: 0.4 * alpha })
+    g.fill(parseColor(color32))
+    g.stroke({ width: 1.5, ...parseColor(0x000000ff) })
 
     const centerX = trackStartX + trackWidth / 2
     const centerY = startCenterY - ((rowSpan - 1) * gridHeight) / 2
-    const txt = getTextNode(`Kind: ${kind}`, centerX, centerY, 11, 0xffffff)
+    const txt = getTextNode(`Kind: ${kind}`, centerX, centerY, 11, 0xffffffff)
     txt.anchor.set(0.5, 0.5)
   }
 }
@@ -884,7 +874,7 @@ const renderEditor = () => {
   const majorTickLength = minorTickLengthVal * 3
   const tickEndX = trackStartX - 4
 
-  const currentCoord = props.currentCoord
+  const currentCoord = currentSongInfo.value.currentCoord ?? { raw: 0 }
   const targetBaselineY = viewHeight - (cfg.activeRowIndexFromBottom - 0.5) * gridHeight
   const rowHPerCoord = gridHeight / cfg.stepCoord
 
@@ -899,14 +889,17 @@ const renderEditor = () => {
 
   const precision = getDecimalPlaces(cfg.stepCoord)
 
-  // 背景
+  // 轨道背景
   g.rect(trackStartX, 0, trackWidth, viewHeight)
-  g.fill({ color: 0x000000 })
+  g.fill(parseColor(cfg.trackBgColor))
 
   // 网格与刻度
   const startCoordIndex = Math.floor(minVisibleCoord / cfg.stepCoord)
   const maxCoordIndex = Math.ceil(maxVisibleCoord / cfg.stepCoord)
   const isShowGridLines = showGridLines.value
+
+  const gridLineColorParsed = parseColor(cfg.gridLineColor)
+  const tickColorParsed = parseColor(cfg.tickColor)
 
   for (let i = startCoordIndex; i <= maxCoordIndex; i++) {
     const c = i * cfg.stepCoord
@@ -917,34 +910,34 @@ const renderEditor = () => {
     if (isShowGridLines) {
       g.moveTo(trackStartX, cellTopY)
       g.lineTo(trackStartX + trackWidth, cellTopY)
-      g.stroke({ width: 1, color: cfg.gridLineColor })
+      g.stroke({ width: 1, ...gridLineColorParsed })
 
       g.moveTo(trackStartX, cellBottomY)
       g.lineTo(trackStartX + trackWidth, cellBottomY)
-      g.stroke({ width: 1, color: cfg.gridLineColor })
+      g.stroke({ width: 1, ...gridLineColorParsed })
     }
 
     const posInGroup = (((i + 4) % 8) + 8) % 8
 
     if (posInGroup === 4) {
       const displayText = precision > 0 ? c.toFixed(precision) : c.toString()
-      const txt = getTextNode(displayText, tickEndX, centerY, 11, 0x94a3b8)
+      const txt = getTextNode(displayText, tickEndX, centerY, 11, cfg.tickColor)
       txt.anchor.set(1, 0.5)
     } else if (posInGroup === 0) {
       g.moveTo(tickEndX - majorTickLength, centerY)
       g.lineTo(tickEndX, centerY)
-      g.stroke({ width: 1.5, color: 0x94a3b8 })
+      g.stroke({ width: 1.5, ...tickColorParsed })
     } else {
       g.moveTo(tickEndX - minorTickLengthVal, centerY)
       g.lineTo(tickEndX, centerY)
-      g.stroke({ width: 1, color: 0x475569 })
+      g.stroke({ width: 1, ...tickColorParsed })
     }
   }
 
   // 当前行高亮
   const activeCellTopY = targetBaselineY - gridHeight / 2
   g.rect(trackStartX, activeCellTopY, trackWidth, gridHeight)
-  g.fill({ color: activeRowColor.value, alpha: activeRowAlpha.value })
+  g.fill(parseColor(cfg.activeRowColor))
 
   // 连线填充
   const intervals = filledIntervals.value
@@ -968,17 +961,17 @@ const renderEditor = () => {
         getSpriteNode(texture, trackStartX, cellTopY, trackWidth, gridHeight)
       } else {
         g.rect(trackStartX, cellTopY, trackWidth, gridHeight)
-        g.fill({ color: fillKindColor, alpha: 0.9 })
-        g.stroke({ width: 1.5, color: 0x000000, alpha: 0.4 })
+        g.fill(parseColor(fillKindColor))
+        g.stroke({ width: 1.5, ...parseColor(0x00000066) })
 
         const centerX = trackStartX + trackWidth / 2
-        const txt = getTextNode(`Kind: ${interval.fillKind}`, centerX, centerY, 11, 0xffffff)
+        const txt = getTextNode(`Kind: ${interval.fillKind}`, centerX, centerY, 11, 0xffffffff)
         txt.anchor.set(0.5, 0.5)
       }
     }
   }
 
-  // 现存障碍物：使用二分查找直接定位到视口底部的起始索引
+  // 现存障碍物
   const obstacleList = obstacles.value
   const currentHoverCoord = hoverState.value?.coord ?? null
   const hasSelectedObstacle = !!selectedObstacle.value
@@ -1030,11 +1023,11 @@ const renderEditor = () => {
       const cellTopY = centerY - gridHeight / 2
 
       g.rect(trackStartX, cellTopY, trackWidth, gridHeight)
-      g.fill({ color: 0xef4444, alpha: 0.35 })
-      g.stroke({ width: 1.5, color: 0xef4444, alpha: 0.8 })
+      g.fill(parseColor(0xef444459))
+      g.stroke({ width: 1.5, ...parseColor(0xef4444cc) })
 
       const centerX = trackStartX + trackWidth / 2
-      const txt = getTextNode(errorMessage, centerX, centerY, 11, 0xf87171)
+      const txt = getTextNode(errorMessage, centerX, centerY, 11, 0xf87171ff)
       txt.anchor.set(0.5, 0.5)
     } else if (previewObs) {
       renderObstacleItem(
@@ -1055,7 +1048,7 @@ const renderEditor = () => {
   const trackY0 = 10
 
   g.roundRect(scrollbarStartX, trackY0, cfg.scrollbarWidth, trackHeight, 3)
-  g.fill({ color: 0x1e293b })
+  g.fill(parseColor(0x1e293bff))
 
   const thumbHeight = Math.max(30, (viewHeight / (rawSpan * rowHPerCoord)) * trackHeight)
   const availableTrackLength = trackHeight - thumbHeight
@@ -1065,7 +1058,7 @@ const renderEditor = () => {
   const thumbY = trackY0 + availableTrackLength * (1 - progressRatio)
 
   g.roundRect(scrollbarStartX, thumbY, cfg.scrollbarWidth, thumbHeight, 3)
-  g.fill({ color: isDraggingScrollbar ? 0x38bdf8 : 0x64748b })
+  g.fill(parseColor(isDraggingScrollbar ? 0x38bdf8ff : 0x64748bff))
 }
 
 const handleWheel = (e: WheelEvent) => {
@@ -1074,12 +1067,12 @@ const handleWheel = (e: WheelEvent) => {
   if (range.span <= 0) return
 
   const cfg = CONFIG.value
-  const currentCoord = props.currentCoord
+  const currentCoord = currentSongInfo.value.currentCoord ?? { raw: 0 }
   const baseTick = Math.round(currentCoord.raw / cfg.stepCoord) * cfg.stepCoord
   const stepDelta = e.deltaY < 0 ? cfg.stepCoord : -cfg.stepCoord
   const targetCoord = Math.max(range.min, Math.min(range.max, baseTick + stepDelta))
 
-  props.seekTo(targetCoord, 'coord')
+  props.seekTo?.(targetCoord, 'coord')
 }
 
 const handleCanvasClick = (e: PIXI.FederatedPointerEvent) => {
@@ -1098,7 +1091,7 @@ const handleCanvasClick = (e: PIXI.FederatedPointerEvent) => {
   if (clickX >= scrollbarStartX - 6 && button === 0) {
     isDraggingScrollbar = true
     dragStartY = clickY
-    dragStartCoord = props.currentCoord.raw
+    dragStartCoord = currentSongInfo.value.currentCoord?.raw ?? 0
     return
   }
 
@@ -1230,7 +1223,7 @@ const handlePointerMove = (e: PIXI.FederatedPointerEvent) => {
   const snappedCoord = Math.round(rawTargetCoord / cfg.stepCoord) * cfg.stepCoord
   const targetCoord = Math.max(range.min, Math.min(range.max, snappedCoord))
 
-  props.seekTo(targetCoord, 'coord')
+  props.seekTo?.(targetCoord, 'coord')
 }
 
 const handlePointerUp = (e: PIXI.FederatedPointerEvent) => {
