@@ -7,25 +7,25 @@
         <div v-if="id" class="relative">
           <!-- 障碍物主选择按钮 -->
           <button @click="selectObstacle(id)"
-            class="group flex items-center justify-center rounded-xl p-2 transition-all" :class="[
+            class="group relative flex items-center justify-center rounded-xl p-2 transition-all duration-200" :class="[
               selectedObstacle?.Kind === String(id)
-                ? 'border border-zinc-800 bg-zinc-900'
-                : 'border border-slate-200 bg-slate-100 hover:border-slate-300 hover:bg-slate-200/70'
+                ? 'border border-slate-800 bg-slate-800 shadow-xs'
+                : 'border border-slate-200 bg-slate-50 hover:border-slate-300 hover:bg-slate-100'
             ]">
             <div class="relative flex items-center justify-center max-w-20">
               <img :src="getObstacleImageUrl(id)" :alt="`Obstacle ${id}`"
-                class="h-full w-full object-contain pointer-events-none" />
+                class="h-full w-full object-contain pointer-events-none transition-transform duration-200 group-hover:scale-105" />
             </div>
           </button>
 
           <!-- 特殊障碍物 ID 161 专属配置按钮 + Popover -->
           <el-popover v-if="String(id) === '161'" placement="top-end" :width="268" trigger="click"
-            popper-class="!p-3.5 !rounded-2xl !border-slate-200/90 !bg-white/95 !shadow-2xl !backdrop-blur-md">
+            popper-class="!p-3.5 !rounded-xl !border-slate-200 !bg-white/95 !shadow-xl !backdrop-blur-md">
             <template #reference>
               <button
-                class="absolute -top-1.5 -right-1.5 z-10 flex h-6 w-6 items-center justify-center rounded-full bg-linear-to-tr from-indigo-600 to-violet-500 text-white shadow-md transition-all hover:scale-110 hover:shadow-indigo-500/30 active:scale-95"
+                class="absolute -top-1.5 -right-1.5 z-10 flex h-6 w-6 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 shadow-xs transition-all hover:border-slate-300 hover:bg-slate-50 hover:text-slate-800 active:scale-95"
                 title="配置随机障碍物池">
-                <el-icon :size="14">
+                <el-icon :size="13">
                   <Setting />
                 </el-icon>
               </button>
@@ -33,27 +33,22 @@
 
             <!-- Popover 内部内容 -->
             <div>
-              <div class="flex items-center justify-between pb-2 mb-2.5 border-b border-slate-100">
-                <div class="flex items-center gap-1.5">
-                  <span class="text-xs font-bold text-slate-800">随机障碍配置</span>
-                </div>
-              </div>
-
+              <!-- 候选障碍池 -->
               <div class="mb-3">
                 <div class="flex items-center justify-between mb-1.5">
-                  <span class="text-[11px] font-semibold text-slate-500">候选障碍池</span>
-                  <span class="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold text-slate-700">
+                  <span class="text-xs font-medium text-slate-400">候选障碍池</span>
+                  <span class="rounded-md bg-slate-100 px-1.5 py-0.5 text-[10px] font-semibold text-slate-600">
                     已选 {{ globalConfigStore.randomType?.length || 0 }} 项
                   </span>
                 </div>
 
-                <div class="grid grid-cols-2 gap-1.5 max-h-60 overflow-y-auto p-1">
+                <div class="grid grid-cols-2 gap-1.5 max-h-60 overflow-y-auto p-0.5">
                   <button v-for="item in defaultGlobalConfig.randomType" :key="item" @click="toggleRandomType(item)"
                     class="group flex h-10 w-full items-center justify-center rounded-lg border p-1 transition-all shrink-0 active:scale-95"
                     :class="[
                       isRandomTypeSelected(item)
-                        ? 'border-slate-900 bg-slate-900 shadow-md ring-2 ring-slate-900/20'
-                        : 'border-slate-200/80 bg-slate-50 hover:border-slate-300 hover:bg-slate-100'
+                        ? 'border-slate-800 bg-slate-800 shadow-xs'
+                        : 'border-slate-200 bg-slate-50 hover:border-slate-300 hover:bg-slate-100'
                     ]">
                     <img :src="getObstacleImageUrl(String(item))" :alt="`Obstacle ${item}`"
                       class="h-full w-full object-contain pointer-events-none" />
@@ -61,28 +56,29 @@
                 </div>
               </div>
 
+              <!-- 重复出现概率 -->
               <div class="pt-2.5 border-t border-slate-100">
-                <div class="flex items-center justify-between mb-1.5">
-                  <span class="text-[11px] font-semibold text-slate-500">重复出现概率</span>
+                <div class="flex items-center justify-between mb-2">
+                  <span class="text-xs font-medium text-slate-400">重复出现概率</span>
                   <div class="flex items-center gap-1">
                     <input type="number" min="0" max="100" v-model.number="globalConfigStore.repeatChance"
-                      class="w-12 rounded-md border border-slate-200 bg-slate-50 px-1 py-0.5 text-center text-xs font-bold text-indigo-600 focus:border-indigo-500 focus:bg-white focus:outline-none" />
-                    <span class="text-[11px] text-slate-400 font-medium">%</span>
+                      class="w-12 rounded border border-slate-200 bg-slate-50 px-1.5 py-0.5 text-right font-mono text-xs font-semibold text-slate-700 transition-all focus:border-slate-400 focus:bg-white focus:outline-hidden [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none" />
+                    <span class="text-xs font-medium text-slate-400">%</span>
                   </div>
                 </div>
                 <div class="flex items-center gap-2">
                   <input type="range" min="0" max="100" step="1" v-model.number="globalConfigStore.repeatChance"
-                    class="h-1.5 w-full cursor-pointer appearance-none rounded-lg bg-slate-200 accent-indigo-600 focus:outline-none" />
+                    class="h-1.5 w-full cursor-pointer appearance-none rounded-lg bg-slate-200 accent-slate-700 focus:outline-hidden" />
                 </div>
               </div>
             </div>
           </el-popover>
         </div>
 
+        <!-- 空位占位 -->
         <div v-else
           class="invisible flex items-center justify-center p-2 rounded-xl border border-transparent pointer-events-none"
           aria-hidden="true">
-          <!-- 借用本列第一行非空元素的图片占位，保证宽度与真实的等大 -->
           <div class="relative flex items-center justify-center max-w-20">
             <img v-if="getColumnSampleId(colIndex)" :src="getObstacleImageUrl(getColumnSampleId(colIndex)!)"
               class="h-full w-full object-contain" />
