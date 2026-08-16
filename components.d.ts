@@ -47,6 +47,7 @@ declare module 'vue' {
     ShortcutKeyTip: typeof import('./src/components/ShortcutKeyTip.vue')['default']
     SongInfoPanel: typeof import('./src/components/SongInfoPanel.vue')['default']
     SongMetaCard: typeof import('./src/components/SongMetaCard.vue')['default']
+    SongStatsDialog: typeof import('./src/components/SongStatsDialog.vue')['default']
     SongVisualization: typeof import('./src/components/SongVisualization.vue')['default']
     TrackManagerPopover: typeof import('./src/components/TrackManagerPopover.vue')['default']
     ViewportConfig: typeof import('./src/components/ViewportConfig.vue')['default']

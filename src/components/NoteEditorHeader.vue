@@ -9,13 +9,19 @@
       <h1 class="text-lg font-bold text-slate-800">{{ songTitle }}</h1>
     </div>
     <div class="flex items-center gap-3">
+      <el-button type="primary" :disabled="loading" @click="statsVisible = true">详情统计</el-button>
       <el-button type="primary" :disabled="loading" @click="handleSaveXml">导出谱面</el-button>
     </div>
   </header>
+
+  <!-- 详情统计对话框 -->
+  <el-dialog v-model="statsVisible" title="谱面数据统计" width="680px" destroy-on-close align-center class="rounded-2xl">
+    <SongStatsDialog :xml-data="xmlObject" />
+  </el-dialog>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { XMLBuilder } from 'fast-xml-parser'
 import { ElMessage } from 'element-plus'
@@ -23,6 +29,8 @@ import iconv from 'iconv-lite'
 import { Buffer } from 'buffer'
 
 import { useAppStore } from '@/store/store'
+// 导入自定义的详情统计组件
+import SongStatsDialog from './SongStatsDialog.vue'
 
 // @ts-expect-error iconv需要这个东西
 window.Buffer = Buffer
@@ -38,6 +46,9 @@ withDefaults(
 
 const router = useRouter()
 const appStore = useAppStore()
+
+// 控制统计弹窗显隐
+const statsVisible = ref(false)
 
 // 直接从 appStore 获取歌曲名称与 xml 对象
 const songTitle = computed(() => appStore.currentSong?.xmlObject?.TITLE?.Name || '未命名歌曲')
