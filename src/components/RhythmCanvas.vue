@@ -16,7 +16,7 @@ import { storeToRefs } from 'pinia'
 import * as PIXI from 'pixi.js'
 import { ref, onMounted, onUnmounted, watch, computed } from 'vue'
 import spriteUrl from '@/assets/sprites.png'
-import { mirrorModeMap, NoteType } from '@/note'
+import { NoteType } from '@/note'
 
 export interface Obstacle {
   Coord: string
