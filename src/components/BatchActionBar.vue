@@ -3,7 +3,7 @@
   <Transition enter-active-class="transition-opacity duration-150 ease-out" enter-from-class="opacity-0"
     enter-to-class="opacity-100" leave-active-class="transition-opacity duration-100 ease-in"
     leave-from-class="opacity-100" leave-to-class="opacity-0">
-    <div v-show="selectedCoords.size > 0" class="mt-auto pt-3 shrink-0 border-t border-slate-100 bg-white">
+    <div class="mt-auto pt-3 shrink-0 border-t border-slate-100 bg-white">
       <!-- 头部：状态展示 -->
       <div class="flex items-center justify-between mb-2.5 px-1">
         <div class="flex items-center gap-1.5">
@@ -82,10 +82,11 @@
         </Transition>
 
         <!-- 操作按钮渲染 -->
-        <button v-for="btn in actionButtons" :key="btn.id" @click="btn.action" :class="twMerge(
-          'flex items-center justify-center rounded-lg px-2 py-2 text-xs font-medium transition-all active:scale-95 disabled:opacity-40 disabled:pointer-events-none bg-slate-100 text-slate-600 hover:bg-slate-200/80 hover:text-slate-900 active:bg-slate-200',
-          btn.customClass
-        )">
+        <button v-for="btn in actionButtons" :disabled="selectedCoords.size === 0" :key="btn.id" @click="btn.action"
+          :class="twMerge(
+            'flex items-center justify-center rounded-lg px-2 py-2 text-xs font-medium transition-all active:scale-95 disabled:opacity-40 disabled:pointer-events-none bg-slate-100 text-slate-600 hover:bg-slate-200/80 hover:text-slate-900 active:bg-slate-200',
+            btn.customClass
+          )">
           {{ btn.label }}
         </button>
       </div>
@@ -100,7 +101,6 @@ import { twMerge } from 'tailwind-merge';
 import { useAppStore, type NoteData } from '@/store/store';
 import { mirrorModeMap, NoteType, StarNotetransformMap } from '@/note';
 import { ElMessage } from 'element-plus';
-
 
 const store = useAppStore();
 const { selectedCoords, currentSong } = storeToRefs(store);
@@ -154,6 +154,46 @@ function getSelectedObstacles(): NoteData[] {
 }
 
 /**
+ * 抽取公共校验函数：长音完整性校验
+ * @param selectedObs 选中的障碍物列表（必须已按 Coord 升序排列）
+ * @returns boolean 校验是否通过
+ */
+function validateSelection(selectedObs: NoteData[]): boolean {
+  if (selectedObs.length === 0) return false;
+
+  const firstObs = selectedObs[0];
+  const lastObs = selectedObs[selectedObs.length - 1];
+
+  const firstKind = String(firstObs.Kind);
+  const lastKind = String(lastObs.Kind);
+
+  // 定义校验用的音符 Kind 集合
+  const middleKinds = new Set(['129', '132', '135', '138', '141', '144']);
+  const headKinds = new Set(['130', '133', '136', '139', '142', '145']);
+  const tailKinds = new Set(['128', '131', '134', '137', '140', '143']);
+
+  // 规则 1：首尾障碍物不能是长音的中间帧
+  if (middleKinds.has(firstKind) || middleKinds.has(lastKind)) {
+    ElMessage.error('操作失败：首尾障碍物不能包含长音中间帧');
+    return false;
+  }
+
+  // 规则 2：第一个障碍物不能是长音尾帧
+  if (headKinds.has(firstKind)) {
+    ElMessage.error('操作失败：第一个障碍物不能是长音尾帧');
+    return false;
+  }
+
+  // 规则 3：最后一个障碍物不能是长音首帧
+  if (tailKinds.has(lastKind)) {
+    ElMessage.error('操作失败：最后一个障碍物不能是长音首帧');
+    return false;
+  }
+
+  return true;
+}
+
+/**
  * 批量删除
  */
 function handleBatchDelete() {
@@ -175,6 +215,10 @@ function handleAlignSubmit() {
   const area = currentSong.value?.xmlObject?.TITLE?.AREA;
   if (!area || selectedCoords.value.size === 0) return;
 
+  const selectedObs = getSelectedObstacles();
+  // 校验逻辑
+  if (!validateSelection(selectedObs)) return;
+
   const offset = Number(alignOffset.value) || 0;
   if (offset === 0) {
     activePopover.value = null;
@@ -182,9 +226,6 @@ function handleAlignSubmit() {
   }
 
   const selectedSet = selectedCoords.value;
-  const selectedObs = getSelectedObstacles();
-  if (selectedObs.length === 0) return;
-
   const movedMap = new Map<number, NoteData>();
   const newSelectedCoords = new Set<number>();
 
@@ -218,9 +259,11 @@ function handleDuplicateSubmit() {
   const area = currentSong.value?.xmlObject?.TITLE?.AREA;
   if (!area || selectedCoords.value.size === 0) return;
 
-  const targetBase = Math.max(0, Number(duplicateBaseCoord.value) || 0);
   const selectedObs = getSelectedObstacles();
-  if (selectedObs.length === 0) return;
+  // 校验逻辑
+  if (!validateSelection(selectedObs)) return;
+
+  const targetBase = Math.max(0, Number(duplicateBaseCoord.value) || 0);
 
   const coords = selectedObs.map(item => +item.Coord);
   const minCoord = Math.min(...coords);
@@ -327,41 +370,10 @@ function handleMirrorMode() {
   const area = currentSong.value?.xmlObject?.TITLE?.AREA;
   if (!area || selectedCoords.value.size === 0) return;
 
-  // 1. 获取选中的障碍物列表（按 Coord 从小到大排序）
   const selectedObs = getSelectedObstacles();
-  if (selectedObs.length === 0) return;
+  // 校验逻辑
+  if (!validateSelection(selectedObs)) return;
 
-  const firstObs = selectedObs[0];
-  const lastObs = selectedObs[selectedObs.length - 1];
-
-  const firstKind = String(firstObs.Kind);
-  const lastKind = String(lastObs.Kind);
-
-  // 定义校验用的音符 Kind 集合
-  const middleKinds = new Set(['129', '132', '135', '138', '141', '144']);
-  const headKinds = new Set(['130', '133', '136', '139', '142', '145']);
-  const tailKinds = new Set(['128', '131', '134', '137', '140', '143']);
-
-  // 2. 校验规则执行（使用 Element Plus 消息提示）
-  // 规则 1：首尾障碍物不能是长音的中间帧
-  if (middleKinds.has(firstKind) || middleKinds.has(lastKind)) {
-    ElMessage.error('镜像失败：首尾障碍物不能包含长音中间帧');
-    return;
-  }
-
-  // 规则 2：第一个障碍物不能是长音尾帧
-  if (headKinds.has(firstKind)) {
-    ElMessage.error('镜像失败：第一个障碍物不能是长音尾帧');
-    return;
-  }
-
-  // 规则 3：最后一个障碍物不能是长音首帧
-  if (tailKinds.has(lastKind)) {
-    ElMessage.error('镜像失败：最后一个障碍物不能是长音首帧');
-    return;
-  }
-
-  // 3. 执行镜像逻辑
   const selectedSet = selectedCoords.value;
 
   if (currentSong.value)
@@ -384,7 +396,6 @@ function handleMirrorMode() {
 
   activePopover.value = null;
 }
-
 
 const actionButtons = computed(() => [
   {
@@ -412,7 +423,7 @@ const actionButtons = computed(() => [
     }
   },
   {
-    id: 'remove-star',
+    id: 'mirror-mode',
     label: '镜子模式',
     action: handleMirrorMode
   },

@@ -46,8 +46,8 @@ export const NoteType: Record<
  * 同按键进行转换映射，用于处理星星和钉子的映射
  */
 export const StarNotetransformMap = {
-  '18': '27',
-  '19': '26',
+  '18': '26',
+  '19': '27',
   '26': '18',
   '27': '19',
 }
