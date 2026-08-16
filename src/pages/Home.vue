@@ -67,14 +67,12 @@
           </span>
         </div>
 
-        <!-- 纯扁平高质感列表：完全移除任何 shadow 阴影 -->
         <div class="custom-scrollbar max-h-90 divide-y divide-slate-100 overflow-y-auto pr-1">
           <div v-for="song in songs" :key="song.id"
             class="group flex items-center justify-between rounded-xl p-3 transition-colors duration-150 hover:bg-slate-100/70">
 
             <!-- 歌曲信息 -->
             <div class="flex items-center gap-3.5 min-w-0">
-              <!-- 极简图标：无边框无阴影 -->
               <div
                 class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-slate-500 transition-colors group-hover:bg-emerald-100/70 group-hover:text-emerald-700">
                 <el-icon :size="18">
@@ -97,7 +95,7 @@
               </div>
             </div>
 
-            <!-- 操作区（扁平按钮） -->
+            <!-- 操作区 -->
             <div class="flex items-center gap-1 shrink-0">
               <el-button type="primary" link
                 class="text-xs font-semibold !ext-emerald-600 hover:text-emerald-700 px-3 py-1.5 rounded-lg hover:bg-emerald-50 transition-colors"

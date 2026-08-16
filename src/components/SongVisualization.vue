@@ -1,10 +1,10 @@
 <template>
   <aside class="flex h-full w-full flex-col gap-4 rounded-2xl border border-slate-200/80 bg-white p-6 overflow-hidden">
     <el-tabs v-model="activeTab" class="flex-1 flex flex-col overflow-hidden min-h-0 custom-tabs">
-      <el-tab-pane label="音频可视化" name="selector" class="h-full overflow-hidden">
-        <div class="h-full overflow-y-auto">
+      <el-tab-pane label="快捷键预览" name="selector" class="h-full overflow-hidden">
+        <div class="flex flex-col gap-5 h-full overflow-y-auto">
           <!-- <AudioWaveformVisualizer :seek-to="seekTo"></AudioWaveformVisualizer> -->
-          暂时没想好展示哪些东西，如果你有好的建议可以提给我
+          <ShortcutKeyTip></ShortcutKeyTip>
         </div>
       </el-tab-pane>
 
@@ -25,6 +25,7 @@
 import { ref } from 'vue';
 import ObstacleConfig from './ObstacleConfig.vue';
 import BatchActionBar from './BatchActionBar.vue';
+import ShortcutKeyTip from './ShortcutKeyTip.vue';
 // import AudioWaveformVisualizer from './AudioWaveformVisualizer.vue';
 
 

@@ -44,6 +44,7 @@ declare module 'vue' {
     RhythmCanvas: typeof import('./src/components/RhythmCanvas.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
+    ShortcutKeyTip: typeof import('./src/components/ShortcutKeyTip.vue')['default']
     SongInfoPanel: typeof import('./src/components/SongInfoPanel.vue')['default']
     SongMetaCard: typeof import('./src/components/SongMetaCard.vue')['default']
     SongVisualization: typeof import('./src/components/SongVisualization.vue')['default']
