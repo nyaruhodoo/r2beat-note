@@ -33,6 +33,7 @@ declare module 'vue' {
     ElTableV2: typeof import('element-plus/es')['ElTableV2']
     ElTabPane: typeof import('element-plus/es')['ElTabPane']
     ElTabs: typeof import('element-plus/es')['ElTabs']
+    ElTooltip: typeof import('element-plus/es')['ElTooltip']
     ElUpload: typeof import('element-plus/es')['ElUpload']
     GridConfigPanel: typeof import('./src/components/GridConfigPanel.vue')['default']
     MusicPlayer: typeof import('./src/components/MusicPlayer.vue')['default']

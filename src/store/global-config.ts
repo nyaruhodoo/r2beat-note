@@ -49,6 +49,9 @@ export interface GlobalConfig {
   randomType: number[]
   /** 随机障碍物重复概率取值 0-100 */
   repeatChance: number
+
+  // ===== 快捷键配置 =====
+  directionKeyMap: boolean
 }
 
 export const defaultGlobalConfig: GlobalConfig = {
@@ -81,6 +84,9 @@ export const defaultGlobalConfig: GlobalConfig = {
   // ===== 随机障碍物生成配置 =====
   randomType: [16, 17, 18, 19, 20, 21, 22, 23, 26, 27],
   repeatChance: 10,
+
+  // ===== 快捷键配置 =====
+  directionKeyMap: true,
 }
 
 export const useGlobalConfigStore = defineStore('globalConfig', {

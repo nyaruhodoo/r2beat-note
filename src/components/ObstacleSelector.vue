@@ -95,9 +95,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, watch, onUnmounted } from 'vue';
 import { storeToRefs } from 'pinia';
 import { Setting } from '@element-plus/icons-vue';
+import { useMagicKeys } from '@vueuse/core';
 import { useAppStore } from '@/store/store';
 import { NoteType } from '@/note';
 import { useGlobalConfigStore, defaultGlobalConfig } from '@/store/global-config';
@@ -106,7 +107,122 @@ const store = useAppStore();
 const { selectedObstacle } = storeToRefs(store);
 const globalConfigStore = useGlobalConfigStore();
 
-// 补齐 null 的数组布局
+// ================= 按键监听 (8方向互斥 + 长按) =================
+const { ArrowUp, ArrowDown, ArrowLeft, ArrowRight } = useMagicKeys();
+
+const DIRECTION_DEBOUNCE = 35; // 允许的双手/双键按下的毫秒级时差
+const LONG_PRESS_THRESHOLD = 500; // 长按判定时间 (ms)
+
+let evaluationTimer: ReturnType<typeof setTimeout> | null = null;
+let longPressTimer: ReturnType<typeof setTimeout> | null = null;
+let hasExecutedInCurrentPress = false; // 保证单次按下只触发一次短按
+
+function clearLongPress() {
+  if (longPressTimer) {
+    clearTimeout(longPressTimer);
+    longPressTimer = null;
+  }
+}
+
+function evaluateDirection() {
+  if (hasExecutedInCurrentPress) return;
+
+  const u = ArrowUp.value;
+  const d = ArrowDown.value;
+  const l = ArrowLeft.value;
+  const r = ArrowRight.value;
+
+  type ActionType = 'up' | 'down' | 'left' | 'right' | 'left_up' | 'right_up' | 'other' | null;
+  let currentAction: ActionType = null;
+
+  // 1. 对角线优先
+  if (u && l) {
+    selectObstacle("20");
+    currentAction = 'left_up';
+  } else if (u && r) {
+    selectObstacle("21");
+    currentAction = 'right_up';
+  } else if (d && l) {
+    selectObstacle("22");
+    currentAction = 'other';
+  } else if (d && r) {
+    selectObstacle("23");
+    currentAction = 'other';
+  }
+  // 2. 纯单方向
+  else if (u && !d && !l && !r) {
+    selectObstacle("16");
+    currentAction = 'up';
+  } else if (d && !u && !l && !r) {
+    selectObstacle("17");
+    currentAction = 'down';
+  } else if (l && !r && !u && !d) {
+    selectObstacle("18");
+    currentAction = 'left';
+  } else if (r && !l && !u && !d) {
+    selectObstacle("19");
+    currentAction = 'right';
+  } else {
+    return; // 非合法组合不标记已执行
+  }
+
+  hasExecutedInCurrentPress = true;
+
+  // 开启指定方向的长按监听占位
+  clearLongPress();
+  if (currentAction && currentAction !== 'other') {
+    longPressTimer = setTimeout(() => {
+      if (currentAction === 'up') {
+        selectObstacle("136");
+      } else if (currentAction === 'down') {
+        selectObstacle("139");
+      } else if (currentAction === 'left') {
+        selectObstacle("142");
+      } else if (currentAction === 'right') {
+        selectObstacle("145");
+      } else if (currentAction === 'left_up') {
+        selectObstacle("130");
+      } else if (currentAction === 'right_up') {
+        selectObstacle("133");
+      }
+    }, LONG_PRESS_THRESHOLD);
+  }
+}
+
+// 监听按键状态和开关状态
+watch(
+  [ArrowUp, ArrowDown, ArrowLeft, ArrowRight, () => globalConfigStore.directionKeyMap],
+  ([u, d, l, r, isMapEnabled]) => {
+    // 若未启用方向键映射，清理所有状态和定时器
+    if (!isMapEnabled) {
+      if (evaluationTimer) clearTimeout(evaluationTimer);
+      clearLongPress();
+      hasExecutedInCurrentPress = false;
+      return;
+    }
+
+    const isAnyPressed = u || d || l || r;
+
+    if (isAnyPressed) {
+      if (!hasExecutedInCurrentPress) {
+        if (evaluationTimer) clearTimeout(evaluationTimer);
+        evaluationTimer = setTimeout(evaluateDirection, DIRECTION_DEBOUNCE);
+      }
+    } else {
+      // 键全部松开，重置状态准备下一次按键并清除长按
+      if (evaluationTimer) clearTimeout(evaluationTimer);
+      clearLongPress();
+      hasExecutedInCurrentPress = false;
+    }
+  }
+);
+
+onUnmounted(() => {
+  if (evaluationTimer) clearTimeout(evaluationTimer);
+  clearLongPress();
+});
+
+// ================= 组件原有逻辑 =================
 const layoutConfig = ref<(string | null)[][]>([
   ['19', '18', '145', '142'],
   ['26', '27', null, null],
@@ -116,7 +232,6 @@ const layoutConfig = ref<(string | null)[][]>([
   ['24', '161', null, null],
 ]);
 
-// 寻找该列中第一个存在的真实 obstacle ID，用来给占位块撑开相同的自然尺寸
 function getColumnSampleId(colIndex: number): string | null {
   for (const row of layoutConfig.value) {
     if (row[colIndex]) return row[colIndex];

@@ -29,7 +29,16 @@
             </div>
           </el-form-item>
 
-          <el-form-item label="网格渲染精度" class="prevent-item-expand">
+
+          <el-form-item label="刻度线长度" class="prevent-item-expand">
+            <div class="flex items-center gap-1">
+              <el-input-number v-model="minorTickLengthSafe" :min="0" :max="50" :step="1" :precision="0"
+                :value-on-clear="0" style="width: 100px" />
+              <el-button :icon="Refresh" size="small" @click="resetField('minorTickLength')" title="重置为默认值" />
+            </div>
+          </el-form-item>
+
+          <el-form-item label="Coord对准精度" class="prevent-item-expand">
             <div class="flex items-center gap-1">
               <el-input-number v-model="stepCoordSafe" :min="0.1" :max="100" :step="1" :value-on-clear="1"
                 style="width: 100px" />
@@ -37,7 +46,22 @@
             </div>
           </el-form-item>
 
-          <el-form-item label="额外延迟修正(秒)" class="prevent-item-expand" title="如果你不知道有什么用请不要改">
+
+
+          <!-- 修改项: 额外延迟修正(秒) -->
+          <el-form-item class="prevent-item-expand">
+            <template #label>
+              <div class="flex items-center gap-1.5">
+                <span>额外延迟修正(秒)</span>
+                <el-tooltip raw-content content="因为各种原因需要采用该配置来对齐1.0编辑器的听感<br />你可以找一首你认为最准的谱子来调试<br />对大多数用户来说并不需要修改"
+                  placement="top" effect="dark">
+                  <el-icon
+                    class="cursor-pointer text-amber-500 hover:text-amber-600 transition-transform hover:scale-110 text-base">
+                    <QuestionFilled />
+                  </el-icon>
+                </el-tooltip>
+              </div>
+            </template>
             <div class="flex items-center gap-1">
               <el-input-number v-model="fixMusicDelaySafe" :min="-1" :max="1" :step="0.01" :precision="2"
                 :value-on-clear="0" style="width: 100px" />
@@ -104,25 +128,37 @@
             </div>
           </el-form-item>
 
-          <el-form-item label="刻度线长度" class="prevent-item-expand">
-            <div class="flex items-center gap-1">
-              <el-input-number v-model="minorTickLengthSafe" :min="0" :max="50" :step="1" :precision="0"
-                :value-on-clear="0" style="width: 100px" />
-              <el-button :icon="Refresh" size="small" @click="resetField('minorTickLength')" title="重置为默认值" />
-            </div>
-          </el-form-item>
         </div>
 
+        <el-divider class="my-2" />
+
+        <!-- 新增项: 开启方向键映射障碍物 -->
+        <el-form-item class="prevent-item-expand">
+          <template #label>
+            <div class="flex items-center gap-1.5">
+              <span>方向键映射障碍物</span>
+              <el-tooltip content="开启后可以使用方向键快速切换选择的障碍物" placement="top" effect="dark">
+                <el-icon
+                  class="cursor-pointer text-blue-500 hover:text-blue-600 transition-transform hover:scale-110 text-base">
+                  <QuestionFilled />
+                </el-icon>
+              </el-tooltip>
+            </div>
+          </template>
+          <div class="flex items-center gap-1">
+            <el-switch v-model="store.directionKeyMap" size="small" />
+            <el-button :icon="Refresh" size="small" @click="resetField('directionKeyMap')" title="重置为默认值" />
+          </div>
+        </el-form-item>
       </el-form>
     </div>
-
 
   </div>
 </template>
 
 <script setup lang="ts">
 import { computed } from 'vue'
-import { Refresh } from '@element-plus/icons-vue'
+import { Refresh, QuestionFilled } from '@element-plus/icons-vue'
 import { useGlobalConfigStore, defaultGlobalConfig } from '@/store/global-config'
 
 const store = useGlobalConfigStore()
