@@ -14,6 +14,9 @@
           <span class="text-xs font-medium text-slate-500">已选中</span>
           <span class="text-xs font-bold text-slate-800">{{ selectedCoords.size }}</span>
           <span class="text-[11px] text-slate-400">项</span>
+          <span class="text-xs font-medium text-slate-500">共</span>
+          <span class="text-xs font-bold text-slate-800">{{ obstacles.length }}</span>
+          <span class="text-[11px] text-slate-400">项</span>
         </div>
 
         <!-- 右侧操作组 -->
@@ -48,7 +51,7 @@
             </div>
             <p class="text-[11px] text-slate-400 mb-2">平移选中障碍物，新位置已有障碍物将被覆盖</p>
             <div class="flex items-center gap-1.5">
-              <input type="number" v-model.number="alignOffset" placeholder="偏移量 (+/-)"
+              <input ref="alignInputRef" type="number" v-model.number="alignOffset" placeholder="偏移量 (+/-)"
                 class="w-full rounded-lg border border-slate-200 px-2 py-1.5 text-xs focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500" />
               <button @click="handleAlignSubmit"
                 class="shrink-0 rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-indigo-700 active:bg-indigo-800 transition-colors">
@@ -66,12 +69,13 @@
           <div v-if="activePopover === 'duplicate'"
             class="absolute bottom-full mb-2 left-0 right-0 z-20 rounded-xl border border-slate-200/90 bg-white p-3 shadow-xl ring-1 ring-black/5">
             <div class="flex items-center justify-between mb-1.5">
-              <span class="text-xs font-bold text-slate-700">复制副本 (按基准 Coord)</span>
+              <span class="text-xs font-bold text-slate-700">复制副本到下一个基准 Coord</span>
               <button @click="activePopover = null" class="text-slate-400 hover:text-slate-600 text-xs px-1">✕</button>
             </div>
             <p class="text-[11px] text-slate-400 mb-2">将清空目标区间内的旧障碍物再进行填充</p>
             <div class="flex items-center gap-1.5">
-              <input type="number" min="0" v-model.number="duplicateBaseCoord" placeholder="基准 Coord (≥0)"
+              <input ref="duplicateInputRef" type="number" min="0" v-model.number="duplicateBaseCoord"
+                placeholder="基准 Coord (≥0)"
                 class="w-full rounded-lg border border-slate-200 px-2 py-1.5 text-xs focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500" />
               <button @click="handleDuplicateSubmit"
                 class="shrink-0 rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-indigo-700 active:bg-indigo-800 transition-colors">
@@ -95,19 +99,25 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, nextTick } from 'vue';
 import { storeToRefs } from 'pinia';
 import { twMerge } from 'tailwind-merge';
 import { useAppStore, type NoteData } from '@/store/store';
 import { mirrorModeMap, NoteType, StarNotetransformMap } from '@/note';
 import { ElMessage } from 'element-plus';
+import { useGlobalConfigStore } from '@/store/global-config';
 
 const store = useAppStore();
+const globalConfigStore = useGlobalConfigStore();
+const { stepCoord } = storeToRefs(globalConfigStore);
 const { selectedCoords, currentSong } = storeToRefs(store);
 
 const activePopover = ref<'align' | 'duplicate' | null>(null);
 const alignOffset = ref<number>(0);
 const duplicateBaseCoord = ref<number>(0);
+
+const alignInputRef = ref<HTMLInputElement | null>(null);
+const duplicateInputRef = ref<HTMLInputElement | null>(null);
 
 const obstacles = computed(() => {
   const areaData = currentSong.value?.xmlObject?.TITLE?.AREA;
@@ -405,6 +415,10 @@ const actionButtons = computed(() => [
       if (activePopover.value !== 'align') {
         alignOffset.value = 0;
         activePopover.value = 'align';
+        nextTick(() => {
+          alignInputRef.value?.focus();
+          alignInputRef.value?.select();
+        });
       } else {
         activePopover.value = null;
       }
@@ -415,8 +429,19 @@ const actionButtons = computed(() => [
     label: '复制副本',
     action: () => {
       if (activePopover.value !== 'duplicate') {
-        duplicateBaseCoord.value = 0;
+        const selectedObs = getSelectedObstacles();
+        if (selectedObs.length > 0) {
+          const maxCoord = +selectedObs[selectedObs.length - 1].Coord;
+          // 设置默认值为：最后一个 coord + stepCoord
+          duplicateBaseCoord.value = maxCoord + Number(stepCoord.value || 0);
+        } else {
+          duplicateBaseCoord.value = 0;
+        }
         activePopover.value = 'duplicate';
+        nextTick(() => {
+          duplicateInputRef.value?.focus();
+          duplicateInputRef.value?.select();
+        });
       } else {
         activePopover.value = null;
       }
