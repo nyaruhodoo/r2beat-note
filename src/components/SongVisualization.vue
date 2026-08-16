@@ -3,8 +3,8 @@
     <el-tabs v-model="activeTab" class="flex-1 flex flex-col overflow-hidden min-h-0 custom-tabs">
       <el-tab-pane label="音频可视化" name="selector" class="h-full overflow-hidden">
         <div class="h-full overflow-y-auto">
-          <!-- <AudioWaveformVisualizer :musicObjectUrl="musicObjectUrl" :current-time="currentTime" :duration="duration"
-            :seek-to="seekTo"></AudioWaveformVisualizer> -->
+          <!-- <AudioWaveformVisualizer :seek-to="seekTo"></AudioWaveformVisualizer> -->
+          暂时没想好展示哪些东西，如果你有好的建议可以提给我
         </div>
       </el-tab-pane>
 
@@ -29,9 +29,6 @@ import BatchActionBar from './BatchActionBar.vue';
 
 
 defineProps<{
-  musicObjectUrl?: string
-  currentTime?: number
-  duration?: number
   seekTo?: (target: number | string, type: 'time' | 'frame' | 'coord') => void
 }>()
 

@@ -175,7 +175,7 @@
       </div>
 
       <!-- BPM 虚拟列表 (Element Plus el-table-v2) -->
-      <div class="h-[300px] w-full border border-slate-100 rounded-xl overflow-hidden text-xs">
+      <div class="h-75 w-full border border-slate-100 rounded-xl overflow-hidden text-xs">
         <template v-if="displayList.length > 0">
           <el-auto-resizer>
             <template #default="{ height, width }">

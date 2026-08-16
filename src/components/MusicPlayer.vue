@@ -52,7 +52,7 @@
       <!-- 进度条容器：直接 v-model 绑定 currentSongInfo.currentTime -->
       <div class="min-w-16 flex-1 progress-slider-container">
         <el-slider v-model="currentSongInfo.currentTime" :max="currentSongInfo.duration" :step="0.001"
-          :format-tooltip="formatTime" :show-tooltip="true" :disabled="!isLoaded || isAudioLoading" size="small"
+          :format-tooltip="formatTime" :show-tooltip="false" :disabled="!isLoaded || isAudioLoading" size="small"
           @input="handleSliderInput" @change="(val) => handleSeek(val as number)" />
       </div>
 

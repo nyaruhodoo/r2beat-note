@@ -16,7 +16,7 @@ import { storeToRefs } from 'pinia'
 import * as PIXI from 'pixi.js'
 import { ref, onMounted, onUnmounted, watch, computed } from 'vue'
 import spriteUrl from '@/assets/sprites.png'
-import { NoteType } from '@/note'
+import { mirrorModeMap, NoteType } from '@/note'
 
 export interface Obstacle {
   Coord: string
@@ -110,6 +110,10 @@ function updateSongObstacles(newObstacles: Obstacle[]) {
   currentSong.value.xmlObject.TITLE.AREA = sortedObstacles
 }
 
+
+/**
+ * 根据上下文得出最优可摆放的障碍物
+ */
 function generateObstacle(
   prevObs: Obstacle | null,
   nextObs: Obstacle | null,
@@ -145,6 +149,9 @@ function generateObstacle(
     prevObs, nextObs, offsetXRatio, selectedObstacle: selectedObstacle.value
   })
 
+  /**
+   * 自动闭合障碍物
+   */
   if (selectedObstacle.value.Level === "5" && selectedObstacleKind > 100) {
     if ((prevObsKind !== selectedObstacleKind - 2 || prevObsKind === selectedObstacleKind) && (prevObsKind + 1 !== selectedObstacleKind)) {
       return {
@@ -153,6 +160,18 @@ function generateObstacle(
       }
     }
   }
+
+
+
+
+  /**
+   * 左右智能映射，暂时先不考虑，对于长障碍物来说体验略差
+   */
+  // const mirrorMode = mirrorModeMap[selectedObstacleKind + ""] as [number, number]
+  // const newKind = mirrorMode[offsetXRatio < 0.5 ? 0 : 1]
+  // if (newKind) {
+  //   return NoteType[newKind];
+  // }
 
   return { ...selectedObstacle.value }
 }

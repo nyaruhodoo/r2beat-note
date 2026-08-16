@@ -98,7 +98,8 @@ import { ref, computed } from 'vue';
 import { storeToRefs } from 'pinia';
 import { twMerge } from 'tailwind-merge';
 import { useAppStore, type NoteData } from '@/store/store';
-import { NoteType, StarNotetransformMap } from '@/note';
+import { mirrorModeMap, NoteType, StarNotetransformMap } from '@/note';
+import { ElMessage } from 'element-plus';
 
 
 const store = useAppStore();
@@ -319,6 +320,72 @@ function handleAddStars() {
   activePopover.value = null;
 }
 
+/**
+ * 功能：镜子模式
+ */
+function handleMirrorMode() {
+  const area = currentSong.value?.xmlObject?.TITLE?.AREA;
+  if (!area || selectedCoords.value.size === 0) return;
+
+  // 1. 获取选中的障碍物列表（按 Coord 从小到大排序）
+  const selectedObs = getSelectedObstacles();
+  if (selectedObs.length === 0) return;
+
+  const firstObs = selectedObs[0];
+  const lastObs = selectedObs[selectedObs.length - 1];
+
+  const firstKind = String(firstObs.Kind);
+  const lastKind = String(lastObs.Kind);
+
+  // 定义校验用的音符 Kind 集合
+  const middleKinds = new Set(['129', '132', '135', '138', '141', '144']);
+  const headKinds = new Set(['130', '133', '136', '139', '142', '145']);
+  const tailKinds = new Set(['128', '131', '134', '137', '140', '143']);
+
+  // 2. 校验规则执行（使用 Element Plus 消息提示）
+  // 规则 1：首尾障碍物不能是长音的中间帧
+  if (middleKinds.has(firstKind) || middleKinds.has(lastKind)) {
+    ElMessage.error('镜像失败：首尾障碍物不能包含长音中间帧');
+    return;
+  }
+
+  // 规则 2：第一个障碍物不能是长音尾帧
+  if (headKinds.has(firstKind)) {
+    ElMessage.error('镜像失败：第一个障碍物不能是长音尾帧');
+    return;
+  }
+
+  // 规则 3：最后一个障碍物不能是长音首帧
+  if (tailKinds.has(lastKind)) {
+    ElMessage.error('镜像失败：最后一个障碍物不能是长音首帧');
+    return;
+  }
+
+  // 3. 执行镜像逻辑
+  const selectedSet = selectedCoords.value;
+
+  if (currentSong.value)
+    currentSong.value.xmlObject.TITLE.AREA = area.map((item) => {
+      const coord = +item.Coord;
+      if (selectedSet.has(coord)) {
+        const currentKind = String(item.Kind);
+        const pair = mirrorModeMap[currentKind as keyof typeof mirrorModeMap];
+
+        if (pair) {
+          const targetKind = pair.find((k) => k !== currentKind) || currentKind;
+          return {
+            ...item,
+            Kind: targetKind,
+          };
+        }
+      }
+      return item;
+    });
+
+  activePopover.value = null;
+}
+
+
 const actionButtons = computed(() => [
   {
     id: 'align',
@@ -343,6 +410,11 @@ const actionButtons = computed(() => [
         activePopover.value = null;
       }
     }
+  },
+  {
+    id: 'remove-star',
+    label: '镜子模式',
+    action: handleMirrorMode
   },
   {
     id: 'remove-star',
