@@ -513,6 +513,7 @@ audioWorker.onmessage = (e: MessageEvent) => {
     el.onended = () => {
       currentSongInfo.isPlaying = false
       currentSongInfo.currentTime = currentSongInfo.duration
+
       if (animationFrameId) cancelAnimationFrame(animationFrameId)
     }
   }
@@ -544,9 +545,6 @@ const buildAndApplyMultiChannelAudio = async () => {
   try {
     if (!audioCtx) {
       audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)()
-    }
-    if (audioCtx.state === 'suspended') {
-      await audioCtx.resume()
     }
 
     const filesToDecode = [mainFile, ...backingFiles]
@@ -626,9 +624,16 @@ const applyPitchAndRateConfig = () => {
   el.playbackRate = safeCombinedRate
 }
 
-const playAt = (offset: number) => {
+const playAt = async (offset: number) => {
   if (!audioRef.value || !audioCtx || isAudioLoading.value) return
-  audioCtx.resume().catch((e) => console.warn('AudioContext 恢复失败', e))
+
+  if (audioCtx.state === 'suspended') {
+    try {
+      await audioCtx.resume()
+    } catch (e) {
+      console.warn('AudioContext 恢复失败', e)
+    }
+  }
 
   if (offset >= currentSongInfo.duration - 0.01) {
     offset = 0
