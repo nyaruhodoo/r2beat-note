@@ -265,13 +265,16 @@
 
     <template #footer>
       <div class="flex items-center justify-end gap-2 pt-2">
+        <!-- 取消按钮 (次要操作) -->
         <button type="button"
-          class="rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-50 cursor-pointer"
+          class="rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 hover:text-slate-900 hover:border-slate-300 active:scale-95 transition-all duration-200 cursor-pointer"
           @click="handleClose(false)">
           取消
         </button>
+
+        <!-- 保存修改按钮 (主要操作) -->
         <button type="button"
-          class="rounded-xl bg-slate-900 px-4 py-2 text-xs font-semibold text-white hover:bg-slate-800 active:scale-95 transition-all cursor-pointer"
+          class="rounded-xl bg-slate-900 px-4 py-2 text-xs font-semibold text-white shadow-md hover:bg-slate-800 hover:shadow-slate-500/20 hover:ring-1 hover:ring-slate-700/50 hover:brightness-125 active:scale-95 transition-all duration-200 cursor-pointer"
           @click="handleSave">
           保存修改
         </button>

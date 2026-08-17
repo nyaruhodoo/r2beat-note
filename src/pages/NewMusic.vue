@@ -98,11 +98,19 @@
 
         <!-- 底部操作按钮 -->
         <div class="mt-10 flex items-center justify-end gap-3 border-t border-slate-100 pt-6">
-          <el-button size="large" class="rounded-xl px-6 border-slate-200 text-slate-700 hover:bg-slate-50"
-            @click="handleBack">取消</el-button>
-          <el-button type="primary" size="large" class="rounded-xl px-8" @click="handleSave">
-            创建歌曲
-          </el-button>
+          <!-- 取消按钮 (次要操作) -->
+          <button type="button"
+            class="rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 hover:text-slate-900 hover:border-slate-300 active:scale-95 transition-all duration-200 cursor-pointer"
+            @click="handleBack">
+            取消
+          </button>
+
+          <!-- 保存修改按钮 (主要操作) -->
+          <button type="button"
+            class="rounded-xl bg-slate-900 px-4 py-2 text-xs font-semibold text-white shadow-md hover:bg-slate-800 hover:shadow-slate-500/20 hover:ring-1 hover:ring-slate-700/50 hover:brightness-125 active:scale-95 transition-all duration-200 cursor-pointer"
+            @click="handleSave">
+            导入
+          </button>
         </div>
       </el-form>
     </div>

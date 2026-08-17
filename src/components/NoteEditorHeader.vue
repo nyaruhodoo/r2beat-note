@@ -10,7 +10,12 @@
     </div>
     <div class="flex items-center gap-3">
       <!--  <el-button type="primary" :disabled="loading" @click="statsVisible = true" >详情统计</el-button> -->
-      <el-button type="primary" :disabled="loading" @click="handleSaveXml">导出谱面</el-button>
+
+      <button type="button"
+        class="rounded-xl bg-slate-900 px-4 py-2 text-xs font-semibold text-white shadow-md hover:bg-slate-800 hover:shadow-slate-500/20 hover:ring-1 hover:ring-slate-700/50 hover:brightness-125 active:scale-95 transition-all duration-200 cursor-pointer"
+        @click="handleSaveXml">
+        导出谱面
+      </button>
     </div>
   </header>
 
