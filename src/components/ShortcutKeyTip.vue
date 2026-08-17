@@ -35,6 +35,8 @@ const data = [
     keys: ['ctrl', 'y'],
   },
   { title: '选中障碍物', keys: ['shift', '左键'] },
+  { title: '调整节拍(非组合键)', keys: ['q', 'w', 'e'] },
+  { title: '调整速率(非组合键)', keys: ['a', 's', 'd'] },
 ]
 
 const formatKey = (key: string) => {

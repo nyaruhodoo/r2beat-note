@@ -97,7 +97,7 @@
       <div class="flex items-center justify-between">
         <span class="text-xs font-medium text-slate-500">节拍 (Tempo)</span>
         <div class="flex items-center gap-1.5">
-          <el-input-number v-model="playbackRateSafe" class="w-24!" :min="0.1" :max="4.0" :step="0.1" :precision="1"
+          <el-input-number v-model="playbackRateSafe" class="w-24!" :min="0.1" :max="2.0" :step="0.1" :precision="1"
             :value-on-clear="1.0" size="small" />
           <button type="button" class="text-slate-400 hover:text-slate-700 p-1 rounded transition-colors" title="复位到1.0"
             @click="playbackRateSafe = 1.0">
@@ -110,7 +110,7 @@
       <div class="flex items-center justify-between">
         <span class="text-xs font-medium text-slate-500">速率 (Rate)</span>
         <div class="flex items-center gap-1.5">
-          <el-input-number v-model="pitchRateSafe" class="w-24!" :min="0.1" :max="4.0" :step="0.1" :precision="1"
+          <el-input-number v-model="pitchRateSafe" class="w-24!" :min="0.1" :max="2.0" :step="0.1" :precision="1"
             :value-on-clear="1.0" size="small" />
           <button type="button" class="text-slate-400 hover:text-slate-700 p-1 rounded transition-colors" title="复位到1.0"
             @click="pitchRateSafe = 1.0">
@@ -672,7 +672,7 @@ const togglePlay = () => {
 useMagicKeys({
   passive: false,
   onEventFired(e) {
-    if (e.code !== 'Space' || e.type !== 'keydown') return
+    if (e.type !== 'keydown') return
 
     const activeElement = document.activeElement
     const isInputActive =
@@ -683,8 +683,37 @@ useMagicKeys({
 
     if (isInputActive) return
 
-    e.preventDefault()
-    togglePlay()
+    if (e.code === 'Space') {
+      e.preventDefault()
+      togglePlay()
+      return
+    }
+
+    const key = e.key.toLowerCase()
+
+    // 1. 节拍控制: q(降低) w(还原) e(增加)
+    if (key === 'q') {
+      e.preventDefault()
+      playbackRateSafe.value = Math.max(0.1, Number((playbackRateSafe.value - 0.1).toFixed(1)))
+    } else if (key === 'w') {
+      e.preventDefault()
+      playbackRateSafe.value = 1.0
+    } else if (key === 'e') {
+      e.preventDefault()
+      playbackRateSafe.value = Math.min(2.0, Number((playbackRateSafe.value + 0.1).toFixed(1)))
+    }
+
+    // 2. 速率控制: a(降低) s(还原) d(增加)
+    if (key === 'a') {
+      e.preventDefault()
+      pitchRateSafe.value = Math.max(0.1, Number((pitchRateSafe.value - 0.1).toFixed(1)))
+    } else if (key === 's') {
+      e.preventDefault()
+      pitchRateSafe.value = 1.0
+    } else if (key === 'd') {
+      e.preventDefault()
+      pitchRateSafe.value = Math.min(2.0, Number((pitchRateSafe.value + 0.1).toFixed(1)))
+    }
   },
 })
 
