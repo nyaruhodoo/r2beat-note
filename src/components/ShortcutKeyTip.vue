@@ -29,10 +29,10 @@ const data = [
     title: '切换音频播放',
     keys: ['空格'],
   },
-  { title: '撤回修改', keys: ['shift', 'z'] },
+  { title: '撤回修改', keys: ['ctrl', 'z'] },
   {
     title: '恢复修改',
-    keys: ['shift', 'y'],
+    keys: ['ctrl', 'y'],
   },
   { title: '选中障碍物', keys: ['shift', '左键'] },
 ]
