@@ -229,7 +229,12 @@ const pitchRateSafe = computed<number>({
   },
 })
 
-const combinedRate = computed(() => playbackRate.value * pitchRate.value)
+/**
+ * 复合速率
+ */
+const combinedRate = computed(() => {
+  return playbackRate.value * pitchRate.value
+})
 const isAudioReady = ref(false)
 
 let audioCtx: AudioContext | null = null
@@ -828,6 +833,13 @@ const seekTo = (target: number | string, type: 'time' | 'frame' | 'coord') => {
     handleSeek(Math.max(0, Math.min(seconds, currentSongInfo.duration)))
   }
 }
+
+/**
+ * FIX: 修正调整速率时因为计算延迟导致的不同步问题
+ */
+watch(combinedRate, () => {
+  seekTo(calculatedCoord.value.rounded, 'coord')
+})
 
 // 组件仅暴露 seekTo 与 pause
 defineExpose({
