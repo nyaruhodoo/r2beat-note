@@ -23,7 +23,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onUnmounted, ref, toRaw, watch } from 'vue'
+import { computed, nextTick, onUnmounted, ref, toRaw, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useRefHistory, onKeyStroke } from '@vueuse/core'
 
@@ -94,10 +94,12 @@ onKeyStroke((e: KeyboardEvent) => {
 watch(
   [loading],
   async () => {
-    if (loading.value) {
+    if (!loading.value) {
       const song = await getSongById(id)
       if (song) {
         appStore.setCurrentSong(song)
+        // 3. 等待 Vue 响应式依赖全部更新完毕
+        await nextTick()
         clear() // 初始数据加载完成后清空历史栈，防止撤回至 null 状态
         comLoading.value = false
       }
