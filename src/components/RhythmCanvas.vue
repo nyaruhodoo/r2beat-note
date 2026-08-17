@@ -27,7 +27,7 @@ export interface Obstacle {
 
 const props = withDefaults(
   defineProps<{
-    seekTo: (target: number | string, type: 'time' | 'frame' | 'coord') => void
+    seekTo?: (target: number | string, type: 'time' | 'frame' | 'coord') => void
     gridAspect?: number
   }>(),
   {
