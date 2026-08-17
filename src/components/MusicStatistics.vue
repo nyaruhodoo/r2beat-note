@@ -94,14 +94,6 @@ const statsData = {
   peakNps: 30,
   highDensityDuration: '00:32'
 }
-
-// RGB 格式化函数
-const toCssRgb = ([r, g, b]: number[], alpha = 1) => {
-  const [r255, g255, b255] = [r, g, b].map(v => Math.round(v * 255))
-  return alpha < 1
-    ? `rgba(${r255}, ${g255}, ${b255}, ${alpha})`
-    : `rgb(${r255}, ${g255}, ${b255})`
-}
 </script>
 
 <style>
