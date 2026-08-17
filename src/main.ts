@@ -9,6 +9,13 @@ import { createApp } from 'vue'
 import App from './App.vue'
 import { router } from './router.ts'
 
+/**
+ * 全局禁用右键菜单
+ */
+document.addEventListener('contextmenu', (event) => {
+  event.preventDefault()
+})
+
 const pinia = createPinia()
 pinia.use(piniaPluginPersistedstate)
 
