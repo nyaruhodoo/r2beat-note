@@ -60,6 +60,9 @@ const handleSaveXml = () => {
     return
   }
 
+  // 打包时再补一个正常的长度，便于其他编辑器正常识别
+  xmlObj.TITLE.LENGTH.Value = xmlObj.TITLE.AREA[xmlObj.TITLE.AREA.length - 1].Coord ?? "6666"
+
   try {
     const builder = new XMLBuilder({
       ignoreAttributes: false,
