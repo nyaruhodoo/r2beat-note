@@ -94,7 +94,7 @@ onKeyStroke((e: KeyboardEvent) => {
 watch(
   [loading],
   async () => {
-    if (loading) {
+    if (loading.value) {
       const song = await getSongById(id)
       if (song) {
         appStore.setCurrentSong(song)
