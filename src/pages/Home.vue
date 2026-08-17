@@ -127,7 +127,7 @@ import { useSongStorage } from '@/db/useSongStorage'
 
 
 const router = useRouter()
-const { songs, loading, deleteSong } = useSongStorage()
+const { songs, deleteSong } = useSongStorage()
 
 // 打开/编辑已有歌曲
 const handleEdit = (id: number) => {
