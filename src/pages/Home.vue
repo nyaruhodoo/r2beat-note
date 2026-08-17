@@ -52,7 +52,7 @@
       </div>
 
       <!-- 3. 已有歌曲列表区域 (有数据时才显示) -->
-      <div v-if="songs.length > 0" class="space-y-2">
+      <div class="space-y-2">
         <!-- 标题栏 -->
         <div class="flex items-center justify-between px-2 pb-1">
           <div class="flex items-center gap-2">
@@ -61,13 +61,9 @@
               {{ songs.length }}
             </span>
           </div>
-          <span v-if="loading" class="flex items-center text-xs text-slate-400">
-            <span class="mr-1.5 h-1.5 w-1.5 animate-ping rounded-full bg-emerald-400"></span>
-            同步中...
-          </span>
         </div>
 
-        <div class="custom-scrollbar max-h-90 divide-y divide-slate-100 overflow-y-auto pr-1">
+        <div class="custom-scrollbar h-90 divide-y divide-slate-100 overflow-y-auto pr-1">
           <div v-for="song in songs" :key="song.id"
             class="group flex items-center justify-between rounded-xl p-3 transition-colors duration-150 hover:bg-slate-100/70">
 
