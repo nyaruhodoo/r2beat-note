@@ -9,15 +9,13 @@
       <h1 class="text-lg font-bold text-slate-800">{{ songTitle }}</h1>
     </div>
     <div class="flex items-center gap-3">
-      <el-button type="primary" :disabled="loading" @click="statsVisible = true">详情统计</el-button>
+      <!--  <el-button type="primary" :disabled="loading" @click="statsVisible = true" >详情统计</el-button> -->
       <el-button type="primary" :disabled="loading" @click="handleSaveXml">导出谱面</el-button>
     </div>
   </header>
 
   <!-- 详情统计对话框 -->
-  <el-dialog v-model="statsVisible" title="谱面数据统计" width="680px" destroy-on-close align-center class="rounded-2xl">
-    <SongStatsDialog :xml-data="xmlObject" />
-  </el-dialog>
+  <MusicStatistics v-model:visible="statsVisible"></MusicStatistics>
 </template>
 
 <script setup lang="ts">
@@ -28,9 +26,9 @@ import { ElMessage } from 'element-plus'
 import iconv from 'iconv-lite'
 import { Buffer } from 'buffer'
 
+
 import { useAppStore } from '@/store/store'
-// 导入自定义的详情统计组件
-import SongStatsDialog from './SongStatsDialog.vue'
+import MusicStatistics from './MusicStatistics.vue'
 
 // @ts-expect-error iconv需要这个东西
 window.Buffer = Buffer
@@ -98,4 +96,5 @@ const handleSaveXml = () => {
     ElMessage.error('谱面导出失败，请检查控制台输出')
   }
 }
+
 </script>
