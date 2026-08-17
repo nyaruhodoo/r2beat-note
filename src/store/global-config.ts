@@ -19,6 +19,8 @@ export interface GlobalConfig {
   scrollbarWidth: number
   /** 网格线颜色 (0xRRGGBBAA) */
   gridLineColor: number
+  /** 画布整体宽度 */
+  canvasWidth: number
 
   // ===== 画布与轨道背景配置 =====
   /** 画布背景色 (0xRRGGBBAA) */
@@ -51,7 +53,10 @@ export interface GlobalConfig {
   repeatChance: number
 
   // ===== 快捷键配置 =====
+  /** 快捷键切换选择障碍物 */
   directionKeyMap: boolean
+  /** 快捷键调整播放速率 */
+  rateKeyMap: boolean
 }
 
 export const defaultGlobalConfig: GlobalConfig = {
@@ -64,6 +69,7 @@ export const defaultGlobalConfig: GlobalConfig = {
   activeRowIndexFromBottom: 13,
   scrollbarWidth: 12,
   gridLineColor: 0x334155ff, // Slate-700，不透明
+  canvasWidth: 240,
 
   // ===== 画布与轨道背景配置 =====
   canvasBgColor: 0x0f172aff, // Slate-900，不透明
@@ -87,6 +93,7 @@ export const defaultGlobalConfig: GlobalConfig = {
 
   // ===== 快捷键配置 =====
   directionKeyMap: true,
+  rateKeyMap: true,
 }
 
 export const useGlobalConfigStore = defineStore('globalConfig', {

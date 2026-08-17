@@ -12,7 +12,9 @@
       </div>
 
       <!-- 中间：直接在模板里组装对象，Vue 会自动深度解包 ref 保持响应式 -->
-      <RhythmCanvas v-if="songInfoPanelRef" :seek-to="songInfoPanelRef?.seekTo" />
+      <RhythmCanvas :style="{
+        width: globalConfigStore.canvasWidth + 'px'
+      }" v-if="songInfoPanelRef" :seek-to="songInfoPanelRef?.seekTo" :key="globalConfigStore.canvasWidth" />
 
       <!-- 右侧：音频可视化区域 -->
       <div class="flex-1">
@@ -34,9 +36,11 @@ import SongInfoPanel from '@/components/SongInfoPanel.vue'
 import { useAppStore } from '@/store/store'
 import { useSongStorage } from '@/db/useSongStorage'
 import { deepToRaw } from '@/utils/utils'
+import { useGlobalConfigStore } from '@/store/global-config'
 
 const route = useRoute()
 const appStore = useAppStore()
+const globalConfigStore = useGlobalConfigStore()
 const songInfoPanelRef = ref<InstanceType<typeof SongInfoPanel> | null>(null)
 const comLoading = ref(true)
 const { loading, getSongById, updateSong } = useSongStorage()

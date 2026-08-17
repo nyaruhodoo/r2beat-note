@@ -5,6 +5,14 @@
 
         <!-- 1. 网格与视口配置 -->
         <div class="mb-4">
+          <el-form-item label="画布宽度" class="prevent-item-expand">
+            <div class="flex items-center gap-1">
+              <el-input-number v-model="canvasWidthSafe" :step="10" :precision="0" :value-on-clear="240"
+                style="width: 100px" />
+              <el-button :icon="Refresh" size="small" @click="resetField('canvasWidth')" title="重置为默认值" />
+            </div>
+          </el-form-item>
+
           <el-form-item label="视口可见总行数" class="prevent-item-expand">
             <div class="flex items-center gap-1">
               <el-input-number v-model="visibleGridCountSafe" :min="1" :max="200" :step="1" :precision="0"
@@ -106,12 +114,6 @@
             </div>
           </el-form-item>
 
-          <el-form-item label="显示背景网格线" class="prevent-item-expand">
-            <div class="flex items-center gap-1">
-              <el-switch v-model="store.showGridLines" size="small" />
-              <el-button :icon="Refresh" size="small" @click="resetField('showGridLines')" title="重置为默认值" />
-            </div>
-          </el-form-item>
 
           <el-form-item label="网格线颜色" class="prevent-item-expand">
             <div class="flex items-center gap-1">
@@ -128,6 +130,11 @@
             </div>
           </el-form-item>
 
+          <el-form-item label="显示背景网格线" class="prevent-item-expand">
+            <div class="flex items-center gap-1">
+              <el-switch v-model="store.showGridLines" size="small" />
+            </div>
+          </el-form-item>
         </div>
 
         <el-divider class="my-2" />
@@ -147,7 +154,24 @@
           </template>
           <div class="flex items-center gap-1">
             <el-switch v-model="store.directionKeyMap" size="small" />
-            <el-button :icon="Refresh" size="small" @click="resetField('directionKeyMap')" title="重置为默认值" />
+          </div>
+        </el-form-item>
+
+        <!-- 新增项: 速率快捷键 -->
+        <el-form-item class="prevent-item-expand">
+          <template #label>
+            <div class="flex items-center gap-1.5">
+              <span>速率快捷键</span>
+              <el-tooltip content="开启后可以使用快捷键快速调整播放速率" placement="top" effect="dark">
+                <el-icon
+                  class="cursor-pointer text-blue-500 hover:text-blue-600 transition-transform hover:scale-110 text-base">
+                  <QuestionFilled />
+                </el-icon>
+              </el-tooltip>
+            </div>
+          </template>
+          <div class="flex items-center gap-1">
+            <el-switch v-model="store.rateKeyMap" size="small" />
           </div>
         </el-form-item>
       </el-form>
@@ -208,6 +232,7 @@ const createSafeNumericComputed = (
 }
 
 // 安全数字计算属性
+const canvasWidthSafe = createSafeNumericComputed('canvasWidth', 100, 3000, 800)
 const visibleGridCountSafe = createSafeNumericComputed('visibleGridCount', 1, 200, 10)
 const activeRowIndexFromBottomSafe = createSafeNumericComputed('activeRowIndexFromBottom', 0, store.visibleGridCount, 0)
 const scrollbarWidthSafe = createSafeNumericComputed('scrollbarWidth', 0, 50, 10)
