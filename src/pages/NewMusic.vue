@@ -3,7 +3,11 @@
     <!-- 顶部导航 / 返回栏 -->
     <div class="mb-6 flex w-full max-w-2xl items-center justify-between">
       <div class="flex items-center gap-3">
-        <el-button circle class="border-slate-200 text-slate-600 hover:text-slate-900" @click="handleBack">
+        <el-button
+          circle
+          class="border-slate-200 text-slate-600 hover:text-slate-900"
+          @click="handleBack"
+        >
           <el-icon>
             <Back />
           </el-icon>
@@ -16,7 +20,8 @@
 
     <!-- 主卡片容器：优化了阴影(shadow-lg + fine ring)和圆角 -->
     <div
-      class="w-full max-w-2xl space-y-6 rounded-3xl bg-white p-10 shadow-lg shadow-slate-950/5 ring-1 ring-slate-100">
+      class="w-full max-w-2xl space-y-6 rounded-3xl bg-white p-10 shadow-lg ring-1 shadow-slate-950/5 ring-slate-100"
+    >
       <el-form ref="formRef" :model="songForm" :rules="rules" label-position="top" size="large">
         <!-- 1. 音频文件上传与播放区域 -->
         <el-form-item prop="audioFile">
@@ -30,12 +35,21 @@
           </template>
 
           <!-- 状态 A：未上传文件，展示拖拽上传框。添加定制 class 'fixed-height-dragger' -->
-          <el-upload v-if="!audioUrl" ref="uploadRef" drag action="#" :auto-upload="false" :show-file-list="false"
-            accept="audio/*,.mp3,.wav,.ogg,.aac,.flac,.m4a" class="audio-uploader fixed-height-dragger w-full"
-            :on-change="handleFileChange">
+          <el-upload
+            v-if="!audioUrl"
+            ref="uploadRef"
+            drag
+            action="#"
+            :auto-upload="false"
+            :show-file-list="false"
+            accept="audio/*,.mp3,.wav,.ogg,.aac,.flac,.m4a"
+            class="audio-uploader fixed-height-dragger w-full"
+            :on-change="handleFileChange"
+          >
             <div class="flex flex-col items-center justify-center space-y-3">
               <div
-                class="flex h-16 w-16 items-center justify-center rounded-full bg-emerald-50 text-emerald-500 shadow-inner ring-4 ring-emerald-50/50">
+                class="flex h-16 w-16 items-center justify-center rounded-full bg-emerald-50 text-emerald-500 shadow-inner ring-4 ring-emerald-50/50"
+              >
                 <el-icon :size="32">
                   <UploadFilled />
                 </el-icon>
@@ -47,24 +61,31 @@
           </el-upload>
 
           <!-- 状态 B：已上传文件，展示播放器预览界面 -->
-          <div v-else
-            class="flex w-full flex-col gap-4 rounded-2xl border border-emerald-100 bg-emerald-50/50 p-5 transition-all shadow-inner shadow-emerald-100/50">
+          <div
+            v-else
+            class="flex w-full flex-col gap-4 rounded-2xl border border-emerald-100 bg-emerald-50/50 p-5 shadow-inner shadow-emerald-100/50 transition-all"
+          >
             <div class="flex items-center justify-between gap-4">
               <div class="flex items-center gap-3.5 overflow-hidden">
                 <div
-                  class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-emerald-500 text-white shadow-lg shadow-emerald-500/30">
+                  class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-emerald-500 text-white shadow-lg shadow-emerald-500/30"
+                >
                   <el-icon :size="24">
                     <VideoPlay />
                   </el-icon>
                 </div>
                 <div class="truncate">
                   <p class="truncate text-base font-semibold text-slate-900">{{ audioFileName }}</p>
-                  <p class="text-xs text-emerald-700/80 font-medium">音频就绪，点击下方播放器进行预览</p>
+                  <p class="text-xs font-medium text-emerald-700/80">
+                    音频就绪，点击下方播放器进行预览
+                  </p>
                 </div>
               </div>
-              <el-button circle
-                class="border-none bg-white/80 text-slate-500 hover:bg-rose-50 hover:text-rose-600 shadow-sm"
-                @click="removeAudio">
+              <el-button
+                circle
+                class="border-none bg-white/80 text-slate-500 shadow-sm hover:bg-rose-50 hover:text-rose-600"
+                @click="removeAudio"
+              >
                 <el-icon>
                   <Delete />
                 </el-icon>
@@ -83,7 +104,12 @@
             <template #label>
               <span class="font-medium text-slate-700">歌曲名称</span>
             </template>
-            <el-input v-model="songForm.title" placeholder="请输入歌曲名称" clearable class="custom-input" />
+            <el-input
+              v-model="songForm.title"
+              placeholder="请输入歌曲名称"
+              clearable
+              class="custom-input"
+            />
           </el-form-item>
 
           <!-- 2. 歌曲速度 (BPM) -->
@@ -91,24 +117,34 @@
             <template #label>
               <span class="font-medium text-slate-700">默认 BPM (可以随时更改)</span>
             </template>
-            <el-input-number v-model="songForm.bpm" :min="1" :max="999" :controls="false" placeholder="150"
-              class="w-full! custom-input-number" />
+            <el-input-number
+              v-model="songForm.bpm"
+              :min="1"
+              :max="999"
+              :controls="false"
+              placeholder="150"
+              class="custom-input-number w-full!"
+            />
           </el-form-item>
         </div>
 
         <!-- 底部操作按钮 -->
         <div class="mt-10 flex items-center justify-end gap-3 border-t border-slate-100 pt-6">
           <!-- 取消按钮 (次要操作) -->
-          <button type="button"
-            class="rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 hover:text-slate-900 hover:border-slate-300 active:scale-95 transition-all duration-200 cursor-pointer"
-            @click="handleBack">
+          <button
+            type="button"
+            class="cursor-pointer rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-semibold text-slate-600 transition-all duration-200 hover:border-slate-300 hover:bg-slate-100 hover:text-slate-900 active:scale-95"
+            @click="handleBack"
+          >
             取消
           </button>
 
           <!-- 保存修改按钮 (主要操作) -->
-          <button type="button"
-            class="rounded-xl bg-slate-900 px-4 py-2 text-xs font-semibold text-white shadow-md hover:bg-slate-800 hover:shadow-slate-500/20 hover:ring-1 hover:ring-slate-700/50 hover:brightness-125 active:scale-95 transition-all duration-200 cursor-pointer"
-            @click="handleSave">
+          <button
+            type="button"
+            class="cursor-pointer rounded-xl bg-slate-900 px-4 py-2 text-xs font-semibold text-white shadow-md transition-all duration-200 hover:bg-slate-800 hover:ring-1 hover:shadow-slate-500/20 hover:ring-slate-700/50 hover:brightness-125 active:scale-95"
+            @click="handleSave"
+          >
             导入
           </button>
         </div>
@@ -130,13 +166,13 @@ import { type SongXmlData } from '@/store/store'
 const router = useRouter()
 
 // 容错处理：如果 useSongStorage 不可用，mock 一个 addSong 方法，防止报错
-let addSong: (data: any) => Promise<string | number>;
+let addSong: (data: any) => Promise<string | number>
 try {
-  const storage = useSongStorage();
-  addSong = storage.addSong;
+  const storage = useSongStorage()
+  addSong = storage.addSong
 } catch (e) {
-  console.warn('useSongStorage 引入失败，使用 Mock 方法');
-  addSong = async () => 'mock-id-' + Date.now();
+  console.warn('useSongStorage 引入失败，使用 Mock 方法')
+  addSong = async () => 'mock-id-' + Date.now()
 }
 
 // 表单引用与状态
@@ -229,7 +265,7 @@ const handleSave = async () => {
   }
 
   // 确保 bpm 有值，否则给个默认值
-  const finalBpm = songForm.bpm?.toString() || '150';
+  const finalBpm = songForm.bpm?.toString() || '150'
 
   const xmlData = {
     '?xml': {

@@ -32,10 +32,11 @@
 </template>
 
 <script setup lang="ts">
-import { useAppStore } from '@/store/store'
 import { ref, watch, onMounted, onUnmounted, nextTick } from 'vue'
 import WaveSurfer from 'wavesurfer.js'
 import type { WaveSurferOptions } from 'wavesurfer.js'
+
+import { useAppStore } from '@/store/store'
 
 const props = withDefaults(
   defineProps<{
@@ -43,8 +44,8 @@ const props = withDefaults(
     options?: Partial<WaveSurferOptions>
   }>(),
   {
-    options: () => ({})
-  }
+    options: () => ({}),
+  },
 )
 
 const appStore = useAppStore()
@@ -66,7 +67,9 @@ const getAudioBuffer = async (audioUrl: string): Promise<AudioBuffer> => {
 
   const response = await fetch(audioUrl)
   const arrayBuffer = await response.arrayBuffer()
-  const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext
+  const AudioCtx =
+    window.AudioContext ||
+    (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext
   const audioCtx = new AudioCtx()
   const decodedBuffer = await audioCtx.decodeAudioData(arrayBuffer)
   audioCtx.close()
@@ -79,18 +82,22 @@ const getAudioBuffer = async (audioUrl: string): Promise<AudioBuffer> => {
 const extractMultibandPeaks = async (
   audioUrl: string,
   targetChannel = 0,
-  samplesPerSec = 80
+  samplesPerSec = 80,
 ): Promise<{ peaks: number[][]; totalChannels: number }> => {
   const decodedBuffer = await getAudioBuffer(audioUrl)
   const totalChannels = decodedBuffer.numberOfChannels
   const activeChannel = Math.min(Math.max(0, targetChannel), totalChannels - 1)
   const totalSamples = Math.floor(decodedBuffer.duration * samplesPerSec)
 
-  const filterAndGetPeaks = async (filterType: BiquadFilterType, freq: number, q = 1): Promise<number[]> => {
+  const filterAndGetPeaks = async (
+    filterType: BiquadFilterType,
+    freq: number,
+    q = 1,
+  ): Promise<number[]> => {
     const offlineCtx = new OfflineAudioContext(
       decodedBuffer.numberOfChannels,
       decodedBuffer.length,
-      decodedBuffer.sampleRate
+      decodedBuffer.sampleRate,
     )
 
     const source = offlineCtx.createBufferSource()
@@ -127,12 +134,12 @@ const extractMultibandPeaks = async (
   const [lowPeaks, midPeaks, highPeaks] = await Promise.all([
     filterAndGetPeaks('lowpass', 200),
     filterAndGetPeaks('bandpass', 1200, 0.8),
-    filterAndGetPeaks('highpass', 4000)
+    filterAndGetPeaks('highpass', 4000),
   ])
 
   return {
     peaks: [highPeaks, midPeaks, lowPeaks],
-    totalChannels
+    totalChannels,
   }
 }
 
@@ -149,13 +156,13 @@ const initWaveSurfer = async () => {
   try {
     const { peaks, totalChannels } = await extractMultibandPeaks(
       appStore.currentSongInfo.musicObjectUrl,
-      selectedTrack.value
+      selectedTrack.value,
     )
 
     if (trackOptions.value.length !== totalChannels) {
       trackOptions.value = Array.from({ length: totalChannels }, (_, i) => ({
         label: `音轨 ${i + 1} (${i === 0 ? 'L / 主声轨' : i === 1 ? 'R / 辅声轨' : `Track ${i + 1}`})`,
-        value: i
+        value: i,
       }))
     }
 
@@ -179,7 +186,7 @@ const initWaveSurfer = async () => {
 
     wavesurfer = WaveSurfer.create({
       ...defaultOptions,
-      ...props.options
+      ...props.options,
     })
     wavesurfer.load(appStore.currentSongInfo.musicObjectUrl, peaks)
 
@@ -215,7 +222,7 @@ watch(
       initWaveSurfer()
     }
   },
-  { immediate: true }
+  { immediate: true },
 )
 
 watch(
@@ -226,7 +233,7 @@ watch(
     if (Math.abs(wsTime - newTime) > 0.01) {
       wavesurfer.setTime(newTime)
     }
-  }
+  },
 )
 
 onMounted(() => {
@@ -292,15 +299,15 @@ onUnmounted(() => {
 }
 
 .legend-bar .tag.high {
-  color: #63B3ED;
+  color: #63b3ed;
 }
 
 .legend-bar .tag.mid {
-  color: #68D391;
+  color: #68d391;
 }
 
 .legend-bar .tag.low {
-  color: #FC8181;
+  color: #fc8181;
 }
 
 .waveform-wrapper {

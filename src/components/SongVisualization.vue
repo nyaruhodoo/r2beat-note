@@ -1,8 +1,10 @@
 <template>
-  <aside class="flex h-full w-full flex-col gap-4 rounded-2xl border border-slate-200/80 bg-white p-6 overflow-hidden">
-    <el-tabs v-model="activeTab" class="flex-1 flex flex-col overflow-hidden min-h-0 custom-tabs">
+  <aside
+    class="flex h-full w-full flex-col gap-4 overflow-hidden rounded-2xl border border-slate-200/80 bg-white p-6"
+  >
+    <el-tabs v-model="activeTab" class="custom-tabs flex min-h-0 flex-1 flex-col overflow-hidden">
       <el-tab-pane label="快捷键预览" name="selector" class="h-full overflow-hidden">
-        <div class="flex flex-col gap-5 h-full overflow-y-auto">
+        <div class="flex h-full flex-col gap-5 overflow-y-auto">
           <!-- <AudioWaveformVisualizer :seek-to="seekTo"></AudioWaveformVisualizer> -->
           <ShortcutKeyTip></ShortcutKeyTip>
         </div>
@@ -13,7 +15,6 @@
           <ObstacleConfig />
         </div>
       </el-tab-pane>
-
     </el-tabs>
 
     <!-- 底部批量操作组件固定在底部 -->
@@ -22,19 +23,19 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
-import ObstacleConfig from './ObstacleConfig.vue';
-import BatchActionBar from './BatchActionBar.vue';
-import ShortcutKeyTip from './ShortcutKeyTip.vue';
-// import AudioWaveformVisualizer from './AudioWaveformVisualizer.vue';
+import { ref } from 'vue'
 
+import BatchActionBar from './BatchActionBar.vue'
+import ObstacleConfig from './ObstacleConfig.vue'
+import ShortcutKeyTip from './ShortcutKeyTip.vue'
+// import AudioWaveformVisualizer from './AudioWaveformVisualizer.vue';
 
 defineProps<{
   seekTo?: (target: number | string, type: 'time' | 'frame' | 'coord') => void
 }>()
 
 // 仅保留当前选中的 Tab 标识
-const activeTab = ref<'selector' | 'config'>('selector');
+const activeTab = ref<'selector' | 'config'>('selector')
 </script>
 
 <style scoped>

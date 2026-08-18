@@ -4,25 +4,42 @@
 
   <!-- 音频播放器面板 -->
   <div
-    class="relative flex flex-col gap-3 rounded-xl border border-slate-200/60 bg-linear-to-b from-slate-50 to-slate-100/50 p-3.5 shadow-inner">
+    class="relative flex flex-col gap-3 rounded-xl border border-slate-200/60 bg-linear-to-b from-slate-50 to-slate-100/50 p-3.5 shadow-inner"
+  >
     <!-- 音频合成 Loading 遮罩层 -->
-    <div v-if="isAudioLoading"
-      class="absolute inset-0 z-20 flex items-center justify-center bg-white/80 backdrop-blur-xs transition-opacity">
-      <div class="flex items-center gap-2 rounded-lg bg-white px-3 py-1.5 shadow-md border border-slate-100">
+    <div
+      v-if="isAudioLoading"
+      class="absolute inset-0 z-20 flex items-center justify-center bg-white/80 backdrop-blur-xs transition-opacity"
+    >
+      <div
+        class="flex items-center gap-2 rounded-lg border border-slate-100 bg-white px-3 py-1.5 shadow-md"
+      >
         <svg class="h-4 w-4 animate-spin text-indigo-600" fill="none" viewBox="0 0 24 24">
-          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-          <path class="opacity-75" fill="currentColor"
-            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
-          </path>
+          <circle
+            class="opacity-25"
+            cx="12"
+            cy="12"
+            r="10"
+            stroke="currentColor"
+            stroke-width="4"
+          ></circle>
+          <path
+            class="opacity-75"
+            fill="currentColor"
+            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+          ></path>
         </svg>
         <span class="text-xs font-semibold text-slate-700">正在处理音轨音频...</span>
       </div>
     </div>
 
     <div class="flex items-center gap-3">
-      <button type="button" :disabled="!isLoaded || isAudioLoading"
+      <button
+        type="button"
+        :disabled="!isLoaded || isAudioLoading"
         class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-slate-900 text-white transition-all hover:bg-slate-800 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
-        @click="togglePlay">
+        @click="togglePlay"
+      >
         <svg v-if="currentSongInfo.isPlaying" class="h-4 w-4 fill-current" viewBox="0 0 24 24">
           <rect x="6" y="4" width="4" height="16" rx="1" />
           <rect x="14" y="4" width="4" height="16" rx="1" />
@@ -34,13 +51,24 @@
       </button>
 
       <div class="shrink-0 font-mono text-xs text-slate-500">
-        <input v-if="isEditingTime" v-model="inputTimeString" type="text" v-focus
+        <input
+          v-if="isEditingTime"
+          v-model="inputTimeString"
+          type="text"
+          v-focus
           class="w-22 rounded border border-slate-300 bg-white px-1 py-0.5 font-mono text-xs font-bold text-slate-800 shadow-xs focus:border-slate-500 focus:outline-hidden"
-          placeholder="00:00.000" @keydown.enter="submitTimeChange" @keydown.esc="cancelTimeEdit"
-          @blur="submitTimeChange" />
+          placeholder="00:00.000"
+          @keydown.enter="submitTimeChange"
+          @keydown.esc="cancelTimeEdit"
+          @blur="submitTimeChange"
+        />
 
-        <span v-else class="cursor-pointer font-bold text-slate-700 select-none hover:text-slate-900 hover:underline"
-          title="双击指定跳转进度" @dblclick="handleDoubleClickTime">
+        <span
+          v-else
+          class="cursor-pointer font-bold text-slate-700 select-none hover:text-slate-900 hover:underline"
+          title="双击指定跳转进度"
+          @dblclick="handleDoubleClickTime"
+        >
           {{ formattedCurrentTime }}
         </span>
 
@@ -50,42 +78,88 @@
       </div>
 
       <!-- 进度条容器：直接 v-model 绑定 currentSongInfo.currentTime -->
-      <div class="min-w-16 flex-1 progress-slider-container">
-        <el-slider v-model="currentSongInfo.currentTime" :max="currentSongInfo.duration" :step="0.001"
-          :format-tooltip="formatTime" :show-tooltip="false" :disabled="!isLoaded || isAudioLoading" size="small"
-          @input="handleSliderInput" @change="(val) => handleSeek(val as number)" />
+      <div class="progress-slider-container min-w-16 flex-1">
+        <el-slider
+          v-model="currentSongInfo.currentTime"
+          :max="currentSongInfo.duration"
+          :step="0.001"
+          :format-tooltip="formatTime"
+          :show-tooltip="false"
+          :disabled="!isLoaded || isAudioLoading"
+          size="small"
+          @input="handleSliderInput"
+          @change="(val) => handleSeek(val as number)"
+        />
       </div>
 
       <!-- 音轨管理弹出按钮 -->
-      <TrackManagerPopover v-model:main-volume="mainVolume" v-model:backing-volumes="backingVolumes"
-        class="ml-auto shrink-0" />
+      <TrackManagerPopover
+        v-model:main-volume="mainVolume"
+        v-model:backing-volumes="backingVolumes"
+        class="ml-auto shrink-0"
+      />
 
-      <div class="group/volume relative flex shrink-0 items-center ml-auto">
-        <button type="button"
+      <div class="group/volume relative ml-auto flex shrink-0 items-center">
+        <button
+          type="button"
           class="flex h-8 w-8 items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-slate-200/60 hover:text-slate-800"
-          @click="toggleMute">
-          <svg v-if="globalConfigStore.musicVolume === 0" class="h-4.5 w-4.5" fill="none" stroke="currentColor"
-            stroke-width="2" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round"
-              d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
-            <path stroke-linecap="round" stroke-linejoin="round" d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2" />
+          @click="toggleMute"
+        >
+          <svg
+            v-if="globalConfigStore.musicVolume === 0"
+            class="h-4.5 w-4.5"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"
+            />
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2"
+            />
           </svg>
 
-          <svg v-else class="h-4.5 w-4.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round"
-              d="M15.536 8.464a5 5 0 010 7.072M17.95 6.05a8 8 0 010 11.314M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+          <svg
+            v-else
+            class="h-4.5 w-4.5"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M15.536 8.464a5 5 0 010 7.072M17.95 6.05a8 8 0 010 11.314M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"
+            />
           </svg>
         </button>
 
         <div
-          class="invisible absolute bottom-full left-1/2 -translate-x-1/2 pb-2 opacity-0 transition-all duration-200 group-hover/volume:visible group-hover/volume:opacity-100">
+          class="invisible absolute bottom-full left-1/2 -translate-x-1/2 pb-2 opacity-0 transition-all duration-200 group-hover/volume:visible group-hover/volume:opacity-100"
+        >
           <div
-            class="volume-slider flex flex-col items-center rounded-xl border border-slate-200 bg-white/95 px-3 py-2.5 shadow-lg backdrop-blur-xs">
+            class="volume-slider flex flex-col items-center rounded-xl border border-slate-200 bg-white/95 px-3 py-2.5 shadow-lg backdrop-blur-xs"
+          >
             <span class="mb-1.5 font-mono text-[10px] font-semibold text-slate-500">
               {{ Math.round(globalConfigStore.musicVolume * 100) }}%
             </span>
-            <el-slider v-model="globalConfigStore.musicVolume" vertical height="80px" :min="0" :max="1" :step="0.01"
-              :show-tooltip="false" size="small" />
+            <el-slider
+              v-model="globalConfigStore.musicVolume"
+              vertical
+              height="80px"
+              :min="0"
+              :max="1"
+              :step="0.01"
+              :show-tooltip="false"
+              size="small"
+            />
           </div>
         </div>
       </div>
@@ -97,10 +171,22 @@
       <div class="flex items-center justify-between">
         <span class="text-xs font-medium text-slate-500">节拍 (Tempo)</span>
         <div class="flex items-center gap-1.5">
-          <el-input-number v-model="playbackRateSafe" class="w-24!" :min="0.1" :max="2.0" :step="0.1" :precision="1"
-            :value-on-clear="1.0" size="small" />
-          <button type="button" class="text-slate-400 hover:text-slate-700 p-1 rounded transition-colors" title="复位到1.0"
-            @click="playbackRateSafe = 1.0">
+          <el-input-number
+            v-model="playbackRateSafe"
+            class="w-24!"
+            :min="0.1"
+            :max="2.0"
+            :step="0.1"
+            :precision="1"
+            :value-on-clear="1.0"
+            size="small"
+          />
+          <button
+            type="button"
+            class="rounded p-1 text-slate-400 transition-colors hover:text-slate-700"
+            title="复位到1.0"
+            @click="playbackRateSafe = 1.0"
+          >
             ↺
           </button>
         </div>
@@ -110,10 +196,22 @@
       <div class="flex items-center justify-between">
         <span class="text-xs font-medium text-slate-500">速率 (Rate)</span>
         <div class="flex items-center gap-1.5">
-          <el-input-number v-model="pitchRateSafe" class="w-24!" :min="0.1" :max="2.0" :step="0.1" :precision="1"
-            :value-on-clear="1.0" size="small" />
-          <button type="button" class="text-slate-400 hover:text-slate-700 p-1 rounded transition-colors" title="复位到1.0"
-            @click="pitchRateSafe = 1.0">
+          <el-input-number
+            v-model="pitchRateSafe"
+            class="w-24!"
+            :min="0.1"
+            :max="2.0"
+            :step="0.1"
+            :precision="1"
+            :value-on-clear="1.0"
+            size="small"
+          />
+          <button
+            type="button"
+            class="rounded p-1 text-slate-400 transition-colors hover:text-slate-700"
+            title="复位到1.0"
+            @click="pitchRateSafe = 1.0"
+          >
             ↺
           </button>
         </div>
@@ -123,18 +221,28 @@
       <div class="flex items-center justify-between">
         <div class="flex items-center gap-1">
           <span class="text-xs font-medium text-slate-500">跳转</span>
-          <select v-model="quickSeekType"
-            class="rounded border border-slate-200 bg-transparent px-1 py-0.5 text-xs text-slate-600 focus:outline-hidden focus:border-slate-400">
+          <select
+            v-model="quickSeekType"
+            class="rounded border border-slate-200 bg-transparent px-1 py-0.5 text-xs text-slate-600 focus:border-slate-400 focus:outline-hidden"
+          >
             <option value="frame">Frame</option>
             <option value="coord">Coord</option>
           </select>
         </div>
         <div class="flex items-center gap-1.5">
-          <el-input-number v-model="quickSeekValue" class="w-24!" :controls="false" size="small"
-            @keydown.enter="handleQuickSeek" />
-          <button type="button" :disabled="!isLoaded || isAudioLoading"
-            class="rounded bg-slate-200 hover:bg-slate-300 text-slate-700 px-2 py-0.5 text-xs transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-            @click="handleQuickSeek">
+          <el-input-number
+            v-model="quickSeekValue"
+            class="w-24!"
+            :controls="false"
+            size="small"
+            @keydown.enter="handleQuickSeek"
+          />
+          <button
+            type="button"
+            :disabled="!isLoaded || isAudioLoading"
+            class="rounded bg-slate-200 px-2 py-0.5 text-xs text-slate-700 transition-colors hover:bg-slate-300 disabled:cursor-not-allowed disabled:opacity-40"
+            @click="handleQuickSeek"
+          >
             GO
           </button>
         </div>
@@ -144,13 +252,15 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, watchEffect, onUnmounted } from 'vue'
 import { useMagicKeys } from '@vueuse/core'
-import { useAppStore, type BpmItem } from '@/store/store.ts'
+import { ref, computed, watch, watchEffect, onUnmounted } from 'vue'
+
 import { useGlobalConfigStore } from '@/store/global-config.ts'
+import { useAppStore, type BpmItem } from '@/store/store.ts'
 import { formatTime, getDecimalPlaces } from '@/utils/utils.ts'
-import TrackManagerPopover from './TrackManagerPopover.vue'
+
 import AudioWorker from '../audio-worker.ts?worker'
+import TrackManagerPopover from './TrackManagerPopover.vue'
 
 const { currentSong, currentSongInfo } = useAppStore()
 const globalConfigStore = useGlobalConfigStore()
@@ -171,7 +281,12 @@ const quickSeekType = ref<'frame' | 'coord'>('frame')
 const quickSeekValue = ref<number | undefined>(undefined)
 
 const handleQuickSeek = () => {
-  if (quickSeekValue.value === undefined || quickSeekValue.value === null || Number.isNaN(quickSeekValue.value)) return
+  if (
+    quickSeekValue.value === undefined ||
+    quickSeekValue.value === null ||
+    Number.isNaN(quickSeekValue.value)
+  )
+    return
   seekTo(quickSeekValue.value, quickSeekType.value)
 }
 
@@ -275,7 +390,7 @@ watch(
       resetPlayback()
     }
   },
-  { deep: true }
+  { deep: true },
 )
 
 // --- 依赖于 currentTime 的核心派生计算 ---
@@ -418,20 +533,30 @@ const setupAudioNodes = (totalTracks: number) => {
   if (!audioCtx || !audioRef.value) return
 
   if (mediaElementSource) {
-    try { mediaElementSource.disconnect() } catch { }
+    try {
+      mediaElementSource.disconnect()
+    } catch {}
   }
   if (splitterNode) {
-    try { splitterNode.disconnect() } catch { }
+    try {
+      splitterNode.disconnect()
+    } catch {}
   }
   trackGainNodes.forEach((g) => {
-    try { g.disconnect() } catch { }
+    try {
+      g.disconnect()
+    } catch {}
   })
   trackGainNodes = []
   if (mergerNode) {
-    try { mergerNode.disconnect() } catch { }
+    try {
+      mergerNode.disconnect()
+    } catch {}
   }
   if (masterGainNode) {
-    try { masterGainNode.disconnect() } catch { }
+    try {
+      masterGainNode.disconnect()
+    } catch {}
   }
 
   masterGainNode = audioCtx.createGain()
@@ -473,9 +598,13 @@ const updateTrackGains = () => {
   })
 }
 
-watch([mainVolume, backingVolumes], () => {
-  updateTrackGains()
-}, { deep: true })
+watch(
+  [mainVolume, backingVolumes],
+  () => {
+    updateTrackGains()
+  },
+  { deep: true },
+)
 
 // 监听 Worker 后台计算完成消息
 audioWorker.onmessage = (e: MessageEvent) => {
@@ -557,7 +686,7 @@ const buildAndApplyMultiChannelAudio = async () => {
       filesToDecode.map(async (file) => {
         const arrayBuffer = await file.arrayBuffer()
         return await audioCtx!.decodeAudioData(arrayBuffer)
-      })
+      }),
     )
 
     if (taskId !== currentTaskId) return
@@ -585,7 +714,7 @@ const buildAndApplyMultiChannelAudio = async () => {
         delayFrames: delayFrames.value,
         fixMusicDelay: Number(globalConfigStore.fixMusicDelay) || 0,
       },
-      transferables
+      transferables,
     )
   } catch (err) {
     console.error('多音轨音频解码失败:', err)
@@ -614,7 +743,7 @@ watch(
 
     buildAndApplyMultiChannelAudio()
   },
-  { immediate: true }
+  { immediate: true },
 )
 
 const applyPitchAndRateConfig = () => {
@@ -623,7 +752,7 @@ const applyPitchAndRateConfig = () => {
 
   const isDefaultPitch = Math.abs(pitchRate.value - 1.0) < 0.001
   el.preservesPitch = isDefaultPitch
-    ; (el as any).webkitPreservesPitch = isDefaultPitch
+  ;(el as any).webkitPreservesPitch = isDefaultPitch
 
   const safeCombinedRate = Math.min(Math.max(combinedRate.value, 0.0625), 16.0)
   el.playbackRate = safeCombinedRate
@@ -747,7 +876,7 @@ watch(
       masterGainNode.gain.value = val
     }
   },
-  { immediate: true }
+  { immediate: true },
 )
 
 const toggleMute = () => {
@@ -808,8 +937,12 @@ const cancelTimeEdit = () => {
   isEditingTime.value = false
 }
 
-const formattedDuration = computed(() => formatTime(Math.max(0, (currentSongInfo.duration ?? 0) - delaySeconds.value)))
-const formattedCurrentTime = computed(() => formatTime(Math.max(0, (currentSongInfo.currentTime ?? 0) - delaySeconds.value)))
+const formattedDuration = computed(() =>
+  formatTime(Math.max(0, (currentSongInfo.duration ?? 0) - delaySeconds.value)),
+)
+const formattedCurrentTime = computed(() =>
+  formatTime(Math.max(0, (currentSongInfo.currentTime ?? 0) - delaySeconds.value)),
+)
 
 const seekTo = (target: number | string, type: 'time' | 'frame' | 'coord') => {
   if (isAudioLoading.value) return
@@ -825,7 +958,8 @@ const seekTo = (target: number | string, type: 'time' | 'frame' | 'coord') => {
       seconds = getSecondsFromCoord(targetCoord)
     }
   } else {
-    const parsedDisplayTime = typeof target === 'number' ? target : parseTimeToSeconds(String(target))
+    const parsedDisplayTime =
+      typeof target === 'number' ? target : parseTimeToSeconds(String(target))
     if (parsedDisplayTime !== null) {
       seconds = parsedDisplayTime + delaySeconds.value
     }

@@ -1,5 +1,7 @@
 <template>
-  <header class="mb-4 flex items-center justify-between rounded-2xl border border-slate-200/80 bg-white px-6 py-3">
+  <header
+    class="mb-4 flex items-center justify-between rounded-2xl border border-slate-200/80 bg-white px-6 py-3"
+  >
     <div class="flex items-center gap-3">
       <el-button circle class="border-none" @click="router.back()">
         <el-icon>
@@ -9,26 +11,54 @@
 
       <!-- 歌名与内联编辑区域（保持单一输入框节点，防止高度跳变） -->
       <div class="flex items-center gap-1.5">
-        <input ref="titleInputRef" v-model="editingTitleText" type="text" :readonly="!isEditingTitle"
+        <input
+          ref="titleInputRef"
+          v-model="editingTitleText"
+          type="text"
+          :readonly="!isEditingTitle"
           class="rounded-lg border px-2 py-1 text-lg font-bold text-slate-800 transition-all duration-200 focus:outline-none"
-          :class="isEditingTitle
-            ? 'border-slate-300 bg-white shadow-xs focus:border-slate-500'
-            : 'border-transparent bg-transparent select-none'
-            " :title="songTitle" @keydown.enter="saveTitle" @keydown.esc="cancelEditTitle" @blur="saveTitle" />
+          :class="
+            isEditingTitle
+              ? 'border-slate-300 bg-white shadow-xs focus:border-slate-500'
+              : 'border-transparent bg-transparent select-none'
+          "
+          :title="songTitle"
+          @keydown.enter="saveTitle"
+          @keydown.esc="cancelEditTitle"
+          @blur="saveTitle"
+        />
 
         <!-- 触发/保存按钮 -->
-        <button type="button"
+        <button
+          type="button"
           class="rounded-md p-1.5 text-slate-400 transition-all duration-200 hover:bg-slate-100 hover:text-slate-600 active:scale-95"
-          :title="isEditingTitle ? '保存歌名' : '修改歌名'" @click="toggleEditTitle">
+          :title="isEditingTitle ? '保存歌名' : '修改歌名'"
+          @click="toggleEditTitle"
+        >
           <!-- 非编辑模式：显示编辑图标 -->
-          <svg v-if="!isEditingTitle" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2"
-            viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round"
-              d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+          <svg
+            v-if="!isEditingTitle"
+            class="h-4 w-4"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
+            />
           </svg>
           <!-- 编辑模式：显示保存勾选图标 -->
-          <svg v-else class="h-4 w-4 text-emerald-600" fill="none" stroke="currentColor" stroke-width="2.5"
-            viewBox="0 0 24 24">
+          <svg
+            v-else
+            class="h-4 w-4 text-emerald-600"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.5"
+            viewBox="0 0 24 24"
+          >
             <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
           </svg>
         </button>
@@ -38,9 +68,11 @@
     <div class="flex items-center gap-3">
       <!-- <el-button type="primary" :disabled="loading" @click="statsVisible = true" >详情统计</el-button> -->
 
-      <button type="button"
-        class="cursor-pointer rounded-xl bg-slate-900 px-4 py-2 text-xs font-semibold text-white shadow-md transition-all duration-200 hover:bg-slate-800 hover:shadow-slate-500/20 hover:ring-1 hover:ring-slate-700/50 hover:brightness-125 active:scale-95"
-        @click="handleSaveXml">
+      <button
+        type="button"
+        class="cursor-pointer rounded-xl bg-slate-900 px-4 py-2 text-xs font-semibold text-white shadow-md transition-all duration-200 hover:bg-slate-800 hover:ring-1 hover:shadow-slate-500/20 hover:ring-slate-700/50 hover:brightness-125 active:scale-95"
+        @click="handleSaveXml"
+      >
         导出谱面
       </button>
     </div>
@@ -51,14 +83,16 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, nextTick } from 'vue'
-import { useRouter } from 'vue-router'
-import { XMLBuilder } from 'fast-xml-parser'
-import { ElMessage } from 'element-plus'
-import iconv from 'iconv-lite'
 import { Buffer } from 'buffer'
 
+import { ElMessage } from 'element-plus'
+import { XMLBuilder } from 'fast-xml-parser'
+import iconv from 'iconv-lite'
+import { ref, computed, watch, nextTick } from 'vue'
+import { useRouter } from 'vue-router'
+
 import { useAppStore } from '@/store/store'
+
 import MusicStatistics from './MusicStatistics.vue'
 
 // @ts-expect-error iconv需要这个东西
@@ -69,8 +103,8 @@ withDefaults(
     loading?: boolean
   }>(),
   {
-    loading: false
-  }
+    loading: false,
+  },
 )
 
 const router = useRouter()
@@ -92,7 +126,7 @@ const songTitle = computed({
     if (appStore.currentSong?.xmlObject?.TITLE) {
       appStore.currentSong.xmlObject.TITLE.Name = newValue
     }
-  }
+  },
 })
 
 // 本地绑定的编辑值
@@ -106,7 +140,7 @@ watch(
       editingTitleText.value = val
     }
   },
-  { immediate: true }
+  { immediate: true },
 )
 
 const xmlObject = computed(() => appStore.currentSong?.xmlObject)
@@ -152,7 +186,7 @@ const handleSaveXml = () => {
   }
 
   // 打包时再补一个正常的长度，便于其他编辑器正常识别
-  xmlObj.TITLE.LENGTH.Value = xmlObj.TITLE.AREA[xmlObj.TITLE.AREA.length - 1].Coord ?? "6666"
+  xmlObj.TITLE.LENGTH.Value = xmlObj.TITLE.AREA[xmlObj.TITLE.AREA.length - 1].Coord ?? '6666'
 
   try {
     const builder = new XMLBuilder({

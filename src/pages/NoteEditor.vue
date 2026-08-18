@@ -12,9 +12,14 @@
       </div>
 
       <!-- 中间：直接在模板里组装对象，Vue 会自动深度解包 ref 保持响应式 -->
-      <RhythmCanvas :style="{
-        width: globalConfigStore.canvasWidth + 'px'
-      }" v-if="songInfoPanelRef" :seek-to="songInfoPanelRef?.seekTo" :key="globalConfigStore.canvasWidth" />
+      <RhythmCanvas
+        :style="{
+          width: globalConfigStore.canvasWidth + 'px',
+        }"
+        v-if="songInfoPanelRef"
+        :seek-to="songInfoPanelRef?.seekTo"
+        :key="globalConfigStore.canvasWidth"
+      />
 
       <!-- 右侧：音频可视化区域 -->
       <div class="flex-1">
@@ -25,18 +30,18 @@
 </template>
 
 <script setup lang="ts">
+import { useRefHistory, onKeyStroke } from '@vueuse/core'
 import { computed, nextTick, onUnmounted, ref, toRaw, watch } from 'vue'
 import { useRoute } from 'vue-router'
-import { useRefHistory, onKeyStroke } from '@vueuse/core'
 
 import NoteEditorHeader from '@/components/NoteEditorHeader.vue'
-import SongVisualization from '@/components/SongVisualization.vue'
 import RhythmCanvas from '@/components/RhythmCanvas.vue'
 import SongInfoPanel from '@/components/SongInfoPanel.vue'
-import { useAppStore } from '@/store/store'
+import SongVisualization from '@/components/SongVisualization.vue'
 import { useSongStorage } from '@/db/useSongStorage'
-import { deepToRaw } from '@/utils/utils'
 import { useGlobalConfigStore } from '@/store/global-config'
+import { useAppStore } from '@/store/store'
+import { deepToRaw } from '@/utils/utils'
 
 const route = useRoute()
 const appStore = useAppStore()
@@ -53,7 +58,7 @@ const areaRef = computed({
     if (appStore.currentSong?.xmlObject) {
       appStore.currentSong.xmlObject.TITLE.AREA = val!
     }
-  }
+  },
 })
 
 // 仅记录 xmlObject 的变化历史
@@ -63,14 +68,17 @@ const { undo, redo, clear } = useRefHistory(areaRef, {
   clone: (val) => {
     if (!val) return
     return structuredClone(deepToRaw(val))
-  }
+  },
 })
 
 // 监听键盘快捷键：Ctrl/Cmd + Z (撤回), Ctrl/Cmd + Y 或 Ctrl/Cmd + Shift + Z (重做)
 onKeyStroke((e: KeyboardEvent) => {
   // 当用户在输入框/文本域中编辑时，保留原生的文本撤回行为
   const target = e.target as HTMLElement | null
-  if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable)) {
+  if (
+    target &&
+    (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable)
+  ) {
     return
   }
 
@@ -109,7 +117,7 @@ watch(
       }
     }
   },
-  { immediate: true }
+  { immediate: true },
 )
 
 // 监听数据变化同步数据库
@@ -124,17 +132,17 @@ watch(
       const cleanData = {
         ...rawSong,
         audioFile: toRaw(rawSong.audioFile),
-        backingTracks: (rawSong.backingTracks || []).map(f => toRaw(f)),
-        xmlObject: deepToRaw(rawSong.xmlObject)
+        backingTracks: (rawSong.backingTracks || []).map((f) => toRaw(f)),
+        xmlObject: deepToRaw(rawSong.xmlObject),
       }
 
       updateSong(newSong.id, cleanData)
     }
   },
-  { deep: true }
+  { deep: true },
 )
 
 onUnmounted(() => {
   appStore.$reset()
-}) 
+})
 </script>

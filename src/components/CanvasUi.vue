@@ -441,7 +441,7 @@ export function createFlameWrap(
   )
 
   let contentDirty = false
-  let wake = () => { }
+  let wake = () => {}
 
   if (htmlInCanvas) {
     paintable.onpaint = () => {
@@ -450,7 +450,7 @@ export function createFlameWrap(
         sourceCtx!.drawElementImage!(content, 0, 0)
         contentDirty = true
         wake()
-      } catch { }
+      } catch {}
     }
   }
 
@@ -750,14 +750,24 @@ watch(
 
 <template>
   <div style="position: relative">
-    <canvas ref="sourceEl" layoutsubtree="true"
-      :style="native ? 'position: absolute; inset: 0; width: 100%; height: 100%' : 'display: none'">
-      <div v-if="native" ref="contentEl" style="position: relative; width: 100%; height: 100%; overflow: auto">
+    <canvas
+      ref="sourceEl"
+      layoutsubtree="true"
+      :style="native ? 'position: absolute; inset: 0; width: 100%; height: 100%' : 'display: none'"
+    >
+      <div
+        v-if="native"
+        ref="contentEl"
+        style="position: relative; width: 100%; height: 100%; overflow: auto"
+      >
         <slot />
       </div>
     </canvas>
-    <div v-if="!native" ref="contentEl"
-      style="position: relative; width: 100%; height: 100%; overflow: auto;padding: 4px;">
+    <div
+      v-if="!native"
+      ref="contentEl"
+      style="position: relative; width: 100%; height: 100%; overflow: auto; padding: 4px"
+    >
       <slot />
     </div>
     <canvas ref="outputEl" aria-hidden="true" :style="outputStyle" />
