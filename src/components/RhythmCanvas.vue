@@ -1,22 +1,27 @@
 <template>
-  <main ref="containerRef"
-    class="relative h-full w-full shrink-0 select-none overflow-hidden rounded-2xl border border-slate-200/80"
-    :style="{ backgroundColor: cssCanvasBgColor }" @wheel="handleWheel" @contextmenu.prevent>
+  <main
+    ref="containerRef"
+    class="relative h-full w-full shrink-0 overflow-hidden rounded-2xl border border-slate-200/80 select-none"
+    :style="{ backgroundColor: cssCanvasBgColor }"
+    @wheel="handleWheel"
+    @contextmenu.prevent
+  >
     <div ref="canvasContainerRef" class="h-full w-full overflow-hidden"></div>
   </main>
 </template>
 
 <script setup lang="ts">
+import { useEventListener, useMagicKeys } from '@vueuse/core'
+import { storeToRefs } from 'pinia'
+import * as PIXI from 'pixi.js'
+import { ref, onMounted, onUnmounted, watch, computed } from 'vue'
+
+import spriteUrl from '@/assets/sprites.png'
+import { NoteType } from '@/note'
 import { spritesConfig } from '@/sprites'
 import { useGlobalConfigStore } from '@/store/global-config'
 import { useAppStore } from '@/store/store'
 import { getDecimalPlaces, hslToHex, parseColor, toCssHex8 } from '@/utils/utils'
-import { useEventListener } from '@vueuse/core'
-import { storeToRefs } from 'pinia'
-import * as PIXI from 'pixi.js'
-import { ref, onMounted, onUnmounted, watch, computed } from 'vue'
-import spriteUrl from '@/assets/sprites.png'
-import { NoteType } from '@/note'
 
 export interface Obstacle {
   Coord: string
@@ -32,7 +37,7 @@ const props = withDefaults(
   }>(),
   {
     gridAspect: 45 / 186,
-  }
+  },
 )
 
 const appStore = useAppStore()
@@ -55,6 +60,17 @@ const {
   trackBgColor,
   tickColor,
 } = storeToRefs(globalConfigStore)
+
+// 控制是否显示全量刻度线/数字
+const showAllTicks = ref(false)
+
+// 快捷键 v 绑定切换
+const { v } = useMagicKeys()
+watch(v, (pressed) => {
+  if (pressed) {
+    showAllTicks.value = !showAllTicks.value
+  }
+})
 
 /**
  * 将 32 位 0xRRGGBBAA 数值转换为 CSS 兼容的 8位 Hex 字符串 (#RRGGBBAA)
@@ -110,14 +126,13 @@ function updateSongObstacles(newObstacles: Obstacle[]) {
   currentSong.value.xmlObject.TITLE.AREA = sortedObstacles
 }
 
-
 /**
  * 根据上下文得出最优可摆放的障碍物
  */
 function generateObstacle(
   prevObs: Obstacle | null,
   nextObs: Obstacle | null,
-  offsetXRatio: number
+  offsetXRatio: number,
 ): Obstacle | null {
   if (!selectedObstacle.value) return null
 
@@ -128,41 +143,44 @@ function generateObstacle(
    * 抽取随机障碍物
    */
   if (selectedObstacleKind === 161) {
-    let actualKind = selectedObstacleKind;
+    let actualKind = selectedObstacleKind
 
     // 1. 检查上一个障碍物是否存在，且是否在当前可抽取的随机池里
-    const canRepeat = prevObsKind != null && randomType.value.includes(prevObsKind);
+    const canRepeat = prevObsKind != null && randomType.value.includes(prevObsKind)
 
     if (canRepeat && Math.random() < repeatChance.value / 100) {
-      actualKind = prevObsKind; // 触发重复
+      actualKind = prevObsKind // 触发重复
     } else {
       // 过滤掉上一个类型，只在“剩下的”类型里抽
-      const otherPool = randomType.value.filter(kind => kind !== prevObsKind);
-      const targetPool = otherPool.length > 0 ? otherPool : randomType.value; // 兜底防止池子被过滤空了
-      actualKind = targetPool[Math.floor(Math.random() * targetPool.length)];
+      const otherPool = randomType.value.filter((kind) => kind !== prevObsKind)
+      const targetPool = otherPool.length > 0 ? otherPool : randomType.value // 兜底防止池子被过滤空了
+      actualKind = targetPool[Math.floor(Math.random() * targetPool.length)]
     }
 
-    return NoteType[actualKind];
+    return NoteType[actualKind]
   }
 
   console.log({
-    prevObs, nextObs, offsetXRatio, selectedObstacle: selectedObstacle.value
+    prevObs,
+    nextObs,
+    offsetXRatio,
+    selectedObstacle: selectedObstacle.value,
   })
 
   /**
    * 自动闭合障碍物
    */
-  if (selectedObstacle.value.Level === "5" && selectedObstacleKind > 100) {
-    if ((prevObsKind !== selectedObstacleKind - 2 || prevObsKind === selectedObstacleKind) && (prevObsKind + 1 !== selectedObstacleKind)) {
+  if (selectedObstacle.value.Level === '5' && selectedObstacleKind > 100) {
+    if (
+      (prevObsKind !== selectedObstacleKind - 2 || prevObsKind === selectedObstacleKind) &&
+      prevObsKind + 1 !== selectedObstacleKind
+    ) {
       return {
         ...selectedObstacle.value,
-        Kind: selectedObstacleKind - 2 + ''
+        Kind: selectedObstacleKind - 2 + '',
       }
     }
   }
-
-
-
 
   /**
    * 左右智能映射，暂时先不考虑，对于长障碍物来说体验略差
@@ -277,7 +295,7 @@ watch(
   () => {
     computePreviewObstacle()
   },
-  { immediate: true }
+  { immediate: true },
 )
 
 function removeObstacleAtCoord(coord: number): boolean {
@@ -321,7 +339,7 @@ function removeObstacleAtCoord(coord: number): boolean {
   let updatedList = currentList.filter((obs) => !removeSet.has(obs))
 
   const hasRemovedIntervalBoundary = obstaclesToRemove.some(
-    (obs) => Number(obs.Kind) > 100 && obs.Level === '5'
+    (obs) => Number(obs.Kind) > 100 && obs.Level === '5',
   )
 
   if (hasRemovedIntervalBoundary) {
@@ -330,7 +348,7 @@ function removeObstacleAtCoord(coord: number): boolean {
       if (!PROTECTED_KINDS.has(obs.Kind)) return true
       const obsCoord = Number(obs.Coord)
       const isInValidInterval = validIntervals.some(
-        ({ startCoord, endCoord }) => obsCoord > startCoord && obsCoord < endCoord
+        ({ startCoord, endCoord }) => obsCoord > startCoord && obsCoord < endCoord,
       )
       return isInValidInterval
     })
@@ -346,7 +364,7 @@ function placeObstacleAtCoord(coord: number, offsetXRatio: number) {
 
   const existingIntervals = calculateClosedIntervals(currentList, RANGE_PAIR_MAP)
   const isInsideClosedInterval = existingIntervals.some(
-    ({ startCoord, endCoord }) => coord > startCoord && coord < endCoord
+    ({ startCoord, endCoord }) => coord > startCoord && coord < endCoord,
   )
 
   if (isInsideClosedInterval) {
@@ -389,7 +407,9 @@ function placeObstacleAtCoord(coord: number, offsetXRatio: number) {
     }
 
     if (hasConflict) {
-      console.warn(`[放置拦截] 类型24障碍物放置位置 [${coord}, ${checkEndCoord}] 范围内已有障碍物。`)
+      console.warn(
+        `[放置拦截] 类型24障碍物放置位置 [${coord}, ${checkEndCoord}] 范围内已有障碍物。`,
+      )
       return
     }
   }
@@ -416,7 +436,7 @@ function placeObstacleAtCoord(coord: number, offsetXRatio: number) {
   })
 
   const kindNum = Number(finalObs.Kind)
-  if (kindNum > 100 && finalObs.Level === "5") {
+  if (kindNum > 100 && finalObs.Level === '5') {
     const intervals = calculateClosedIntervals(newObsList, RANGE_PAIR_MAP)
 
     for (const interval of intervals) {
@@ -453,7 +473,7 @@ const RANGE_PAIR_MAP: Record<string, { endKind: string; fillKind: string }> = {
 
 function calculateClosedIntervals(
   obstacles: Obstacle[],
-  rangePairMap: Record<string, { endKind: string; fillKind: string }> = RANGE_PAIR_MAP
+  rangePairMap: Record<string, { endKind: string; fillKind: string }> = RANGE_PAIR_MAP,
 ): { startCoord: number; endCoord: number; fillKind: string }[] {
   if (!obstacles || obstacles.length === 0) return []
 
@@ -630,7 +650,13 @@ let textPoolIndex = 0
 const spritePool: PIXI.Sprite[] = []
 let spritePoolIndex = 0
 
-function getTextNode(content: string, x: number, y: number, fontSize = 11, color = CONFIG.value.tickColor) {
+function getTextNode(
+  content: string,
+  x: number,
+  y: number,
+  fontSize = 11,
+  color = CONFIG.value.tickColor,
+) {
   let textNode: PIXI.Text
   if (textPoolIndex < textPool.length) {
     textNode = textPool[textPoolIndex]
@@ -665,7 +691,7 @@ function getSpriteNode(
   y: number,
   width: number,
   height: number,
-  alpha = 1
+  alpha = 1,
 ) {
   let spriteNode: PIXI.Sprite
   if (spritePoolIndex < spritePool.length) {
@@ -700,7 +726,7 @@ async function loadSpritesheet() {
     if (!baseTexture) return
 
     for (const [kind, config] of Object.entries(
-      spritesConfig as Record<string, { x: number; y: number; width: number; height: number }>
+      spritesConfig as Record<string, { x: number; y: number; width: number; height: number }>,
     )) {
       const rect = new PIXI.Rectangle(config.x, config.y, config.width, config.height)
       const subTexture = new PIXI.Texture({
@@ -724,7 +750,7 @@ watch(
   () => currentSongInfo.value.isPlaying,
   (playing) => {
     if (!playing) snapToNearestTick()
-  }
+  },
 )
 
 const initPixi = async () => {
@@ -793,13 +819,10 @@ watch(
       initPixi()
     }
   },
-  { immediate: true }
+  { immediate: true },
 )
 
-function getPointerGridState(
-  x: number,
-  y: number
-): { coord: number; offsetXRatio: number } | null {
+function getPointerGridState(x: number, y: number): { coord: number; offsetXRatio: number } | null {
   if (!app) return null
   const cfg = CONFIG.value
   const viewWidth = app.screen.width
@@ -837,7 +860,7 @@ function renderObstacleItem(
   gridHeight: number,
   coordToCenterY: (c: number) => number,
   alpha = 1.0,
-  isSelected = false
+  isSelected = false,
 ) {
   if (!g) return
   const isKind24 = kind === '24'
@@ -937,19 +960,36 @@ const renderEditor = () => {
     }
 
     const posInGroup = (((i + 4) % 8) + 8) % 8
+    const displayText = precision > 0 ? c.toFixed(precision) : c.toString()
 
-    if (posInGroup === 4) {
-      const displayText = precision > 0 ? c.toFixed(precision) : c.toString()
-      const txt = getTextNode(displayText, tickEndX, centerY, 11, cfg.tickColor)
-      txt.anchor.set(1, 0.5)
-    } else if (posInGroup === 0) {
+    if (showAllTicks.value) {
+      // 开启模式：每一行均绘制刻度线与完整刻度数字
       g.moveTo(tickEndX - majorTickLength, centerY)
       g.lineTo(tickEndX, centerY)
       g.stroke({ width: 1.5, ...tickColorParsed })
+
+      const txt = getTextNode(
+        displayText,
+        tickEndX - majorTickLength - 2,
+        centerY,
+        11,
+        cfg.tickColor,
+      )
+      txt.anchor.set(1, 0.5)
     } else {
-      g.moveTo(tickEndX - minorTickLengthVal, centerY)
-      g.lineTo(tickEndX, centerY)
-      g.stroke({ width: 1, ...tickColorParsed })
+      // 默认模式：按间隔排列显示
+      if (posInGroup === 4) {
+        const txt = getTextNode(displayText, tickEndX, centerY, 11, cfg.tickColor)
+        txt.anchor.set(1, 0.5)
+      } else if (posInGroup === 0) {
+        g.moveTo(tickEndX - majorTickLength, centerY)
+        g.lineTo(tickEndX, centerY)
+        g.stroke({ width: 1.5, ...tickColorParsed })
+      } else {
+        g.moveTo(tickEndX - minorTickLengthVal, centerY)
+        g.lineTo(tickEndX, centerY)
+        g.stroke({ width: 1, ...tickColorParsed })
+      }
     }
   }
 
@@ -1028,7 +1068,7 @@ const renderEditor = () => {
       gridHeight,
       coordToCenterY,
       1.0,
-      isSelected
+      isSelected,
     )
   }
 
@@ -1056,7 +1096,7 @@ const renderEditor = () => {
         trackWidth,
         gridHeight,
         coordToCenterY,
-        0.6
+        0.6,
       )
     }
   }

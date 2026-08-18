@@ -1,20 +1,27 @@
 <template>
-  <div class="flex flex-col gap-2 w-full max-w-90 font-sans">
-    <div v-for="(item, index) in data" :key="index"
-      class="relative flex items-center justify-between gap-2 rounded-xl bg-slate-50 p-3 transition-colors hover:bg-slate-100/80">
+  <div class="flex w-full max-w-90 flex-col gap-2 font-sans">
+    <div
+      v-for="(item, index) in data"
+      :key="index"
+      class="relative flex items-center justify-between gap-2 rounded-xl bg-slate-50 p-3 transition-colors hover:bg-slate-100/80"
+    >
       <!-- 左侧 Label -->
       <span class="shrink-0 text-xs font-medium text-slate-400 select-none">
         {{ item.title.trim() }}
       </span>
 
       <!-- 右侧 快捷键组合按键 -->
-      <div class="flex items-center gap-1.5 shrink-0">
+      <div class="flex shrink-0 items-center gap-1.5">
         <template v-for="(key, keyIndex) in item.keys" :key="keyIndex">
           <kbd
-            class="inline-flex h-6 min-w-6 items-center justify-center rounded-md border border-slate-200 bg-white px-2 font-mono text-xs font-semibold text-slate-700 shadow-2xs transition-colors hover:border-slate-300 hover:text-slate-900 select-none active:translate-y-px">
+            class="inline-flex h-6 min-w-6 items-center justify-center rounded-md border border-slate-200 bg-white px-2 font-mono text-xs font-semibold text-slate-700 shadow-2xs transition-colors select-none hover:border-slate-300 hover:text-slate-900 active:translate-y-px"
+          >
             {{ formatKey(key) }}
           </kbd>
-          <span v-if="keyIndex < item.keys.length - 1" class="text-xs font-medium text-slate-400 select-none">
+          <span
+            v-if="keyIndex < item.keys.length - 1"
+            class="text-xs font-medium text-slate-400 select-none"
+          >
             +
           </span>
         </template>
@@ -28,6 +35,10 @@ const data = [
   {
     title: '切换音频播放',
     keys: ['空格'],
+  },
+  {
+    title: '切换刻度值显示精度',
+    keys: ['v'],
   },
   { title: '撤回修改', keys: ['ctrl', 'z'] },
   {
