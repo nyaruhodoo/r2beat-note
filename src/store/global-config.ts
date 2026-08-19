@@ -85,7 +85,7 @@ export const defaultGlobalConfig: GlobalConfig = {
 
   // ===== 音频配置 =====
   musicVolume: 1,
-  fixMusicDelay: 0.1,
+  fixMusicDelay: 0.07,
 
   // ===== 随机障碍物生成配置 =====
   randomType: [16, 17, 18, 19, 20, 21, 22, 23, 26, 27],
