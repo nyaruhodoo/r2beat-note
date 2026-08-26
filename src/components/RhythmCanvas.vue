@@ -160,12 +160,12 @@ function generateObstacle(
     return NoteType[actualKind]
   }
 
-  console.log({
-    prevObs,
-    nextObs,
-    offsetXRatio,
-    selectedObstacle: selectedObstacle.value,
-  })
+  // console.log({
+  //   prevObs,
+  //   nextObs,
+  //   offsetXRatio,
+  //   selectedObstacle: selectedObstacle.value,
+  // })
 
   /**
    * 自动闭合障碍物
@@ -358,6 +358,9 @@ function removeObstacleAtCoord(coord: number): boolean {
   return true
 }
 
+/**
+ * 摆放障碍物
+ */
 function placeObstacleAtCoord(coord: number, offsetXRatio: number) {
   if (!selectedObstacle.value) return
   const currentList = obstacles.value
@@ -477,31 +480,47 @@ function calculateClosedIntervals(
 ): { startCoord: number; endCoord: number; fillKind: string }[] {
   if (!obstacles || obstacles.length === 0) return []
 
-  const sorted = obstacles
+  // 必须按坐标升序排序
+  const sorted = [...obstacles].sort((a, b) => Number(a.Coord) - Number(b.Coord))
   const intervals: { startCoord: number; endCoord: number; fillKind: string }[] = []
-  const activeStacks: Record<string, number[]> = {}
 
-  for (const obs of sorted) {
-    const coord = Number(obs.Coord)
-    const kind = obs.Kind
+  // 1. 建立 EndKind 到 StartKind 的反向映射表，方便双向查询
+  const endToStartMap: Record<string, { startKind: string; fillKind: string }> = {}
+  for (const [startKind, rule] of Object.entries(rangePairMap)) {
+    endToStartMap[rule.endKind] = { startKind, fillKind: rule.fillKind }
+  }
 
-    if (rangePairMap[kind]) {
-      if (!activeStacks[kind]) activeStacks[kind] = []
-      activeStacks[kind].push(coord)
-      continue
-    }
+  // 用于记录已经被匹配过的 EndKind，防止重复配对
+  const matchedEndCoords = new Set<number>()
 
-    for (const [startKind, rule] of Object.entries(rangePairMap)) {
-      if (kind === rule.endKind && activeStacks[startKind] && activeStacks[startKind].length > 0) {
-        const startCoord = activeStacks[startKind].pop()!
-        if (coord > startCoord) {
+  for (let i = 0; i < sorted.length; i++) {
+    const obs = sorted[i]
+    const startCoord = Number(obs.Coord)
+    const startKind = obs.Kind
+
+    // 如果当前节点是 StartKind (如 128)
+    if (rangePairMap[startKind]) {
+      const targetEndKind = rangePairMap[startKind].endKind
+      const fillKind = rangePairMap[startKind].fillKind
+
+      // 向后扫描，寻找【离它最近】且【未被匹配】的 EndKind (如 130)
+      for (let j = i + 1; j < sorted.length; j++) {
+        const nextObs = sorted[j]
+        const nextCoord = Number(nextObs.Coord)
+        const nextKind = nextObs.Kind
+
+        // 如果中途遇到了另一个同类型的 StartKind，说明之前的未闭合，直接中断，交由下一个 StartKind 匹配
+        if (nextKind === startKind) break
+
+        if (nextKind === targetEndKind && !matchedEndCoords.has(nextCoord)) {
           intervals.push({
             startCoord,
-            endCoord: coord,
-            fillKind: rule.fillKind,
+            endCoord: nextCoord,
+            fillKind,
           })
+          matchedEndCoords.add(nextCoord) // 标记该 EndKind 已闭合
+          break
         }
-        break
       }
     }
   }
