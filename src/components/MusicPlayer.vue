@@ -823,8 +823,6 @@ useMagicKeys({
       return
     }
 
-    if (!globalConfigStore.rateKeyMap) return
-
     const key = e.key.toLowerCase()
 
     // 1. 节拍控制: q(降低) w(还原) e(增加)

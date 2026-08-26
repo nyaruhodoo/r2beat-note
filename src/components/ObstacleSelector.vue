@@ -226,32 +226,21 @@ function evaluateDirection() {
 }
 
 // 监听按键状态和开关状态
-watch(
-  [ArrowUp, ArrowDown, ArrowLeft, ArrowRight, () => globalConfigStore.directionKeyMap],
-  ([u, d, l, r, isMapEnabled]) => {
-    // 若未启用方向键映射，清理所有状态和定时器
-    if (!isMapEnabled) {
-      if (evaluationTimer) clearTimeout(evaluationTimer)
-      clearLongPress()
-      hasExecutedInCurrentPress = false
-      return
-    }
+watch([ArrowUp, ArrowDown, ArrowLeft, ArrowRight], ([u, d, l, r]) => {
+  const isAnyPressed = u || d || l || r
 
-    const isAnyPressed = u || d || l || r
-
-    if (isAnyPressed) {
-      if (!hasExecutedInCurrentPress) {
-        if (evaluationTimer) clearTimeout(evaluationTimer)
-        evaluationTimer = setTimeout(evaluateDirection, DIRECTION_DEBOUNCE)
-      }
-    } else {
-      // 键全部松开，重置状态准备下一次按键并清除长按
+  if (isAnyPressed) {
+    if (!hasExecutedInCurrentPress) {
       if (evaluationTimer) clearTimeout(evaluationTimer)
-      clearLongPress()
-      hasExecutedInCurrentPress = false
+      evaluationTimer = setTimeout(evaluateDirection, DIRECTION_DEBOUNCE)
     }
-  },
-)
+  } else {
+    // 键全部松开，重置状态准备下一次按键并清除长按
+    if (evaluationTimer) clearTimeout(evaluationTimer)
+    clearLongPress()
+    hasExecutedInCurrentPress = false
+  }
+})
 
 onUnmounted(() => {
   if (evaluationTimer) clearTimeout(evaluationTimer)

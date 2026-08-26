@@ -53,10 +53,6 @@ export interface GlobalConfig {
   repeatChance: number
 
   // ===== 快捷键配置 =====
-  /** 快捷键切换选择障碍物 */
-  directionKeyMap: boolean
-  /** 快捷键调整播放速率 */
-  rateKeyMap: boolean
   /** 是否开启左右智能映射 */
   enableAutoDirection: boolean
   /** 是否显示单项障碍物 */
@@ -95,9 +91,7 @@ export const defaultGlobalConfig: GlobalConfig = {
   randomType: [16, 17, 18, 19, 20, 21, 22, 23, 26, 27],
   repeatChance: 10,
 
-  // ===== 快捷键配置 =====
-  directionKeyMap: true,
-  rateKeyMap: true,
+  // ===== 其他个性化配置 =====
   enableAutoDirection: false,
   enableSingleObstacle: false,
 }

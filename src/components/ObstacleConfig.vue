@@ -102,7 +102,7 @@
             </div>
           </el-form-item>
 
-          <el-form-item label="Coord对准精度" class="prevent-item-expand">
+          <el-form-item label="Coord 精度" class="prevent-item-expand">
             <div class="flex items-center gap-1">
               <el-input-number
                 v-model="stepCoordSafe"
@@ -271,7 +271,7 @@
             </div>
           </el-form-item>
 
-          <el-form-item label="显示背景网格线" class="prevent-item-expand">
+          <el-form-item label="显示网格线" class="prevent-item-expand">
             <div class="flex items-center gap-1">
               <el-switch v-model="store.showGridLines" size="small" />
             </div>
@@ -279,50 +279,6 @@
         </div>
 
         <el-divider class="my-2" />
-
-        <el-form-item class="prevent-item-expand">
-          <template #label>
-            <div class="flex items-center gap-1.5">
-              <span>方向键映射障碍物</span>
-              <el-tooltip
-                content="开启后可以使用方向键快速切换选择的障碍物"
-                placement="top"
-                effect="dark"
-              >
-                <el-icon
-                  class="cursor-pointer text-base text-blue-500 transition-transform hover:scale-110 hover:text-blue-600"
-                >
-                  <QuestionFilled />
-                </el-icon>
-              </el-tooltip>
-            </div>
-          </template>
-          <div class="flex items-center gap-1">
-            <el-switch v-model="store.directionKeyMap" size="small" />
-          </div>
-        </el-form-item>
-
-        <el-form-item class="prevent-item-expand">
-          <template #label>
-            <div class="flex items-center gap-1.5">
-              <span>速率快捷键</span>
-              <el-tooltip
-                content="开启后可以使用快捷键快速调整播放速率"
-                placement="top"
-                effect="dark"
-              >
-                <el-icon
-                  class="cursor-pointer text-base text-blue-500 transition-transform hover:scale-110 hover:text-blue-600"
-                >
-                  <QuestionFilled />
-                </el-icon>
-              </el-tooltip>
-            </div>
-          </template>
-          <div class="flex items-center gap-1">
-            <el-switch v-model="store.rateKeyMap" size="small" />
-          </div>
-        </el-form-item>
 
         <el-form-item class="prevent-item-expand">
           <template #label>
@@ -349,12 +305,8 @@
         <el-form-item class="prevent-item-expand">
           <template #label>
             <div class="flex items-center gap-1.5">
-              <span>显示单项障碍物</span>
-              <el-tooltip
-                content="当开启左右智能映射时可以精简障碍物列表"
-                placement="top"
-                effect="dark"
-              >
+              <span>显示单向障碍物</span>
+              <el-tooltip content="用于精简障碍物列表" placement="top" effect="dark">
                 <el-icon
                   class="cursor-pointer text-base text-blue-500 transition-transform hover:scale-110 hover:text-blue-600"
                 >
