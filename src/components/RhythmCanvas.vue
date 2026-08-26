@@ -17,7 +17,7 @@ import * as PIXI from 'pixi.js'
 import { ref, onMounted, onUnmounted, watch, computed } from 'vue'
 
 import spriteUrl from '@/assets/sprites.png'
-import { NoteType } from '@/note'
+import { mirrorModeMap, NoteType } from '@/note'
 import { spritesConfig } from '@/sprites'
 import { useGlobalConfigStore } from '@/store/global-config'
 import { useAppStore } from '@/store/store'
@@ -59,7 +59,11 @@ const {
   canvasBgColor,
   trackBgColor,
   tickColor,
+  enableAutoDirection,
 } = storeToRefs(globalConfigStore)
+
+// 用于控制触发反向障碍物的分界线坐标(0-1)
+const splitRatioThreshold = 0.6
 
 // 控制是否显示全量刻度线/数字
 const showAllTicks = ref(false)
@@ -131,7 +135,7 @@ function updateSongObstacles(newObstacles: Obstacle[]) {
  */
 function generateObstacle(
   prevObs: Obstacle | null,
-  nextObs: Obstacle | null,
+  _nextObs: Obstacle | null,
   offsetXRatio: number,
 ): Obstacle | null {
   if (!selectedObstacle.value) return null
@@ -160,13 +164,6 @@ function generateObstacle(
     return NoteType[actualKind]
   }
 
-  // console.log({
-  //   prevObs,
-  //   nextObs,
-  //   offsetXRatio,
-  //   selectedObstacle: selectedObstacle.value,
-  // })
-
   /**
    * 自动闭合障碍物
    */
@@ -182,14 +179,15 @@ function generateObstacle(
     }
   }
 
-  /**
-   * 左右智能映射，暂时先不考虑，对于长障碍物来说体验略差
-   */
-  // const mirrorMode = mirrorModeMap[selectedObstacleKind + ""] as [number, number]
-  // const newKind = mirrorMode[offsetXRatio < 0.5 ? 0 : 1]
-  // if (newKind) {
-  //   return NoteType[newKind];
-  // }
+  // 左右智能映射
+  if (selectedObstacleKind < 100 && enableAutoDirection.value) {
+    // @ts-expect-error  忽略
+    const mirrorMode = mirrorModeMap[selectedObstacleKind + ''] as [number, number] | undefined
+    const newKind = mirrorMode?.[offsetXRatio < splitRatioThreshold ? 0 : 1]
+    if (newKind) {
+      return NoteType[newKind]
+    }
+  }
 
   return { ...selectedObstacle.value }
 }
@@ -231,7 +229,7 @@ function getSurroundingObstacles(targetCoord: number) {
 
 const hoverDirection = computed<'left' | 'right' | null>(() => {
   if (!hoverState.value) return null
-  return hoverState.value.offsetXRatio <= 0.5 ? 'left' : 'right'
+  return hoverState.value.offsetXRatio <= splitRatioThreshold ? 'left' : 'right'
 })
 
 const hoverCoord = computed(() => hoverState.value?.coord ?? null)
@@ -855,7 +853,7 @@ function getPointerGridState(x: number, y: number): { coord: number; offsetXRati
   }
 
   const relativeX = x - trackStartX
-  const offsetXRatio = (relativeX / trackWidth) * 2 - 1
+  const offsetXRatio = relativeX / trackWidth
 
   const rowHPerCoord = gridHeight / cfg.stepCoord
   const targetBaselineY = viewHeight - (cfg.activeRowIndexFromBottom - 0.5) * gridHeight

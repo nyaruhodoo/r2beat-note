@@ -133,7 +133,7 @@
 import { Setting } from '@element-plus/icons-vue'
 import { useMagicKeys } from '@vueuse/core'
 import { storeToRefs } from 'pinia'
-import { ref, watch, onUnmounted } from 'vue'
+import { watch, onUnmounted, computed } from 'vue'
 
 import { NoteType } from '@/note'
 import { useGlobalConfigStore, defaultGlobalConfig } from '@/store/global-config'
@@ -258,15 +258,28 @@ onUnmounted(() => {
   clearLongPress()
 })
 
-// ================= 组件原有逻辑 =================
-const layoutConfig = ref<(string | null)[][]>([
-  ['19', '18', '145', '142'],
-  ['26', '27', null, null],
-  ['22', '23', null, null],
-  ['20', '21', '130', '133'],
-  ['16', '17', '136', '139'],
-  ['24', '161', null, null],
-])
+/**
+ * 障碍物布局列表
+ */
+const layoutConfig = computed(() => {
+  if (globalConfigStore.enableSingleObstacle && globalConfigStore.enableAutoDirection)
+    return [
+      ['19', '145', '142', null],
+      ['26', null, null, null],
+      ['22', null, null, null],
+      ['20', '130', '133', null],
+      ['16', '136', '139', null],
+      ['24', '161', null, null],
+    ]
+  return [
+    ['19', '18', '145', '142'],
+    ['26', '27', null, null],
+    ['22', '23', null, null],
+    ['20', '21', '130', '133'],
+    ['16', '17', '136', '139'],
+    ['24', '161', null, null],
+  ]
+})
 
 function getColumnSampleId(colIndex: number): string | null {
   for (const row of layoutConfig.value) {

@@ -57,15 +57,15 @@ export const StarNotetransformMap = {
  */
 export const mirrorModeMap = {
   '26': ['26', '27'], // 原 leftStar
-  '27': ['26', '27'], // 原 rightStar
+  '27': ['27', '26'], // 原 rightStar
   '19': ['19', '18'], // 原 leftSpike
-  '18': ['19', '18'], // 原 rightSpike
+  '18': ['18', '19'], // 原 rightSpike
   '16': ['16', '17'], // 原 jump
-  '17': ['16', '17'], // 原 squat
+  '17': ['17', '16'], // 原 squat
   '20': ['20', '21'], // 原 leftTopJump
-  '21': ['20', '21'], // 原 rightTopJump
+  '21': ['21', '20'], // 原 rightTopJump
   '22': ['22', '23'], // 原 leftSpin
-  '23': ['22', '23'], // 原 rightSpin
+  '23': ['23', '22'], // 原 rightSpin
   '128': ['128', '131'], // 原 leftTopLongJump
   '129': ['129', '132'],
   '130': ['130', '133'],

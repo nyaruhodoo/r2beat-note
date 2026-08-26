@@ -22,7 +22,7 @@
             </div>
           </el-form-item>
 
-          <el-form-item label="视口可见总行数" class="prevent-item-expand">
+          <el-form-item label="视口行数" class="prevent-item-expand">
             <div class="flex items-center gap-1">
               <el-input-number
                 v-model="visibleGridCountSafe"
@@ -280,7 +280,6 @@
 
         <el-divider class="my-2" />
 
-        <!-- 新增项: 开启方向键映射障碍物 -->
         <el-form-item class="prevent-item-expand">
           <template #label>
             <div class="flex items-center gap-1.5">
@@ -303,7 +302,6 @@
           </div>
         </el-form-item>
 
-        <!-- 新增项: 速率快捷键 -->
         <el-form-item class="prevent-item-expand">
           <template #label>
             <div class="flex items-center gap-1.5">
@@ -323,6 +321,50 @@
           </template>
           <div class="flex items-center gap-1">
             <el-switch v-model="store.rateKeyMap" size="small" />
+          </div>
+        </el-form-item>
+
+        <el-form-item class="prevent-item-expand">
+          <template #label>
+            <div class="flex items-center gap-1.5">
+              <span>左右智能映射</span>
+              <el-tooltip
+                content="开启后可以根据鼠标位置切换左右障碍物"
+                placement="top"
+                effect="dark"
+              >
+                <el-icon
+                  class="cursor-pointer text-base text-blue-500 transition-transform hover:scale-110 hover:text-blue-600"
+                >
+                  <QuestionFilled />
+                </el-icon>
+              </el-tooltip>
+            </div>
+          </template>
+          <div class="flex items-center gap-1">
+            <el-switch v-model="store.enableAutoDirection" size="small" />
+          </div>
+        </el-form-item>
+
+        <el-form-item class="prevent-item-expand">
+          <template #label>
+            <div class="flex items-center gap-1.5">
+              <span>显示单项障碍物</span>
+              <el-tooltip
+                content="当开启左右智能映射时可以精简障碍物列表"
+                placement="top"
+                effect="dark"
+              >
+                <el-icon
+                  class="cursor-pointer text-base text-blue-500 transition-transform hover:scale-110 hover:text-blue-600"
+                >
+                  <QuestionFilled />
+                </el-icon>
+              </el-tooltip>
+            </div>
+          </template>
+          <div class="flex items-center gap-1">
+            <el-switch v-model="store.enableSingleObstacle" size="small" />
           </div>
         </el-form-item>
       </el-form>

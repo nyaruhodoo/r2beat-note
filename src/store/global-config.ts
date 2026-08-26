@@ -57,6 +57,10 @@ export interface GlobalConfig {
   directionKeyMap: boolean
   /** 快捷键调整播放速率 */
   rateKeyMap: boolean
+  /** 是否开启左右智能映射 */
+  enableAutoDirection: boolean
+  /** 是否显示单项障碍物 */
+  enableSingleObstacle: boolean
 }
 
 export const defaultGlobalConfig: GlobalConfig = {
@@ -94,6 +98,8 @@ export const defaultGlobalConfig: GlobalConfig = {
   // ===== 快捷键配置 =====
   directionKeyMap: true,
   rateKeyMap: true,
+  enableAutoDirection: false,
+  enableSingleObstacle: false,
 }
 
 export const useGlobalConfigStore = defineStore('globalConfig', {
