@@ -33,7 +33,7 @@
       </div>
     </div>
 
-    <div class="flex items-center gap-3">
+    <div class="flex flex-row-reverse items-center gap-3">
       <button
         type="button"
         :disabled="!isLoaded || isAudioLoading"
@@ -45,7 +45,7 @@
           <rect x="14" y="4" width="4" height="16" rx="1" />
         </svg>
 
-        <svg v-else class="ml-0.5 h-4 w-4 fill-current" viewBox="0 0 24 24">
+        <svg v-else class="h-4 w-4 fill-current" viewBox="0 0 24 24">
           <path d="M8 5v14l11-7z" />
         </svg>
       </button>
@@ -181,14 +181,6 @@
             :value-on-clear="1.0"
             size="small"
           />
-          <button
-            type="button"
-            class="rounded p-1 text-slate-400 transition-colors hover:text-slate-700"
-            title="复位到1.0"
-            @click="playbackRateSafe = 1.0"
-          >
-            ↺
-          </button>
         </div>
       </div>
 
@@ -206,14 +198,6 @@
             :value-on-clear="1.0"
             size="small"
           />
-          <button
-            type="button"
-            class="rounded p-1 text-slate-400 transition-colors hover:text-slate-700"
-            title="复位到1.0"
-            @click="pitchRateSafe = 1.0"
-          >
-            ↺
-          </button>
         </div>
       </div>
 
@@ -230,13 +214,6 @@
           </select>
         </div>
         <div class="flex items-center gap-1.5">
-          <el-input-number
-            v-model="quickSeekValue"
-            class="w-24!"
-            :controls="false"
-            size="small"
-            @keydown.enter="handleQuickSeek"
-          />
           <button
             type="button"
             :disabled="!isLoaded || isAudioLoading"
@@ -245,6 +222,13 @@
           >
             GO
           </button>
+          <el-input-number
+            v-model="quickSeekValue"
+            class="w-24!"
+            :controls="false"
+            size="small"
+            @keydown.enter="handleQuickSeek"
+          />
         </div>
       </div>
     </div>

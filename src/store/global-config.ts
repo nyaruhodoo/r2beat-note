@@ -57,6 +57,23 @@ export interface GlobalConfig {
   enableAutoDirection: boolean
   /** 是否显示单项障碍物 */
   enableSingleObstacle: boolean
+
+  shortcutKey: {
+    title: string
+    keys: string[]
+    event:
+      | 'toggle-play'
+      | 'toggle-scale'
+      | 'undo'
+      | 'redo'
+      | 'select-obstacle'
+      | 'decrease-beat'
+      | 'increase-beat'
+      | 'reset-beat'
+      | 'decrease-speed'
+      | 'increase-speed'
+      | 'reset-speed'
+  }[]
 }
 
 export const defaultGlobalConfig: GlobalConfig = {
@@ -94,11 +111,26 @@ export const defaultGlobalConfig: GlobalConfig = {
   // ===== 其他个性化配置 =====
   enableAutoDirection: false,
   enableSingleObstacle: false,
+
+  // ===== 快捷键配置 =====
+  shortcutKey: [
+    { title: '切换音频播放', keys: ['Space'], event: 'toggle-play' },
+    { title: '切换刻度值显示', keys: ['v'], event: 'toggle-scale' },
+    { title: '撤回修改', keys: ['Control', 'z'], event: 'undo' },
+    { title: '恢复修改', keys: ['Control', 'y'], event: 'redo' },
+    { title: '选中障碍物', keys: ['Shift', 'MouseLeft'], event: 'select-obstacle' },
+    { title: '降低节拍', keys: ['q'], event: 'decrease-beat' },
+    { title: '增加节拍', keys: ['e'], event: 'increase-beat' },
+    { title: '重置节拍', keys: ['w'], event: 'reset-beat' },
+    { title: '降低速率', keys: ['a'], event: 'decrease-speed' },
+    { title: '增加速率', keys: ['d'], event: 'increase-speed' },
+    { title: '重置速率', keys: ['s'], event: 'reset-speed' },
+  ],
 }
 
 export const useGlobalConfigStore = defineStore('globalConfig', {
   state: (): GlobalConfig => {
-    return { ...defaultGlobalConfig }
+    return structuredClone(defaultGlobalConfig)
   },
 
   // 开启持久化插件自动同步到 localStorage

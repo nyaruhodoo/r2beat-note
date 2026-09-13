@@ -20,6 +20,7 @@
     "element-plus": "^2.14.3",
     "fast-xml-parser": "^5.10.1",
     "iconv-lite": "^0.7.3",
+    "mitt": "^3.0.1",
     "pinia": "^4.0.2",
     "pinia-plugin-persistedstate": "^4.7.1",
     "pixi.js": "^8.19.0",
