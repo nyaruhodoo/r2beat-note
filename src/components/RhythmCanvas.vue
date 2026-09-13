@@ -11,7 +11,7 @@
 </template>
 
 <script setup lang="ts">
-import { useEventListener, useMagicKeys } from '@vueuse/core'
+import { useEventListener } from '@vueuse/core'
 import { storeToRefs } from 'pinia'
 import * as PIXI from 'pixi.js'
 import { ref, onMounted, onUnmounted, watch, computed } from 'vue'
@@ -21,6 +21,7 @@ import { mirrorModeMap, NoteType } from '@/note'
 import { spritesConfig } from '@/sprites'
 import { useGlobalConfigStore } from '@/store/global-config'
 import { useAppStore } from '@/store/store'
+import { emitter } from '@/utils/eventBus'
 import { getDecimalPlaces, hslToHex, parseColor, toCssHex8 } from '@/utils/utils'
 
 export interface Obstacle {
@@ -68,13 +69,12 @@ const splitRatioThreshold = 0.6
 // 控制是否显示全量刻度线/数字
 const showAllTicks = ref(false)
 
-// 快捷键 v 绑定切换
-const { v } = useMagicKeys()
-watch(v, (pressed) => {
-  if (pressed) {
-    showAllTicks.value = !showAllTicks.value
-  }
-})
+// 监听 emitter 的 toggle-scale 事件
+const handleToggleScale = () => {
+  showAllTicks.value = !showAllTicks.value
+}
+
+emitter.on('toggle-scale', handleToggleScale)
 
 /**
  * 将 32 位 0xRRGGBBAA 数值转换为 CSS 兼容的 8位 Hex 字符串 (#RRGGBBAA)
@@ -1332,6 +1332,7 @@ onMounted(() => {
 })
 
 onUnmounted(() => {
+  emitter.off('toggle-scale', handleToggleScale)
   if (app) {
     app.stage.off('pointerdown', handleCanvasClick)
     app.stage.off('pointermove', handlePointerMove)

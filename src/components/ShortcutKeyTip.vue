@@ -3,20 +3,43 @@
     <div
       v-for="(item, index) in shortcutKey"
       :key="item.event"
-      class="group relative flex cursor-pointer items-center justify-between gap-2 rounded-xl bg-slate-50 p-3 transition-all hover:bg-slate-100/80"
+      class="group relative flex items-center justify-between gap-2 rounded-xl p-3 transition-all"
+      :class="[
+        item.lock
+          ? 'cursor-not-allowed bg-slate-100/60 opacity-60'
+          : 'cursor-pointer bg-slate-50 hover:bg-slate-100/80',
+      ]"
       @click="startRecording(index)"
     >
-      <!-- 左侧 Label -->
-      <span class="shrink-0 text-xs font-medium text-slate-500">
-        {{ item.title.trim() }}
-      </span>
+      <!-- 左侧 Label 与锁图标 -->
+      <div class="flex shrink-0 items-center gap-1.5 overflow-hidden">
+        <span class="truncate text-xs font-medium text-slate-500">
+          {{ item.title.trim() }}
+        </span>
+        <!-- 锁定图标 -->
+        <svg
+          v-if="item.lock"
+          class="h-3.5 w-3.5 shrink-0 text-slate-400"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+          />
+        </svg>
+      </div>
 
       <!-- 右侧 快捷键组合按键 -->
       <div class="flex shrink-0 items-center gap-1.5">
         <template v-if="item.keys && item.keys.length > 0">
           <template v-for="(key, keyIndex) in item.keys" :key="keyIndex">
             <kbd
-              class="inline-flex h-6 min-w-6 items-center justify-center rounded-md border border-slate-200 bg-white px-2 font-mono text-xs font-semibold text-slate-700 shadow-xs transition-colors group-hover:border-slate-300 group-hover:text-slate-900"
+              class="inline-flex h-6 min-w-6 items-center justify-center rounded-md border border-slate-200 bg-white px-2 font-mono text-xs font-semibold text-slate-700 shadow-xs transition-colors"
+              :class="{ 'group-hover:border-slate-300 group-hover:text-slate-900': !item.lock }"
             >
               {{ formatKey(key) }}
             </kbd>
@@ -25,18 +48,18 @@
             </span>
           </template>
         </template>
-        <!-- 修改这里：让“未设置”也拥有 h-6 和相同的圆角、边框、字体，保持高度雷打不动 -->
         <span
           v-else
-          class="inline-flex h-6 items-center justify-center rounded-md border border-dashed border-slate-200 bg-slate-100/50 px-2 text-[11px] font-normal text-slate-400 group-hover:border-slate-300"
+          class="inline-flex h-6 items-center justify-center rounded-md border border-dashed border-slate-200 bg-slate-100/50 px-2 text-[11px] font-normal text-slate-400"
+          :class="{ 'group-hover:border-slate-300': !item.lock }"
         >
           未设置
         </span>
       </div>
 
-      <!-- 点击修改时的蒙层 Overlay -->
+      <!-- 点击修改时的蒙层 Overlay (锁定项目不展示) -->
       <div
-        v-if="activeIndex === index"
+        v-if="!item.lock && activeIndex === index"
         class="absolute inset-0 z-10 flex items-center justify-between rounded-xl border border-indigo-500 bg-indigo-600/90 px-3 text-white shadow-md backdrop-blur-xs transition-all"
         @click.stop
       >
@@ -106,6 +129,7 @@ export interface ShortcutItem {
   title: string
   keys: string[]
   event: string
+  lock?: boolean
 }
 
 const globalConfigStore = useGlobalConfigStore()
@@ -160,8 +184,10 @@ const interceptEvent = (e: Event) => {
   e.stopImmediatePropagation()
 }
 
-// 开启蒙层录制模式
+// 开启蒙层录制模式（如果已被锁定，则直接禁止开启）
 const startRecording = (index: number) => {
+  if (shortcutKey.value[index]?.lock) return
+
   activeIndex.value = index
   recordedKeys.value = [...shortcutKey.value[index].keys]
 
@@ -318,8 +344,8 @@ const handleGlobalKeyDown = (e: KeyboardEvent) => {
   }
 
   for (const item of shortcutKey.value) {
-    // 如果没有绑定快捷键（为空），直接跳过
-    if (!item.keys || item.keys.length === 0) continue
+    // 如果没有绑定快捷键或已锁定，跳过
+    if (item.lock || !item.keys || item.keys.length === 0) continue
 
     if (isKeyMatch(item.keys, currentPressedKeys)) {
       if (item.event === 'toggle-play') {
@@ -362,8 +388,8 @@ const handleGlobalMouseDown = (e: MouseEvent) => {
   }
 
   for (const item of shortcutKey.value) {
-    // 如果没有绑定快捷键（为空），直接跳过
-    if (!item.keys || item.keys.length === 0) continue
+    // 如果没有绑定快捷键或已锁定，跳过
+    if (item.lock || !item.keys || item.keys.length === 0) continue
 
     if (isKeyMatch(item.keys, currentPressedKeys)) {
       console.log(`[快捷键触发] 事件: ${item.event}, 标题: ${item.title}`, currentPressedKeys)

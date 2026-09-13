@@ -92,74 +92,76 @@
         />
       </div>
 
-      <!-- 音轨管理弹出按钮 -->
-      <TrackManagerPopover
-        v-model:main-volume="mainVolume"
-        v-model:backing-volumes="backingVolumes"
-        class="ml-auto shrink-0"
-      />
+      <div class="flex items-center">
+        <!-- 音轨管理弹出按钮 -->
+        <TrackManagerPopover
+          v-model:main-volume="mainVolume"
+          v-model:backing-volumes="backingVolumes"
+          class="ml-auto shrink-0"
+        />
 
-      <div class="group/volume relative ml-auto flex shrink-0 items-center">
-        <button
-          type="button"
-          class="flex h-8 w-8 items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-slate-200/60 hover:text-slate-800"
-          @click="toggleMute"
-        >
-          <svg
-            v-if="globalConfigStore.musicVolume === 0"
-            class="h-4.5 w-4.5"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            viewBox="0 0 24 24"
+        <div class="group/volume relative ml-auto flex shrink-0 items-center">
+          <button
+            type="button"
+            class="flex h-8 w-8 items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-slate-200/60 hover:text-slate-800"
+            @click="toggleMute"
           >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"
-            />
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2"
-            />
-          </svg>
+            <svg
+              v-if="globalConfigStore.musicVolume === 0"
+              class="h-4.5 w-4.5"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"
+              />
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2"
+              />
+            </svg>
 
-          <svg
-            v-else
-            class="h-4.5 w-4.5"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            viewBox="0 0 24 24"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              d="M15.536 8.464a5 5 0 010 7.072M17.95 6.05a8 8 0 010 11.314M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"
-            />
-          </svg>
-        </button>
+            <svg
+              v-else
+              class="h-4.5 w-4.5"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M15.536 8.464a5 5 0 010 7.072M17.95 6.05a8 8 0 010 11.314M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"
+              />
+            </svg>
+          </button>
 
-        <div
-          class="invisible absolute bottom-full left-1/2 -translate-x-1/2 pb-2 opacity-0 transition-all duration-200 group-hover/volume:visible group-hover/volume:opacity-100"
-        >
           <div
-            class="volume-slider flex flex-col items-center rounded-xl border border-slate-200 bg-white/95 px-3 py-2.5 shadow-lg backdrop-blur-xs"
+            class="invisible absolute bottom-full left-1/2 -translate-x-1/2 pb-2 opacity-0 transition-all duration-200 group-hover/volume:visible group-hover/volume:opacity-100"
           >
-            <span class="mb-1.5 font-mono text-[10px] font-semibold text-slate-500">
-              {{ Math.round(globalConfigStore.musicVolume * 100) }}%
-            </span>
-            <el-slider
-              v-model="globalConfigStore.musicVolume"
-              vertical
-              height="80px"
-              :min="0"
-              :max="1"
-              :step="0.01"
-              :show-tooltip="false"
-              size="small"
-            />
+            <div
+              class="volume-slider flex flex-col items-center rounded-xl border border-slate-200 bg-white/95 px-3 py-2.5 shadow-lg backdrop-blur-xs"
+            >
+              <span class="mb-1.5 font-mono text-[10px] font-semibold text-slate-500">
+                {{ Math.round(globalConfigStore.musicVolume * 100) }}%
+              </span>
+              <el-slider
+                v-model="globalConfigStore.musicVolume"
+                vertical
+                height="80px"
+                :min="0"
+                :max="1"
+                :step="0.01"
+                :show-tooltip="false"
+                size="small"
+              />
+            </div>
           </div>
         </div>
       </div>
@@ -236,11 +238,11 @@
 </template>
 
 <script setup lang="ts">
-import { useMagicKeys } from '@vueuse/core'
 import { ref, computed, watch, watchEffect, onUnmounted } from 'vue'
 
 import { useGlobalConfigStore } from '@/store/global-config.ts'
 import { useAppStore, type BpmItem } from '@/store/store.ts'
+import { emitter } from '@/utils/eventBus.ts'
 import { formatTime, getDecimalPlaces } from '@/utils/utils.ts'
 
 import AudioWorker from '../audio-worker.ts?worker'
@@ -787,53 +789,33 @@ const togglePlay = () => {
   }
 }
 
-useMagicKeys({
-  passive: false,
-  onEventFired(e) {
-    if (e.type !== 'keydown') return
+// --- 处理 mitt 事件监听 ---
+const handleDecreaseBeat = () => {
+  playbackRateSafe.value = Math.max(0.1, Number((playbackRateSafe.value - 0.1).toFixed(1)))
+}
+const handleIncreaseBeat = () => {
+  playbackRateSafe.value = Math.min(2.0, Number((playbackRateSafe.value + 0.1).toFixed(1)))
+}
+const handleResetBeat = () => {
+  playbackRateSafe.value = 1.0
+}
+const handleDecreaseSpeed = () => {
+  pitchRateSafe.value = Math.max(0.1, Number((pitchRateSafe.value - 0.1).toFixed(1)))
+}
+const handleIncreaseSpeed = () => {
+  pitchRateSafe.value = Math.min(2.0, Number((pitchRateSafe.value + 0.1).toFixed(1)))
+}
+const handleResetSpeed = () => {
+  pitchRateSafe.value = 1.0
+}
 
-    const activeElement = document.activeElement
-    const isInputActive =
-      activeElement &&
-      (activeElement.tagName === 'INPUT' ||
-        activeElement.tagName === 'TEXTAREA' ||
-        (activeElement as HTMLElement).isContentEditable)
-
-    if (isInputActive) return
-
-    if (e.code === 'Space') {
-      e.preventDefault()
-      togglePlay()
-      return
-    }
-
-    const key = e.key.toLowerCase()
-
-    // 1. 节拍控制: q(降低) w(还原) e(增加)
-    if (key === 'q') {
-      e.preventDefault()
-      playbackRateSafe.value = Math.max(0.1, Number((playbackRateSafe.value - 0.1).toFixed(1)))
-    } else if (key === 'w') {
-      e.preventDefault()
-      playbackRateSafe.value = 1.0
-    } else if (key === 'e') {
-      e.preventDefault()
-      playbackRateSafe.value = Math.min(2.0, Number((playbackRateSafe.value + 0.1).toFixed(1)))
-    }
-
-    // 2. 速率控制: a(降低) s(还原) d(增加)
-    if (key === 'a') {
-      e.preventDefault()
-      pitchRateSafe.value = Math.max(0.1, Number((pitchRateSafe.value - 0.1).toFixed(1)))
-    } else if (key === 's') {
-      e.preventDefault()
-      pitchRateSafe.value = 1.0
-    } else if (key === 'd') {
-      e.preventDefault()
-      pitchRateSafe.value = Math.min(2.0, Number((pitchRateSafe.value + 0.1).toFixed(1)))
-    }
-  },
-})
+emitter.on('toggle-play', togglePlay)
+emitter.on('decrease-beat', handleDecreaseBeat)
+emitter.on('increase-beat', handleIncreaseBeat)
+emitter.on('reset-beat', handleResetBeat)
+emitter.on('decrease-speed', handleDecreaseSpeed)
+emitter.on('increase-speed', handleIncreaseSpeed)
+emitter.on('reset-speed', handleResetSpeed)
 
 const updateProgress = () => {
   if (!currentSongInfo.isPlaying || !audioCtx) return
@@ -967,6 +949,14 @@ defineExpose({
 
 onUnmounted(() => {
   pause()
+  emitter.off('toggle-play', togglePlay)
+  emitter.off('decrease-beat', handleDecreaseBeat)
+  emitter.off('increase-beat', handleIncreaseBeat)
+  emitter.off('reset-beat', handleResetBeat)
+  emitter.off('decrease-speed', handleDecreaseSpeed)
+  emitter.off('increase-speed', handleIncreaseSpeed)
+  emitter.off('reset-speed', handleResetSpeed)
+
   audioWorker.terminate()
   if (currentSongInfo.musicObjectUrl) URL.revokeObjectURL(currentSongInfo.musicObjectUrl)
   if (mediaElementSource) {

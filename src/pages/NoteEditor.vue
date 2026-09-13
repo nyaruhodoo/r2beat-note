@@ -30,7 +30,7 @@
 </template>
 
 <script setup lang="ts">
-import { useRefHistory, onKeyStroke } from '@vueuse/core'
+import { useRefHistory } from '@vueuse/core'
 import { computed, nextTick, onUnmounted, ref, toRaw, watch } from 'vue'
 import { useRoute } from 'vue-router'
 
@@ -41,6 +41,7 @@ import SongVisualization from '@/components/SongVisualization.vue'
 import { useSongStorage } from '@/db/useSongStorage'
 import { useGlobalConfigStore } from '@/store/global-config'
 import { useAppStore } from '@/store/store'
+import { emitter } from '@/utils/eventBus'
 import { deepToRaw } from '@/utils/utils'
 
 const route = useRoute()
@@ -71,35 +72,17 @@ const { undo, redo, clear } = useRefHistory(areaRef, {
   },
 })
 
-// 监听键盘快捷键：Ctrl/Cmd + Z (撤回), Ctrl/Cmd + Y 或 Ctrl/Cmd + Shift + Z (重做)
-onKeyStroke((e: KeyboardEvent) => {
-  // 当用户在输入框/文本域中编辑时，保留原生的文本撤回行为
-  const target = e.target as HTMLElement | null
-  if (
-    target &&
-    (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable)
-  ) {
-    return
-  }
+// 监听 mitt 派发的撤回/重做事件
+const handleUndo = () => {
+  undo()
+}
 
-  const isCtrlOrCmd = e.ctrlKey || e.metaKey
-  if (!isCtrlOrCmd) return
+const handleRedo = () => {
+  redo()
+}
 
-  const key = e.key.toLowerCase()
-
-  if (key === 'z') {
-    if (e.shiftKey) {
-      e.preventDefault()
-      redo()
-    } else {
-      e.preventDefault()
-      undo()
-    }
-  } else if (key === 'y') {
-    e.preventDefault()
-    redo()
-  }
-})
+emitter.on('undo', handleUndo)
+emitter.on('redo', handleRedo)
 // ================================================================
 
 // 监听初始加载完毕
@@ -143,6 +126,8 @@ watch(
 )
 
 onUnmounted(() => {
+  emitter.off('undo', handleUndo)
+  emitter.off('redo', handleRedo)
   appStore.$reset()
 })
 </script>

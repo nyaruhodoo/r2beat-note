@@ -60,6 +60,7 @@ export interface GlobalConfig {
 
   shortcutKey: {
     title: string
+    lock?: boolean
     keys: string[]
     event:
       | 'toggle-play'
@@ -114,11 +115,11 @@ export const defaultGlobalConfig: GlobalConfig = {
 
   // ===== 快捷键配置 =====
   shortcutKey: [
+    { title: '选中障碍物', keys: ['Shift', 'MouseLeft'], event: 'select-obstacle', lock: true },
     { title: '切换音频播放', keys: ['Space'], event: 'toggle-play' },
     { title: '切换刻度值显示', keys: ['v'], event: 'toggle-scale' },
     { title: '撤回修改', keys: ['Control', 'z'], event: 'undo' },
     { title: '恢复修改', keys: ['Control', 'y'], event: 'redo' },
-    { title: '选中障碍物', keys: ['Shift', 'MouseLeft'], event: 'select-obstacle' },
     { title: '降低节拍', keys: ['q'], event: 'decrease-beat' },
     { title: '增加节拍', keys: ['e'], event: 'increase-beat' },
     { title: '重置节拍', keys: ['w'], event: 'reset-beat' },
