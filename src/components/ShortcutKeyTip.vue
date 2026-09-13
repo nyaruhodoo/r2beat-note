@@ -118,15 +118,37 @@ const formatKey = (key: string) => {
   if (!key) return ''
   const lower = key.toLowerCase()
   const map: Record<string, string> = {
-    space: 'Space',
+    // 修饰键与鼠标
     control: 'Ctrl',
     ctrl: 'Ctrl',
     shift: 'Shift',
     alt: 'Alt',
     meta: 'Cmd',
-    mouseleft: '左键',
-    mouseright: '右键',
-    mousemiddle: '中键',
+    mouseleft: '鼠标左键',
+    mouseright: '鼠标右键',
+    mousemiddle: '鼠标中键',
+
+    // 常用功能键中文映射
+    space: '空格',
+    enter: '回车',
+    backspace: '退格',
+    delete: '删除',
+    tab: 'Tab',
+    escape: 'Esc',
+    capslock: '大写锁定',
+
+    // 方向键
+    arrowup: '↑',
+    arrowdown: '↓',
+    arrowleft: '←',
+    arrowright: '→',
+
+    // 翻页与定位
+    pageup: '上页',
+    pagedown: '下页',
+    home: 'Home',
+    end: 'End',
+    insert: '插入',
   }
   return map[lower] || (key.length === 1 ? key.toUpperCase() : key)
 }
