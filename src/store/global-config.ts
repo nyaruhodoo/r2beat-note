@@ -57,6 +57,8 @@ export interface GlobalConfig {
   enableAutoDirection: boolean
   /** 是否显示单项障碍物 */
   enableSingleObstacle: boolean
+  /** 方向键映射障碍物 */
+  directionKeyMap: boolean
 
   shortcutKey: {
     title: string
@@ -112,6 +114,7 @@ export const defaultGlobalConfig: GlobalConfig = {
   // ===== 其他个性化配置 =====
   enableAutoDirection: false,
   enableSingleObstacle: false,
+  directionKeyMap: true,
 
   // ===== 快捷键配置 =====
   shortcutKey: [

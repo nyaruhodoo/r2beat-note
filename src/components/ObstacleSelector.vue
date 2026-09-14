@@ -161,7 +161,7 @@ function clearLongPress() {
 }
 
 function evaluateDirection() {
-  if (hasExecutedInCurrentPress) return
+  if (hasExecutedInCurrentPress || !globalConfigStore.directionKeyMap) return
 
   const u = ArrowUp.value
   const d = ArrowDown.value

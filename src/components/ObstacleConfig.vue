@@ -319,6 +319,28 @@
             <el-switch v-model="store.enableSingleObstacle" size="small" />
           </div>
         </el-form-item>
+
+        <el-form-item class="prevent-item-expand">
+          <template #label>
+            <div class="flex items-center gap-1.5">
+              <span>方向键映射障碍物</span>
+              <el-tooltip
+                content="开启后可以使用方向键快速切换选择的障碍物"
+                placement="top"
+                effect="dark"
+              >
+                <el-icon
+                  class="cursor-pointer text-base text-blue-500 transition-transform hover:scale-110 hover:text-blue-600"
+                >
+                  <QuestionFilled />
+                </el-icon>
+              </el-tooltip>
+            </div>
+          </template>
+          <div class="flex items-center gap-1">
+            <el-switch v-model="store.directionKeyMap" size="small" />
+          </div>
+        </el-form-item>
       </el-form>
     </div>
   </div>
