@@ -11,7 +11,7 @@
         <SongInfoPanel ref="songInfoPanelRef" />
       </div>
 
-      <!-- 中间：直接在模板里组装对象，Vue 会自动深度解包 ref 保持响应式 -->
+      <!-- 中间：画布 -->
       <RhythmCanvas
         :style="{
           width: globalConfigStore.canvasWidth + 'px',
@@ -21,7 +21,7 @@
         :key="globalConfigStore.canvasWidth"
       />
 
-      <!-- 右侧：音频可视化区域 -->
+      <!-- 右侧：配置区域 -->
       <div class="flex-1">
         <SongVisualization :seek-to="songInfoPanelRef?.seekTo" />
       </div>

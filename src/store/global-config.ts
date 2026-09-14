@@ -112,7 +112,7 @@ export const defaultGlobalConfig: GlobalConfig = {
   repeatChance: 10,
 
   // ===== 其他个性化配置 =====
-  enableAutoDirection: false,
+  enableAutoDirection: true,
   enableSingleObstacle: false,
   directionKeyMap: true,
 
@@ -137,6 +137,17 @@ export const useGlobalConfigStore = defineStore('globalConfig', {
     return structuredClone(defaultGlobalConfig)
   },
 
-  // 开启持久化插件自动同步到 localStorage
-  persist: true,
+  persist: {
+    serializer: {
+      serialize: JSON.stringify,
+      deserialize: (val) => {
+        const parsed = JSON.parse(val)
+        // 使用默认值作为底图，再叠加上从 localStorage 解析出来的旧数据
+        return {
+          ...defaultGlobalConfig,
+          ...parsed,
+        }
+      },
+    },
+  },
 })
