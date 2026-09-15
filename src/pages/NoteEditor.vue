@@ -1,31 +1,33 @@
 <template>
   <!-- 1. 最外层 div 挂载 v-loading 指令 -->
-  <div v-loading="comLoading" class="flex h-screen w-full flex-col bg-slate-100 p-6">
-    <!-- 使用抽离后的 Header 组件 -->
-    <NoteEditorHeader :loading="loading" />
-
+  <div v-loading="comLoading" class="h-screen w-full">
     <!-- 2. 加载未完成时不渲染核心编辑区域 -->
-    <div v-if="!comLoading" class="flex flex-1 gap-6 overflow-hidden">
-      <!-- 左侧：歌曲信息 -->
-      <div class="flex-1">
-        <SongInfoPanel ref="songInfoPanelRef" />
-      </div>
+    <ResponsiveEditorLayout v-if="!comLoading">
+      <!-- Header 插槽 -->
+      <template #header>
+        <NoteEditorHeader :loading="loading" />
+      </template>
 
-      <!-- 中间：画布 -->
-      <RhythmCanvas
-        :style="{
-          width: globalConfigStore.canvasWidth + 'px',
-        }"
-        v-if="songInfoPanelRef"
-        :seek-to="songInfoPanelRef?.seekTo"
-        :key="globalConfigStore.canvasWidth"
-      />
+      <!-- 左侧插槽：歌曲信息 -->
+      <template #left>
+        <SongInfoPanel />
+      </template>
 
-      <!-- 右侧：配置区域 -->
-      <div class="flex-1">
-        <SongVisualization :seek-to="songInfoPanelRef?.seekTo" />
-      </div>
-    </div>
+      <!-- 中间插槽：画布 -->
+      <template #center>
+        <RhythmCanvas
+          :style="{
+            width: globalConfigStore.canvasWidth + 'px',
+          }"
+          :key="globalConfigStore.canvasWidth"
+        />
+      </template>
+
+      <!-- 右侧插槽：配置区域 -->
+      <template #right>
+        <SongVisualization />
+      </template>
+    </ResponsiveEditorLayout>
   </div>
 </template>
 
@@ -35,6 +37,7 @@ import { computed, nextTick, onUnmounted, ref, toRaw, watch } from 'vue'
 import { useRoute } from 'vue-router'
 
 import NoteEditorHeader from '@/components/NoteEditorHeader.vue'
+import ResponsiveEditorLayout from '@/components/ResponsiveEditorLayout.vue'
 import RhythmCanvas from '@/components/RhythmCanvas.vue'
 import SongInfoPanel from '@/components/SongInfoPanel.vue'
 import SongVisualization from '@/components/SongVisualization.vue'
@@ -47,7 +50,6 @@ import { deepToRaw } from '@/utils/utils'
 const route = useRoute()
 const appStore = useAppStore()
 const globalConfigStore = useGlobalConfigStore()
-const songInfoPanelRef = ref<InstanceType<typeof SongInfoPanel> | null>(null)
 const comLoading = ref(true)
 const { loading, getSongById, updateSong } = useSongStorage()
 const id = Number(Array.isArray(route.params.id) ? route.params.id[0] : route.params.id)

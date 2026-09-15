@@ -809,6 +809,25 @@ const handleResetSpeed = () => {
   pitchRateSafe.value = 1.0
 }
 
+/**
+ * 监听 seekTo 事件（兼容对象传参、数组传参或多参数传参）
+ */
+const handleSeekToEvent = (payload: any, typeArg?: 'time' | 'frame' | 'coord') => {
+  if (payload === undefined || payload === null) return
+
+  if (Array.isArray(payload)) {
+    // 数组/元组传参: emitter.emit('seekTo', [targetCoord, 'coord'])
+    seekTo(payload[0], payload[1])
+  } else if (typeof payload === 'object') {
+    // 对象传参: emitter.emit('seekTo', { target: targetCoord, type: 'coord' })
+    seekTo(payload.target ?? payload.value, payload.type)
+  } else {
+    // 基础参数形式: emitter.emit('seekTo', targetCoord, 'coord')
+    seekTo(payload, typeArg ?? 'frame')
+  }
+}
+
+emitter.on('seekTo', handleSeekToEvent)
 emitter.on('toggle-play', togglePlay)
 emitter.on('decrease-beat', handleDecreaseBeat)
 emitter.on('increase-beat', handleIncreaseBeat)
@@ -941,14 +960,9 @@ watch(combinedRate, () => {
   seekTo(calculatedCoord.value.rounded, 'coord')
 })
 
-// 组件仅暴露 seekTo 与 pause
-defineExpose({
-  seekTo,
-  pause,
-})
-
 onUnmounted(() => {
   pause()
+  emitter.off('seekTo', handleSeekToEvent)
   emitter.off('toggle-play', togglePlay)
   emitter.off('decrease-beat', handleDecreaseBeat)
   emitter.off('increase-beat', handleIncreaseBeat)

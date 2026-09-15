@@ -1,6 +1,6 @@
 <template>
   <aside
-    class="flex h-full w-full flex-col gap-6 rounded-2xl border border-slate-200/80 bg-white p-6"
+    class="flex h-full w-full flex-col gap-6 overflow-y-auto rounded-2xl border border-slate-200/80 bg-white p-6"
   >
     <!-- 1. 歌曲元数据列表 -->
     <div class="grid grid-cols-2 gap-3">
@@ -32,7 +32,7 @@
       <ObstacleSelector></ObstacleSelector>
     </div>
 
-    <MusicPlayer ref="playerRef" />
+    <MusicPlayer />
 
     <BpmEditModal v-model="isBpmModalOpen" />
   </aside>
@@ -49,9 +49,6 @@ import ObstacleSelector from './ObstacleSelector.vue'
 import SongMetaCard from './SongMetaCard.vue'
 
 const appStore = useAppStore()
-
-// 引入子组件的ref实例
-const playerRef = ref<InstanceType<typeof MusicPlayer> | null>(null)
 
 // --- 歌曲名称逻辑 (通过计算属性安全读写) ---
 // const songTitle = computed<string>({
@@ -91,15 +88,4 @@ const songDelay = computed<number>({
 
 // --- BPM 弹窗 ---
 const isBpmModalOpen = ref(false)
-
-// --- 桥接子组件的数据供模板使用，并且用于对外暴露 ---
-const seekTo = (target: number | string, type: 'time' | 'frame' | 'coord') =>
-  playerRef.value?.seekTo(target, type)
-const pause = () => playerRef.value?.pause()
-
-// 继续向更外层的父级抛出原本暴露的所有方法和参数
-defineExpose({
-  seekTo,
-  pause,
-})
 </script>

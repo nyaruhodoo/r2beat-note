@@ -1,6 +1,5 @@
 <template>
   <main
-    ref="containerRef"
     class="relative h-full w-full shrink-0 overflow-hidden rounded-2xl border border-slate-200/80 select-none"
     :style="{ backgroundColor: cssCanvasBgColor }"
     @wheel="handleWheel"
@@ -33,7 +32,6 @@ export interface Obstacle {
 
 const props = withDefaults(
   defineProps<{
-    seekTo?: (target: number | string, type: 'time' | 'frame' | 'coord') => void
     gridAspect?: number
   }>(),
   {
@@ -760,7 +758,7 @@ async function loadSpritesheet() {
 const snapToNearestTick = () => {
   const currentCoord = currentSongInfo.value.currentCoord
   const snappedCoord = Math.round((currentCoord?.raw ?? 0) / stepCoord.value) * stepCoord.value
-  props.seekTo?.(snappedCoord, 'coord')
+  emitter.emit('seekTo', { target: snappedCoord, type: 'coord' })
 }
 
 watch(
@@ -1148,7 +1146,7 @@ const handleWheel = (e: WheelEvent) => {
   const stepDelta = e.deltaY < 0 ? cfg.stepCoord : -cfg.stepCoord
   const targetCoord = Math.max(range.min, Math.min(range.max, baseTick + stepDelta))
 
-  props.seekTo?.(targetCoord, 'coord')
+  emitter.emit('seekTo', { target: targetCoord, type: 'coord' })
 }
 
 const handleCanvasClick = (e: PIXI.FederatedPointerEvent) => {
@@ -1299,7 +1297,7 @@ const handlePointerMove = (e: PIXI.FederatedPointerEvent) => {
   const snappedCoord = Math.round(rawTargetCoord / cfg.stepCoord) * cfg.stepCoord
   const targetCoord = Math.max(range.min, Math.min(range.max, snappedCoord))
 
-  props.seekTo?.(targetCoord, 'coord')
+  emitter.emit('seekTo', { target: targetCoord, type: 'coord' })
 }
 
 const handlePointerUp = (e: PIXI.FederatedPointerEvent) => {

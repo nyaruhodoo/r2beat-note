@@ -1,6 +1,6 @@
 <template>
   <header
-    class="mb-4 flex items-center justify-between rounded-2xl border border-slate-200/80 bg-white px-6 py-3"
+    class="flex items-center justify-between rounded-2xl border border-slate-200/80 bg-white px-6 py-3"
   >
     <div class="flex items-center gap-3">
       <el-button circle class="border-none" @click="router.back()">
