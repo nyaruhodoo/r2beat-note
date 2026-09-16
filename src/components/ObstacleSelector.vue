@@ -255,13 +255,6 @@ const layoutConfig = computed(() => {
   ]
 })
 
-function getColumnSampleId(colIndex: number): string | null {
-  for (const row of layoutConfig.value) {
-    if (row[colIndex]) return row[colIndex]
-  }
-  return null
-}
-
 function getObstacleImageUrl(id: string) {
   return new URL(`../assets/note/${id}.png`, import.meta.url).href
 }
