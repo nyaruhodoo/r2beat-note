@@ -66,6 +66,7 @@ interface AppState {
     duration: number
     musicObjectUrl?: string
   }
+  touchMode: 'add' | 'delete'
 }
 
 export const useAppStore = defineStore('store', {
@@ -95,6 +96,7 @@ export const useAppStore = defineStore('store', {
 
       // 当前选中的已有障碍物
       selectedCoords: new Set(),
+      touchMode: 'add',
     }
   },
 

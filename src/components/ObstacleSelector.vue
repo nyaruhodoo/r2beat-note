@@ -37,7 +37,7 @@
           >
             <template #reference>
               <button
-                class="absolute -top-1.5 -right-1.5 z-10 flex h-6 w-6 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 shadow-xs transition-all hover:border-slate-300 hover:bg-slate-50 hover:text-slate-800 active:scale-95"
+                class="absolute -top-1.5 -left-1.5 z-10 flex h-6 w-6 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 shadow-xs transition-all hover:border-slate-300 hover:bg-slate-50 hover:text-slate-800 active:scale-95"
                 title="配置随机障碍物池"
               >
                 <el-icon :size="13">
@@ -108,21 +108,6 @@
               </div>
             </div>
           </el-popover>
-        </div>
-
-        <!-- 空位占位 -->
-        <div
-          v-else
-          class="pointer-events-none invisible flex items-center justify-center rounded-xl border border-transparent p-2"
-          aria-hidden="true"
-        >
-          <div class="relative flex max-w-20 items-center justify-center">
-            <img
-              v-if="getColumnSampleId(colIndex)"
-              :src="getObstacleImageUrl(getColumnSampleId(colIndex)!)"
-              class="h-full w-full object-contain"
-            />
-          </div>
         </div>
       </template>
     </div>
@@ -253,11 +238,11 @@ onUnmounted(() => {
 const layoutConfig = computed(() => {
   if (globalConfigStore.enableSingleObstacle && globalConfigStore.enableAutoDirection)
     return [
-      ['19', '145', '142', null],
+      ['19', '145', null, null],
       ['26', null, null, null],
       ['22', null, null, null],
-      ['20', '130', '133', null],
-      ['16', '136', '139', null],
+      ['20', '130', null, null],
+      ['16', '136', null, null],
       ['24', '161', null, null],
     ]
   return [

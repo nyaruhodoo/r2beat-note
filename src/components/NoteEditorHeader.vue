@@ -93,8 +93,6 @@ import { useRouter } from 'vue-router'
 
 import { useAppStore } from '@/store/store'
 
-import MusicStatistics from './MusicStatistics.vue'
-
 // @ts-expect-error iconv需要这个东西
 window.Buffer = Buffer
 

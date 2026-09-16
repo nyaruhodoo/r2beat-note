@@ -14,6 +14,12 @@
           <ObstacleConfig />
         </div>
       </el-tab-pane>
+
+      <el-tab-pane label="移动端控件" name="mobile" class="h-full overflow-hidden">
+        <div class="h-full overflow-y-auto">
+          <MobileActionPanel />
+        </div>
+      </el-tab-pane>
     </el-tabs>
 
     <!-- 底部批量操作组件固定在底部 -->
@@ -25,6 +31,7 @@
 import { ref } from 'vue'
 
 import BatchActionBar from './BatchActionBar.vue'
+import MobileActionPanel from './MobileActionPanel.vue'
 import ObstacleConfig from './ObstacleConfig.vue'
 import ShortcutKeyTip from './ShortcutKeyTip.vue'
 // import AudioWaveformVisualizer from './AudioWaveformVisualizer.vue';
@@ -34,7 +41,7 @@ defineProps<{
 }>()
 
 // 仅保留当前选中的 Tab 标识
-const activeTab = ref<'selector' | 'config'>('selector')
+const activeTab = ref<'selector' | 'config' | 'mobile'>('selector')
 </script>
 
 <style scoped>

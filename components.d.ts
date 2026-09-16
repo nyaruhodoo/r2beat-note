@@ -35,6 +35,7 @@ declare module 'vue' {
     ElTabs: typeof import('element-plus/es')['ElTabs']
     ElTooltip: typeof import('element-plus/es')['ElTooltip']
     ElUpload: typeof import('element-plus/es')['ElUpload']
+    MobileActionPanel: typeof import('./src/components/MobileActionPanel.vue')['default']
     MusicPlayer: typeof import('./src/components/MusicPlayer.vue')['default']
     MusicStatistics: typeof import('./src/components/MusicStatistics.vue')['default']
     NoteEditorHeader: typeof import('./src/components/NoteEditorHeader.vue')['default']

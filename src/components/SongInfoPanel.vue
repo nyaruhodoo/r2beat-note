@@ -1,38 +1,44 @@
 <template>
   <aside
-    class="flex h-full w-full flex-col gap-6 overflow-y-auto rounded-2xl border border-slate-200/80 bg-white p-6"
+    class="flex h-full w-full flex-col overflow-hidden rounded-2xl border border-slate-200/80 bg-white p-6"
   >
-    <!-- 1. 歌曲元数据列表 -->
-    <div class="grid grid-cols-2 gap-3">
-      <!-- <SongMetaCard v-model="songTitle" label="歌曲名称" :show-edit-button="true" /> -->
+    <!-- 可滚动区域：包含 歌曲元数据列表 + ObstacleSelector -->
+    <div class="flex flex-1 flex-col gap-6 overflow-y-auto pr-1">
+      <!-- 1. 歌曲元数据列表 -->
+      <div class="grid grid-cols-2 gap-3">
+        <!-- <SongMetaCard v-model="songTitle" label="歌曲名称" :show-edit-button="true" /> -->
 
-      <SongMetaCard
-        label="BPM"
-        :model-value="appStore.currentSongInfo.bpmValue"
-        :show-edit-button="true"
-        :custom-edit-action="
-          () => {
-            isBpmModalOpen = true
-          }
-        "
-      />
-      <SongMetaCard
-        v-model="songDelay"
-        label="延迟(Frame)"
-        :show-edit-button="true"
-        input-type="number"
-      />
+        <SongMetaCard
+          label="BPM"
+          :model-value="appStore.currentSongInfo.bpmValue"
+          :show-edit-button="true"
+          :custom-edit-action="
+            () => {
+              isBpmModalOpen = true
+            }
+          "
+        />
+        <SongMetaCard
+          v-model="songDelay"
+          label="延迟(Frame)"
+          :show-edit-button="true"
+          input-type="number"
+        />
 
-      <SongMetaCard label="Frame" :model-value="appStore.currentSongInfo.currentFrame.rounded" />
+        <SongMetaCard label="Frame" :model-value="appStore.currentSongInfo.currentFrame.rounded" />
 
-      <SongMetaCard label="Coord" :model-value="appStore.currentSongInfo.currentCoord.rounded" />
+        <SongMetaCard label="Coord" :model-value="appStore.currentSongInfo.currentCoord.rounded" />
+      </div>
+
+      <div class="flex flex-1 items-center justify-end">
+        <ObstacleSelector></ObstacleSelector>
+      </div>
     </div>
 
-    <div class="flex flex-1 items-center justify-center">
-      <ObstacleSelector></ObstacleSelector>
+    <!-- 固定在底部的 MusicPlayer（外层可加个上边距或保持紧凑） -->
+    <div class="mt-4 pt-2">
+      <MusicPlayer />
     </div>
-
-    <MusicPlayer />
 
     <BpmEditModal v-model="isBpmModalOpen" />
   </aside>

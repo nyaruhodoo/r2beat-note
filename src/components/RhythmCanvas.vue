@@ -40,7 +40,9 @@ const props = withDefaults(
 )
 
 const appStore = useAppStore()
-const { currentSong, selectedObstacle, selectedCoords, currentSongInfo } = storeToRefs(appStore)
+// 1. 从 storeToRefs 中解构出 touchMode
+const { currentSong, selectedObstacle, selectedCoords, currentSongInfo, touchMode } =
+  storeToRefs(appStore)
 
 const globalConfigStore = useGlobalConfigStore()
 const {
@@ -72,7 +74,53 @@ const handleToggleScale = () => {
   showAllTicks.value = !showAllTicks.value
 }
 
+/**
+ * 步进处理逻辑
+ */
+const handleStepForward = () => {
+  const range = coordRange.value
+  if (range.span <= 0) return
+  const cfg = CONFIG.value
+  const currentCoord = currentSongInfo.value.currentCoord ?? { raw: 0 }
+  const baseTick = Math.round(currentCoord.raw / cfg.stepCoord) * cfg.stepCoord
+  const targetCoord = Math.min(range.max, baseTick + cfg.stepCoord)
+  emitter.emit('seekTo', { target: targetCoord, type: 'coord' })
+}
+
+const handleStepBackward = () => {
+  const range = coordRange.value
+  if (range.span <= 0) return
+  const cfg = CONFIG.value
+  const currentCoord = currentSongInfo.value.currentCoord ?? { raw: 0 }
+  const baseTick = Math.round(currentCoord.raw / cfg.stepCoord) * cfg.stepCoord
+  const targetCoord = Math.max(range.min, baseTick - cfg.stepCoord)
+  emitter.emit('seekTo', { target: targetCoord, type: 'coord' })
+}
+
+/**
+ * 事件处理：在当前 coord 摆放障碍物
+ */
+const handlePlaceObstacle = () => {
+  const rawCoord = currentSongInfo.value.currentCoord?.raw ?? 0
+  const coord = Math.round(rawCoord / stepCoord.value) * stepCoord.value
+  placeObstacleAtCoord(coord, 0.5)
+}
+
+/**
+ * 事件处理：清空当前 coord 的障碍物
+ */
+const handleClearObstacle = () => {
+  const rawCoord = currentSongInfo.value.currentCoord?.raw ?? 0
+  const coord = Math.round(rawCoord / stepCoord.value) * stepCoord.value
+  removeObstacleAtCoord(coord)
+}
+
+// 注册 emitter 监听事件
 emitter.on('toggle-scale', handleToggleScale)
+emitter.on('step-forward', handleStepForward)
+emitter.on('step-backward', handleStepBackward)
+emitter.on('place-obstacle', handlePlaceObstacle)
+emitter.on('clear-obstacle', handleClearObstacle)
 
 /**
  * 将 32 位 0xRRGGBBAA 数值转换为 CSS 兼容的 8位 Hex 字符串 (#RRGGBBAA)
@@ -133,21 +181,23 @@ function updateSongObstacles(newObstacles: Obstacle[]) {
  */
 function generateObstacle(
   prevObs: Obstacle | null,
-  _nextObs: Obstacle | null,
+  nextObs: Obstacle | null,
   offsetXRatio: number,
 ): Obstacle | null {
   if (!selectedObstacle.value) return null
 
   const prevObsKind = +(prevObs?.Kind ?? 0)
-  const selectedObstacleKind = +selectedObstacle.value.Kind
+  const nextObsKind = +(nextObs?.Kind ?? 0)
+  const selectedKind = +selectedObstacle.value.Kind
+  const isLevel5 = selectedObstacle.value.Level === '5'
 
   /**
-   * 抽取随机障碍物
+   * 1. 处理随机障碍物 (Kind === 161)
    */
-  if (selectedObstacleKind === 161) {
-    let actualKind = selectedObstacleKind
+  if (selectedKind === 161) {
+    let actualKind = selectedKind
 
-    // 1. 检查上一个障碍物是否存在，且是否在当前可抽取的随机池里
+    // 检查上一个障碍物是否存在，且是否在当前可抽取的随机池里
     const canRepeat = prevObsKind != null && randomType.value.includes(prevObsKind)
 
     if (canRepeat && Math.random() < repeatChance.value / 100) {
@@ -162,28 +212,61 @@ function generateObstacle(
     return NoteType[actualKind]
   }
 
+  // 计算当前指针位置对应的镜像方向（0: 左, 1: 右）
+  const targetDirIndex = offsetXRatio < splitRatioThreshold ? 0 : 1
+
   /**
-   * 自动闭合障碍物
+   * 2. 自动闭合/区间障碍物逻辑 (Level 5 且 Kind > 100)
+   * 默认选中的 selectedKind 是结束障碍物，baseStartKind 是对应的起始障碍物
    */
-  if (selectedObstacle.value.Level === '5' && selectedObstacleKind > 100) {
-    if (
-      (prevObsKind !== selectedObstacleKind - 2 || prevObsKind === selectedObstacleKind) &&
-      prevObsKind + 1 !== selectedObstacleKind
-    ) {
-      return {
-        ...selectedObstacle.value,
-        Kind: selectedObstacleKind - 2 + '',
+  if (isLevel5 && selectedKind > 100) {
+    const baseStartKind = selectedKind - 2 // 基础起始 Kind
+
+    // 判定 1: 上一个障碍物是起始障碍物 (Level 5) -> 自动闭合，生成与上一个起始障碍物【同方向】的结束障碍物
+    const isPrevStart = prevObs?.Level === '5' && RANGE_PAIR_MAP[`${prevObsKind}`] !== undefined
+
+    if (isPrevStart) {
+      // 根据上一个起始障碍物的 Kind 推出对应的结束障碍物 (Kind + 2)，绝对锁死方向
+      const matchingEndKind = prevObsKind + 2
+      return NoteType[matchingEndKind] ?? { ...selectedObstacle.value, Kind: `${matchingEndKind}` }
+    }
+
+    // 判定 2: 下一个障碍物是结束障碍物 (Level 5) -> 自动生成与下一个结束障碍物【同方向】的起始障碍物
+    // 检查 nextObsKind 是否为 RANGE_PAIR_MAP 中的任何一个 endKind
+    const isNextEnd =
+      nextObs?.Level === '5' &&
+      Object.values(RANGE_PAIR_MAP).some((rule) => +rule.endKind === nextObsKind)
+
+    if (isNextEnd) {
+      // 锁死方向：直接根据下一个结束障碍物的 Kind 减去 2，推导出其同方向的起始障碍物 (Kind - 2)
+      const matchingStartKind = nextObsKind - 2
+      return (
+        NoteType[matchingStartKind] ?? { ...selectedObstacle.value, Kind: `${matchingStartKind}` }
+      )
+    }
+
+    // 判定 3: 其他情况（前后无阻），默认生成起始障碍物，并应用左右智能映射
+    if (enableAutoDirection.value) {
+      // @ts-expect-error 忽略类型提示
+      const mirrorMode = mirrorModeMap[`${baseStartKind}`] as [number, number] | undefined
+      const mappedKind = mirrorMode?.[targetDirIndex]
+      if (mappedKind && NoteType[mappedKind]) {
+        return NoteType[mappedKind]
       }
     }
+
+    return NoteType[baseStartKind] ?? { ...selectedObstacle.value, Kind: `${baseStartKind}` }
   }
 
-  // 左右智能映射
-  if (selectedObstacleKind < 100 && enableAutoDirection.value) {
-    // @ts-expect-error  忽略
-    const mirrorMode = mirrorModeMap[selectedObstacleKind + ''] as [number, number] | undefined
-    const newKind = mirrorMode?.[offsetXRatio < splitRatioThreshold ? 0 : 1]
-    if (newKind) {
-      return NoteType[newKind]
+  /**
+   * 3. 普通障碍物 (Kind < 100) 的左右智能映射
+   */
+  if (selectedKind < 100 && enableAutoDirection.value) {
+    // @ts-expect-error 忽略类型提示
+    const mirrorMode = mirrorModeMap[`${selectedKind}`] as [number, number] | undefined
+    const mappedKind = mirrorMode?.[targetDirIndex]
+    if (mappedKind && NoteType[mappedKind]) {
+      return NoteType[mappedKind]
     }
   }
 
@@ -1087,8 +1170,8 @@ const renderEditor = () => {
     )
   }
 
-  // 预览摆放
-  if (hasSelectedObstacle && hoverState.value !== null) {
+  // 预览摆放 (只有在 add 模式下预览放置)
+  if (touchMode.value === 'add' && hasSelectedObstacle && hoverState.value !== null) {
     const { coord } = hoverState.value
     const { obstacle: previewObs, error: errorMessage } = previewObstacleState.value
 
@@ -1137,16 +1220,11 @@ const renderEditor = () => {
 
 const handleWheel = (e: WheelEvent) => {
   e.preventDefault()
-  const range = coordRange.value
-  if (range.span <= 0) return
-
-  const cfg = CONFIG.value
-  const currentCoord = currentSongInfo.value.currentCoord ?? { raw: 0 }
-  const baseTick = Math.round(currentCoord.raw / cfg.stepCoord) * cfg.stepCoord
-  const stepDelta = e.deltaY < 0 ? cfg.stepCoord : -cfg.stepCoord
-  const targetCoord = Math.max(range.min, Math.min(range.max, baseTick + stepDelta))
-
-  emitter.emit('seekTo', { target: targetCoord, type: 'coord' })
+  if (e.deltaY < 0) {
+    emitter.emit('step-forward')
+  } else if (e.deltaY > 0) {
+    emitter.emit('step-backward')
+  }
 }
 
 const handleCanvasClick = (e: PIXI.FederatedPointerEvent) => {
@@ -1171,6 +1249,7 @@ const handleCanvasClick = (e: PIXI.FederatedPointerEvent) => {
 
   const pointerState = getPointerGridState(clickX, clickY)
 
+  // 右键统一作为清除/取消逻辑
   if (button === 2) {
     let removedSuccess = false
 
@@ -1194,9 +1273,19 @@ const handleCanvasClick = (e: PIXI.FederatedPointerEvent) => {
     return
   }
 
+  // 左键逻辑：根据 touchMode 区分
   if (button === 0 && pointerState !== null) {
     const clickedCoord = pointerState.coord
 
+    // 2. 模式为 delete 时：清空点击位置的障碍物
+    if (touchMode.value === 'delete') {
+      isLeftMouseDown.value = true
+      lastProcessedDragCoord = clickedCoord
+      removeObstacleAtCoord(clickedCoord)
+      return
+    }
+
+    // 模式为 add 时：放置障碍物
     if (selectedObstacle.value) {
       isLeftMouseDown.value = true
       lastProcessedDragCoord = clickedCoord
@@ -1272,9 +1361,15 @@ const handlePointerMove = (e: PIXI.FederatedPointerEvent) => {
     if (isRightMouseDown.value) {
       removeObstacleAtCoord(pointerState.coord)
       lastProcessedDragCoord = pointerState.coord
-    } else if (isLeftMouseDown.value && selectedObstacle.value) {
-      placeObstacleAtCoord(pointerState.coord, pointerState.offsetXRatio)
-      lastProcessedDragCoord = pointerState.coord
+    } else if (isLeftMouseDown.value) {
+      // 3. 根据 touchMode 分别处理左键按住拖拽
+      if (touchMode.value === 'delete') {
+        removeObstacleAtCoord(pointerState.coord)
+        lastProcessedDragCoord = pointerState.coord
+      } else if (touchMode.value === 'add' && selectedObstacle.value) {
+        placeObstacleAtCoord(pointerState.coord, pointerState.offsetXRatio)
+        lastProcessedDragCoord = pointerState.coord
+      }
     }
   }
 
@@ -1331,6 +1426,10 @@ onMounted(() => {
 
 onUnmounted(() => {
   emitter.off('toggle-scale', handleToggleScale)
+  emitter.off('step-forward', handleStepForward)
+  emitter.off('step-backward', handleStepBackward)
+  emitter.off('place-obstacle', handlePlaceObstacle)
+  emitter.off('clear-obstacle', handleClearObstacle)
   if (app) {
     app.stage.off('pointerdown', handleCanvasClick)
     app.stage.off('pointermove', handlePointerMove)
