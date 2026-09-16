@@ -77,9 +77,6 @@
       </button>
     </div>
   </header>
-
-  <!-- 详情统计对话框 -->
-  <MusicStatistics v-model:visible="statsVisible"></MusicStatistics>
 </template>
 
 <script setup lang="ts">
@@ -107,9 +104,6 @@ withDefaults(
 
 const router = useRouter()
 const appStore = useAppStore()
-
-// 控制统计弹窗显隐
-const statsVisible = ref(false)
 
 // 歌名编辑相关状态
 const isEditingTitle = ref(false)

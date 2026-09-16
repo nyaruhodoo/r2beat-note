@@ -9,7 +9,7 @@
     leave-to-class="opacity-0"
   >
     <div class="mt-auto shrink-0 border-t border-slate-100 bg-white pt-3">
-      <!-- 头部：状态展示 -->
+      <!-- 头部：仅仅保留纯粹的“已选中/总数”状态展示 -->
       <div class="mb-2.5 flex items-center justify-between px-1">
         <div class="flex items-center gap-1.5">
           <span class="relative flex h-2 w-2">
@@ -25,31 +25,64 @@
           <span class="text-xs font-bold text-slate-800">{{ obstacles.length }}</span>
           <span class="text-[11px] text-slate-400">项</span>
         </div>
-
-        <!-- 右侧操作组 -->
-        <div class="flex items-center gap-2">
-          <button
-            @click="handleSelectAll"
-            class="text-[11px] font-medium text-slate-400 transition-colors hover:text-indigo-600"
-          >
-            全选
-          </button>
-          <span class="text-[10px] text-slate-200">|</span>
-          <button
-            @click="handleClearSelection"
-            class="text-[11px] font-medium text-slate-400 transition-colors hover:text-rose-500"
-          >
-            清空已选
-          </button>
-        </div>
       </div>
 
       <!-- 多按钮矩阵与气泡弹出框容器 -->
       <div class="relative grid grid-cols-3 gap-1.5">
-        <!-- 点击气泡框外部遮罩关闭Popover -->
+        <!-- 点击气泡框外部遮罩关闭 Popover -->
         <div v-if="activePopover" class="fixed inset-0 z-10" @click="activePopover = null"></div>
 
-        <!-- 1. 对齐/平移障碍 气泡弹出框 -->
+        <!-- 1. 范围选择 气泡弹出框 -->
+        <Transition
+          enter-active-class="transition duration-150 ease-out"
+          enter-from-class="opacity-0 translate-y-1 scale-95"
+          enter-to-class="opacity-100 translate-y-0 scale-100"
+          leave-active-class="transition duration-100 ease-in"
+          leave-from-class="opacity-100 translate-y-0 scale-100"
+          leave-to-class="opacity-0 translate-y-1 scale-95"
+        >
+          <div
+            v-if="activePopover === 'select-range'"
+            class="absolute right-0 bottom-full left-0 z-20 mb-2 rounded-xl border border-slate-200/90 bg-white p-3 shadow-xl ring-1 ring-black/5"
+          >
+            <div class="mb-1.5 flex items-center justify-between">
+              <span class="text-xs font-bold text-slate-700">范围选择 Coord</span>
+              <button
+                @click="activePopover = null"
+                class="px-1 text-xs text-slate-400 hover:text-slate-600"
+              >
+                ✕
+              </button>
+            </div>
+            <p class="mb-2 text-[11px] text-slate-400">选中指定区间内的所有障碍物</p>
+            <div class="mb-2 flex items-center gap-1.5">
+              <input
+                ref="rangeStartInputRef"
+                type="number"
+                min="0"
+                v-model.number="rangeStartCoord"
+                placeholder="开始 Coord"
+                class="w-1/2 rounded-lg border border-slate-200 px-2 py-1.5 text-xs focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 focus:outline-none"
+              />
+              <span class="text-xs text-slate-300">-</span>
+              <input
+                type="number"
+                min="0"
+                v-model.number="rangeEndCoord"
+                placeholder="结束 Coord"
+                class="w-1/2 rounded-lg border border-slate-200 px-2 py-1.5 text-xs focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 focus:outline-none"
+              />
+            </div>
+            <button
+              @click="handleSelectRangeSubmit"
+              class="w-full rounded-lg bg-indigo-600 py-1.5 text-xs font-medium text-white transition-colors hover:bg-indigo-700 active:bg-indigo-800"
+            >
+              确定选中
+            </button>
+          </div>
+        </Transition>
+
+        <!-- 2. 对齐/平移障碍 气泡弹出框 -->
         <Transition
           enter-active-class="transition duration-150 ease-out"
           enter-from-class="opacity-0 translate-y-1 scale-95"
@@ -90,7 +123,7 @@
           </div>
         </Transition>
 
-        <!-- 2. 复制副本 气泡弹出框 -->
+        <!-- 3. 复制副本 气泡弹出框 -->
         <Transition
           enter-active-class="transition duration-150 ease-out"
           enter-from-class="opacity-0 translate-y-1 scale-95"
@@ -132,10 +165,10 @@
           </div>
         </Transition>
 
-        <!-- 操作按钮渲染 -->
+        <!-- 操作按钮统一渲染区域 -->
         <button
           v-for="btn in actionButtons"
-          :disabled="selectedCoords.size === 0"
+          :disabled="btn.disabled"
           :key="btn.id"
           @click="btn.action"
           :class="
@@ -167,9 +200,14 @@ const globalConfigStore = useGlobalConfigStore()
 const { stepCoord } = storeToRefs(globalConfigStore)
 const { selectedCoords, currentSong } = storeToRefs(store)
 
-const activePopover = ref<'align' | 'duplicate' | null>(null)
+const activePopover = ref<'align' | 'duplicate' | 'select-range' | null>(null)
 const alignOffset = ref<number>(0)
 const duplicateBaseCoord = ref<number>(0)
+
+// 范围选择的输入绑与 Ref
+const rangeStartCoord = ref<number | null>(null)
+const rangeEndCoord = ref<number | null>(null)
+const rangeStartInputRef = ref<HTMLInputElement | null>(null)
 
 const alignInputRef = ref<HTMLInputElement | null>(null)
 const duplicateInputRef = ref<HTMLInputElement | null>(null)
@@ -187,6 +225,31 @@ function handleSelectAll() {
 
 function handleClearSelection() {
   selectedCoords.value.clear()
+}
+
+/**
+ * 处理范围选择确认逻辑
+ */
+function handleSelectRangeSubmit() {
+  if (rangeStartCoord.value === null || rangeEndCoord.value === null) {
+    ElMessage.warning('请输入完整的 Coord 范围')
+    return
+  }
+
+  const start = Math.min(rangeStartCoord.value, rangeEndCoord.value)
+  const end = Math.max(rangeStartCoord.value, rangeEndCoord.value)
+
+  const newSet = new Set<number>()
+  obstacles.value.forEach((obs) => {
+    const c = +obs.Coord
+    if (c >= start && c <= end) {
+      newSet.add(c)
+    }
+  })
+
+  selectedCoords.value = newSet
+  activePopover.value = null
+  ElMessage.success(`已选中 ${newSet.size} 项障碍物`)
 }
 
 /**
@@ -219,9 +282,7 @@ function getSelectedObstacles(): NoteData[] {
 }
 
 /**
- * 抽取公共校验函数：长音完整性校验
- * @param selectedObs 选中的障碍物列表（必须已按 Coord 升序排列）
- * @returns boolean 校验是否通过
+ * 校验逻辑：长音完整性校验
  */
 function validateSelection(selectedObs: NoteData[]): boolean {
   if (selectedObs.length === 0) return false
@@ -232,24 +293,20 @@ function validateSelection(selectedObs: NoteData[]): boolean {
   const firstKind = String(firstObs.Kind)
   const lastKind = String(lastObs.Kind)
 
-  // 定义校验用的音符 Kind 集合
   const middleKinds = new Set(['129', '132', '135', '138', '141', '144'])
   const headKinds = new Set(['130', '133', '136', '139', '142', '145'])
   const tailKinds = new Set(['128', '131', '134', '137', '140', '143'])
 
-  // 规则 1：首尾障碍物不能是长音的中间帧
   if (middleKinds.has(firstKind) || middleKinds.has(lastKind)) {
     ElMessage.error('操作失败：首尾障碍物不能包含长音中间帧')
     return false
   }
 
-  // 规则 2：第一个障碍物不能是长音尾帧
   if (headKinds.has(firstKind)) {
     ElMessage.error('操作失败：第一个障碍物不能是长音尾帧')
     return false
   }
 
-  // 规则 3：最后一个障碍物不能是长音首帧
   if (tailKinds.has(lastKind)) {
     ElMessage.error('操作失败：最后一个障碍物不能是长音首帧')
     return false
@@ -274,14 +331,13 @@ function handleBatchDelete() {
 }
 
 /**
- * 功能 1：对齐/偏移障碍物 (自动碰撞检测与覆盖)
+ * 对齐/偏移障碍物
  */
 function handleAlignSubmit() {
   const area = currentSong.value?.xmlObject?.TITLE?.AREA
   if (!area || selectedCoords.value.size === 0) return
 
   const selectedObs = getSelectedObstacles()
-  // 校验逻辑
   if (!validateSelection(selectedObs)) return
 
   const offset = Number(alignOffset.value) || 0
@@ -317,14 +373,13 @@ function handleAlignSubmit() {
 }
 
 /**
- * 功能 2：区间清空 + 高性能等间隔复制
+ * 复制副本
  */
 function handleDuplicateSubmit() {
   const area = currentSong.value?.xmlObject?.TITLE?.AREA
   if (!area || selectedCoords.value.size === 0) return
 
   const selectedObs = getSelectedObstacles()
-  // 校验逻辑
   if (!validateSelection(selectedObs)) return
 
   const targetBase = Math.max(0, Number(duplicateBaseCoord.value) || 0)
@@ -363,7 +418,7 @@ function handleDuplicateSubmit() {
 }
 
 /**
- * 功能：消除星星
+ * 消除星星
  */
 function handleRemoveStars() {
   const area = currentSong.value?.xmlObject?.TITLE?.AREA
@@ -394,7 +449,7 @@ function handleRemoveStars() {
 }
 
 /**
- * 功能：随机夹星
+ * 随机夹星
  */
 function handleAddStars() {
   const area = currentSong.value?.xmlObject?.TITLE?.AREA
@@ -427,14 +482,13 @@ function handleAddStars() {
 }
 
 /**
- * 功能：镜子模式
+ * 镜子模式
  */
 function handleMirrorMode() {
   const area = currentSong.value?.xmlObject?.TITLE?.AREA
   if (!area || selectedCoords.value.size === 0) return
 
   const selectedObs = getSelectedObstacles()
-  // 校验逻辑
   if (!validateSelection(selectedObs)) return
 
   const selectedSet = selectedCoords.value
@@ -462,8 +516,45 @@ function handleMirrorMode() {
 
 const actionButtons = computed(() => [
   {
+    id: 'select-range',
+    label: '范围选择',
+    disabled: obstacles.value.length === 0,
+    action: () => {
+      if (activePopover.value !== 'select-range') {
+        if (selectedCoords.value.size > 0) {
+          const sortedCoords = Array.from(selectedCoords.value).sort((a, b) => a - b)
+          rangeStartCoord.value = sortedCoords[0]
+          rangeEndCoord.value = sortedCoords[sortedCoords.length - 1]
+        } else {
+          rangeStartCoord.value = null
+          rangeEndCoord.value = null
+        }
+        activePopover.value = 'select-range'
+        nextTick(() => {
+          rangeStartInputRef.value?.focus()
+        })
+      } else {
+        activePopover.value = null
+      }
+    },
+  },
+  {
+    id: 'select-all',
+    label: '全选',
+    disabled: obstacles.value.length === 0,
+    action: handleSelectAll,
+  },
+  {
+    id: 'clear-selection',
+    label: '清空已选',
+    disabled: selectedCoords.value.size === 0,
+    action: handleClearSelection,
+  },
+
+  {
     id: 'align',
     label: '对齐障碍',
+    disabled: selectedCoords.value.size === 0,
     action: () => {
       if (activePopover.value !== 'align') {
         alignOffset.value = 0
@@ -480,12 +571,12 @@ const actionButtons = computed(() => [
   {
     id: 'duplicate',
     label: '复制副本',
+    disabled: selectedCoords.value.size === 0,
     action: () => {
       if (activePopover.value !== 'duplicate') {
         const selectedObs = getSelectedObstacles()
         if (selectedObs.length > 0) {
           const maxCoord = +selectedObs[selectedObs.length - 1].Coord
-          // 设置默认值为：最后一个 coord + stepCoord
           duplicateBaseCoord.value = maxCoord + Number(stepCoord.value || 0)
         } else {
           duplicateBaseCoord.value = 0
@@ -503,21 +594,25 @@ const actionButtons = computed(() => [
   {
     id: 'mirror-mode',
     label: '镜子模式',
+    disabled: selectedCoords.value.size === 0,
     action: handleMirrorMode,
   },
   {
     id: 'remove-star',
     label: '消除星星',
+    disabled: selectedCoords.value.size === 0,
     action: handleRemoveStars,
   },
   {
     id: 'add-star',
     label: '随机夹星',
+    disabled: selectedCoords.value.size === 0,
     action: handleAddStars,
   },
   {
     id: 'delete',
     label: '批量删除',
+    disabled: selectedCoords.value.size === 0,
     customClass: 'bg-rose-50 text-rose-600 hover:bg-rose-100 active:bg-rose-200',
     action: () => {
       handleBatchDelete()

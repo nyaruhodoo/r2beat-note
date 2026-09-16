@@ -12,6 +12,7 @@ export {}
 declare module 'vue' {
   export interface GlobalComponents {
     AudioWaveformVisualizer: typeof import('./src/components/AudioWaveformVisualizer.vue')['default']
+    BaseModal: typeof import('./src/components/BaseModal.vue')['default']
     BatchActionBar: typeof import('./src/components/BatchActionBar.vue')['default']
     BpmEditModal: typeof import('./src/components/BpmEditModal.vue')['default']
     CanvasUi: typeof import('./src/components/CanvasUi.vue')['default']

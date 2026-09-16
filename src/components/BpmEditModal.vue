@@ -1,13 +1,12 @@
 <template>
-  <el-dialog
+  <BaseModal
     :model-value="modelValue"
     title="编辑 BPM 列表"
     width="640px"
-    align-center
-    destroy-on-close
-    class="bpm-edit-dialog rounded-2xl"
+    confirm-text="保存修改"
     @update:model-value="handleClose"
     @open="initLocalData"
+    @confirm="handleSave"
   >
     <div class="space-y-3">
       <!-- 顶部功能栏：数据统计与操作 -->
@@ -452,35 +451,15 @@
         </button>
       </div>
     </div>
-
-    <template #footer>
-      <div class="flex items-center justify-end gap-2 pt-2">
-        <!-- 取消按钮 (次要操作) -->
-        <button
-          type="button"
-          class="cursor-pointer rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-semibold text-slate-600 transition-all duration-200 hover:border-slate-300 hover:bg-slate-100 hover:text-slate-900 active:scale-95"
-          @click="handleClose(false)"
-        >
-          取消
-        </button>
-
-        <!-- 保存修改按钮 (主要操作) -->
-        <button
-          type="button"
-          class="cursor-pointer rounded-xl bg-slate-900 px-4 py-2 text-xs font-semibold text-white shadow-md transition-all duration-200 hover:bg-slate-800 hover:ring-1 hover:shadow-slate-500/20 hover:ring-slate-700/50 hover:brightness-125 active:scale-95"
-          @click="handleSave"
-        >
-          保存修改
-        </button>
-      </div>
-    </template>
-  </el-dialog>
+  </BaseModal>
 </template>
 
 <script setup lang="ts">
 import { ref, reactive, computed } from 'vue'
 
 import { useAppStore } from '@/store/store'
+
+import BaseModal from './BaseModal.vue'
 
 interface BpmItem {
   Frame: string
