@@ -11,17 +11,14 @@ export {}
 /* prettier-ignore */
 declare module 'vue' {
   export interface GlobalComponents {
-    AudioWaveformVisualizer: typeof import('./src/components/AudioWaveformVisualizer.vue')['default']
     BaseModal: typeof import('./src/components/BaseModal.vue')['default']
     BatchActionBar: typeof import('./src/components/BatchActionBar.vue')['default']
     BpmEditModal: typeof import('./src/components/BpmEditModal.vue')['default']
-    CanvasUi: typeof import('./src/components/CanvasUi.vue')['default']
     ElAutoResizer: typeof import('element-plus/es')['ElAutoResizer']
     ElButton: typeof import('element-plus/es')['ElButton']
     ElColorPicker: typeof import('element-plus/es')['ElColorPicker']
     ElDialog: typeof import('element-plus/es')['ElDialog']
     ElDivider: typeof import('element-plus/es')['ElDivider']
-    ElDrawer: typeof import('element-plus/es')['ElDrawer']
     ElForm: typeof import('element-plus/es')['ElForm']
     ElFormItem: typeof import('element-plus/es')['ElFormItem']
     ElIcon: typeof import('element-plus/es')['ElIcon']
@@ -38,7 +35,6 @@ declare module 'vue' {
     ElUpload: typeof import('element-plus/es')['ElUpload']
     MobileActionPanel: typeof import('./src/components/MobileActionPanel.vue')['default']
     MusicPlayer: typeof import('./src/components/MusicPlayer.vue')['default']
-    MusicStatistics: typeof import('./src/components/MusicStatistics.vue')['default']
     NoteEditorHeader: typeof import('./src/components/NoteEditorHeader.vue')['default']
     ObstacleConfig: typeof import('./src/components/ObstacleConfig.vue')['default']
     ObstacleSelector: typeof import('./src/components/ObstacleSelector.vue')['default']
