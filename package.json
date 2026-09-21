@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite --host",
     "build": "vue-tsc -b && vite build",
+    "build:local": "vue-tsc -b && vite build --mode app-local",
     "preview": "vite preview",
     "fmt": "oxfmt",
     "fmt:check": "oxfmt --check",
@@ -41,6 +42,7 @@
     "unplugin-vue-components": "^32.1.0",
     "vite": "^8.2.0",
     "vite-plugin-pwa": "^1.3.0",
+    "vite-plugin-singlefile": "^2.3.3",
     "vue-tsc": "^3.3.8"
   }
 }
