@@ -15,10 +15,7 @@
 
       <!-- 中间插槽：画布与移动端控制面板 -->
       <template #center>
-        <div
-          class="relative flex h-full w-full flex-col overflow-hidden"
-          :style="{ backgroundColor: cssCanvasBgColor }"
-        >
+        <div class="relative flex h-full w-full flex-col overflow-hidden">
           <!-- 上部分：画布滚动与展示区域 -->
           <div class="flex w-full flex-1 items-center justify-center overflow-auto">
             <RhythmCanvas

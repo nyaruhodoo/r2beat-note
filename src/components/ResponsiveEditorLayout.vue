@@ -1,5 +1,8 @@
 <template>
-  <div class="relative flex h-screen w-full flex-col overflow-hidden bg-slate-100 sm:p-6">
+  <div
+    class="relative flex h-screen w-full flex-col overflow-hidden sm:p-6"
+    :style="{ backgroundColor: cssCanvasBgColor }"
+  >
     <!-- 
       1. 顶栏 Header 区域 
     -->
@@ -115,13 +118,22 @@
 <script setup lang="ts">
 import { Menu, ArrowDown, Setting } from '@element-plus/icons-vue'
 import { useMediaQuery } from '@vueuse/core'
-import { ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
+
+import { useGlobalConfigStore } from '@/store/global-config'
+import { toCssHex8 } from '@/utils/utils'
+
+const globalConfigStore = useGlobalConfigStore()
 
 const isMobile = useMediaQuery('(max-width: 1023px)')
 
 const isLeftDrawerOpen = ref(false)
 const isRightDrawerOpen = ref(false)
 const isHeaderOpen = ref(false)
+
+const cssCanvasBgColor = computed(() => {
+  return toCssHex8(globalConfigStore.canvasBgColor)
+})
 
 // 切换到桌面端时自动关闭移动端浮层
 watch(isMobile, (mobile) => {

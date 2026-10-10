@@ -23,13 +23,13 @@
       />
     </div>
 
-    <!-- 1. 内容面板（三页轮播/滑动，外层裁剪防止露边） -->
+    <!-- 1. 内容面板（多页轮播/滑动，外层裁剪防止露边） -->
     <div class="w-full max-w-[100vw] overflow-hidden">
       <div
         class="flex w-full transition-transform duration-300 ease-in-out"
         :style="{ transform: `translateX(-${currentPage * 100}%)` }"
       >
-        <!-- 第一页：切换播放 / 触屏模式 / 时间微调 -->
+        <!-- 第一页：切换播放 / 触屏模式 / 时间微调 / 节拍 / 速率 / 核心操作 -->
         <div class="box-border flex w-full shrink-0 flex-col gap-1 px-0.5">
           <!-- 切换播放与触屏模式：同一行各占 50% -->
           <div class="grid grid-cols-2 gap-1">
@@ -81,27 +81,6 @@
             </el-button>
           </div>
 
-          <!-- 核心操作区：放置与清空 -->
-          <div class="grid grid-cols-2 gap-1">
-            <el-button
-              type="success"
-              class="m-0! h-7! rounded-md! px-2! text-xs font-semibold active:scale-95"
-              @click.stop="emitEvent('place-obstacle')"
-            >
-              <el-icon class="mr-1 text-sm"><Plus /></el-icon>放置
-            </el-button>
-            <el-button
-              type="danger"
-              class="m-0! h-7! rounded-md! px-2! text-xs font-semibold active:scale-95"
-              @click.stop="emitEvent('clear-obstacle')"
-            >
-              <el-icon class="mr-1 text-sm"><Delete /></el-icon>清空
-            </el-button>
-          </div>
-        </div>
-
-        <!-- 第二页：节拍控制 / 速率控制 -->
-        <div class="box-border flex w-full shrink-0 flex-col gap-1 px-0.5">
           <!-- 节拍控制 -->
           <div class="grid grid-cols-3 gap-1">
             <el-button
@@ -139,9 +118,27 @@
               >增加速率</el-button
             >
           </div>
+
+          <!-- 核心操作区：放置与清空 -->
+          <div class="grid grid-cols-2 gap-1">
+            <el-button
+              type="success"
+              class="m-0! h-7! rounded-md! px-2! text-xs font-semibold active:scale-95"
+              @click.stop="emitEvent('place-obstacle')"
+            >
+              <el-icon class="mr-1 text-sm"><Plus /></el-icon>放置
+            </el-button>
+            <el-button
+              type="danger"
+              class="m-0! h-7! rounded-md! px-2! text-xs font-semibold active:scale-95"
+              @click.stop="emitEvent('clear-obstacle')"
+            >
+              <el-icon class="mr-1 text-sm"><Delete /></el-icon>清空
+            </el-button>
+          </div>
         </div>
 
-        <!-- 第三页：放置/清空、撤回/恢复、刻度显示 -->
+        <!-- 第二页：放置/清空、撤回/恢复、刻度显示 -->
         <div class="box-border flex w-full shrink-0 flex-col gap-1 px-0.5">
           <!-- 编辑历史：撤回与恢复 -->
           <div class="grid grid-cols-2 gap-1">
@@ -173,12 +170,12 @@
       </div>
     </div>
 
-    <!-- 2. 分页指示器（绝对定位贴底，不占文档流布局空间） -->
+    <!-- 2. 分页指示器（自动基于总页数动态渲染） -->
     <div
       class="pointer-events-none absolute inset-x-0 bottom-1 flex items-center justify-center gap-1"
     >
       <span
-        v-for="(_, index) in 3"
+        v-for="(_, index) in totalPages"
         :key="index"
         class="pointer-events-auto h-1 cursor-pointer rounded-full transition-all duration-300"
         :class="currentPage === index ? 'bg-primary w-3.5' : 'w-1 bg-gray-600'"
@@ -214,7 +211,10 @@ const appStore = useAppStore()
 const globalConfigStore = useGlobalConfigStore()
 const { currentSongInfo, touchMode } = storeToRefs(appStore)
 
-// 当前页码 (0, 1, 2) —— 保持下方轮播的独立分页
+// 定义总页数（如果后续需要扩展第三页，只需在此处修改或改为由子项数组长度决定）
+const totalPages = ref<number>(2)
+
+// 当前页码 (从 0 开始)
 const currentPage = ref<number>(0)
 
 // 背景色直接沿用 canvasBgColor 样式
@@ -264,7 +264,7 @@ const onMouseUp = (e: MouseEvent) => {
   if (Math.abs(diff) > 50) {
     if (diff > 0 && currentPage.value > 0) {
       currentPage.value--
-    } else if (diff < 0 && currentPage.value < 2) {
+    } else if (diff < 0 && currentPage.value < totalPages.value - 1) {
       currentPage.value++
     }
   }
@@ -276,7 +276,7 @@ const handleSwipe = () => {
   if (Math.abs(diff) > threshold) {
     if (diff > 0 && currentPage.value > 0) {
       currentPage.value-- // 向右滑动，上一页
-    } else if (diff < 0 && currentPage.value < 2) {
+    } else if (diff < 0 && currentPage.value < totalPages.value - 1) {
       currentPage.value++ // 向左滑动，下一页
     }
   }
