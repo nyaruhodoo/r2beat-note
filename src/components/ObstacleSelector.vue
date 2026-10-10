@@ -238,7 +238,7 @@ onUnmounted(() => {
 const layoutConfig = computed(() => {
   if (globalConfigStore.enableSingleObstacle && globalConfigStore.enableAutoDirection)
     return [
-      ['19', '145', null, null],
+      ['18', '145', null, null],
       ['26', null, null, null],
       ['22', null, null, null],
       ['20', '130', null, null],
@@ -246,7 +246,7 @@ const layoutConfig = computed(() => {
       ['24', '161', null, null],
     ]
   return [
-    ['19', '18', '145', '142'],
+    ['18', '19', '145', '142'],
     ['26', '27', null, null],
     ['22', '23', null, null],
     ['20', '21', '130', '133'],
