@@ -860,6 +860,7 @@ const initPixi = async () => {
 
   const instance = new PIXI.Application()
   await instance.init({
+    preference: 'canvas',
     resizeTo: canvasContainerRef.value,
     backgroundColor: cssCanvasBgColor.value,
     antialias: true,
