@@ -1,8 +1,5 @@
 <template>
-  <div
-    class="relative flex h-screen w-full flex-col overflow-hidden sm:p-6"
-    :style="{ backgroundColor: cssCanvasBgColor }"
-  >
+  <div class="relative flex h-screen w-full flex-col overflow-hidden bg-slate-100 sm:p-6">
     <!-- 
       1. 顶栏 Header 区域 
     -->
@@ -42,7 +39,12 @@
       2. 核心主体内容区域 
       通过加入 justify-center，在左右抽屉折叠（即非桌面端或未展开）时让中间区域在主轴（水平方向）居中
     -->
-    <div class="relative flex min-h-0 flex-1 justify-center gap-4 overflow-hidden sm:gap-6">
+    <div
+      class="relative flex min-h-0 flex-1 justify-center gap-4 overflow-hidden sm:gap-6"
+      :style="{
+        backgroundColor: isMobile ? cssCanvasBgColor : undefined,
+      }"
+    >
       <!-- 小屏专属：左侧抽屉唤出悬浮按钮 -->
       <button
         v-if="isMobile && !isLeftDrawerOpen"

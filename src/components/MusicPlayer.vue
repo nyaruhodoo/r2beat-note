@@ -4,16 +4,14 @@
 
   <!-- 音频播放器面板 -->
   <div
-    class="relative flex flex-col gap-3 rounded-xl border border-slate-200/60 bg-linear-to-b from-slate-50 to-slate-100/50 p-3.5 shadow-inner"
+    class="relative flex flex-col gap-3 rounded-xl border border-slate-200/60 bg-linear-to-b from-slate-50 to-slate-100/50 p-3.5"
   >
     <!-- 音频合成 Loading 遮罩层 -->
     <div
       v-if="isAudioLoading"
       class="absolute inset-0 z-20 flex items-center justify-center bg-white/80 backdrop-blur-xs transition-opacity"
     >
-      <div
-        class="flex items-center gap-2 rounded-lg border border-slate-100 bg-white px-3 py-1.5 shadow-md"
-      >
+      <div class="flex items-center gap-2 rounded-lg border border-slate-100 bg-white px-3 py-1.5">
         <svg class="h-4 w-4 animate-spin text-indigo-600" fill="none" viewBox="0 0 24 24">
           <circle
             class="opacity-25"
