@@ -54,7 +54,7 @@ import { useSongStorage } from '@/db/useSongStorage'
 import { useGlobalConfigStore } from '@/store/global-config'
 import { useAppStore } from '@/store/store'
 import { emitter } from '@/utils/eventBus'
-import { deepToRaw, toCssHex8 } from '@/utils/utils'
+import { deepToRaw } from '@/utils/utils'
 
 const route = useRoute()
 const appStore = useAppStore()
@@ -63,10 +63,6 @@ const comLoading = ref(true)
 const { loading, getSongById, updateSong } = useSongStorage()
 const isTouchDevice = useMediaQuery('(pointer: coarse)')
 const id = Number(Array.isArray(route.params.id) ? route.params.id[0] : route.params.id)
-
-const cssCanvasBgColor = computed(() => {
-  return toCssHex8(globalConfigStore.canvasBgColor)
-})
 
 // ==================== 历史记录与撤回重做逻辑 ====================
 const areaRef = computed({
