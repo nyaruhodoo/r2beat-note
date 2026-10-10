@@ -1,5 +1,5 @@
 <template>
-  <div class="relative flex h-screen w-full flex-col overflow-hidden bg-slate-100 p-2 sm:p-6">
+  <div class="relative flex h-screen w-full flex-col overflow-hidden bg-slate-100 sm:p-6">
     <!-- 
       1. 顶栏 Header 区域 
     -->
@@ -37,8 +37,9 @@
 
     <!-- 
       2. 核心主体内容区域 
+      通过加入 justify-center，在左右抽屉折叠（即非桌面端或未展开）时让中间区域在主轴（水平方向）居中
     -->
-    <div class="relative flex min-h-0 flex-1 gap-4 overflow-hidden sm:gap-6">
+    <div class="relative flex min-h-0 flex-1 justify-center gap-4 overflow-hidden sm:gap-6">
       <!-- 小屏专属：左侧抽屉唤出悬浮按钮 -->
       <button
         v-if="isMobile && !isLeftDrawerOpen"
@@ -49,21 +50,16 @@
         <el-icon class="text-lg"><Menu /></el-icon>
       </button>
 
-      <!-- 
-        左侧栏（核心修复点）：
-        1. 移动端强制限制高度为屏幕高度：fixed top-0 bottom-0 h-screen max-h-screen
-        2. 给抽屉容器加上 overflow-hidden，防止外层卡片变形溢出
-      -->
+      <!-- 左侧栏 -->
       <div
         :class="[
           'transition-transform duration-300 ease-in-out',
           isMobile
             ? 'fixed top-0 bottom-0 left-0 z-40 box-border flex h-screen max-h-screen w-[85%] flex-col overflow-hidden p-4'
-            : 'flex-colsm:bg-transparent flex min-h-0 flex-1',
+            : 'flex min-h-0 flex-1 flex-col sm:bg-transparent',
           isMobile && !isLeftDrawerOpen ? '-translate-x-full' : 'translate-x-0',
         ]"
       >
-        <!-- 真正的滚动区域：min-h-0 flex-1 overflow-y-auto 保证子元素超出时在卡片内部出现滚动条 -->
         <div class="min-h-0 flex-1 overflow-y-auto">
           <slot name="left" />
         </div>
@@ -77,33 +73,61 @@
       />
 
       <!-- 中间：画布区域 -->
-      <div class="shrink-0">
+      <div class="flex shrink-0 items-center justify-center">
         <slot name="center" />
       </div>
 
-      <!-- 右侧：配置区域 -->
-      <div class="flex-1 overflow-y-auto">
-        <slot name="right" />
+      <!-- 小屏专属：右侧抽屉唤出悬浮按钮 -->
+      <button
+        v-if="isMobile && !isRightDrawerOpen"
+        type="button"
+        class="fixed top-1/2 right-0 z-20 flex -translate-y-1/2 items-center rounded-l-lg border border-r-0 border-slate-200 bg-white/90 px-1.5 py-3 text-slate-700 shadow-md backdrop-blur-sm hover:bg-white"
+        @click="isRightDrawerOpen = true"
+      >
+        <el-icon class="text-lg"><Setting /></el-icon>
+      </button>
+
+      <!-- 右侧栏 -->
+      <div
+        :class="[
+          'transition-transform duration-300 ease-in-out',
+          isMobile
+            ? 'fixed top-0 right-0 bottom-0 z-40 box-border flex h-screen max-h-screen w-[85%] flex-col overflow-hidden p-4'
+            : 'flex min-h-0 flex-1 flex-col overflow-y-auto',
+          isMobile && !isRightDrawerOpen ? 'translate-x-full' : 'translate-x-0',
+        ]"
+      >
+        <div class="min-h-0 flex-1 overflow-y-auto">
+          <slot name="right" />
+        </div>
       </div>
+
+      <!-- 右侧抽屉遮罩层 -->
+      <div
+        v-if="isMobile && isRightDrawerOpen"
+        class="fixed inset-0 z-30 bg-black/40 transition-opacity"
+        @click="isRightDrawerOpen = false"
+      />
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { Menu, ArrowDown } from '@element-plus/icons-vue'
+import { Menu, ArrowDown, Setting } from '@element-plus/icons-vue'
 import { useMediaQuery } from '@vueuse/core'
 import { ref, watch } from 'vue'
 
-// 1200px 以下判定为移动端/小屏
 const isMobile = useMediaQuery('(max-width: 1023px)')
 
 const isLeftDrawerOpen = ref(false)
+const isRightDrawerOpen = ref(false)
 const isHeaderOpen = ref(false)
 
 // 切换到桌面端时自动关闭移动端浮层
 watch(isMobile, (mobile) => {
   if (!mobile) {
     isLeftDrawerOpen.value = false
+    isRightDrawerOpen.value = false
     isHeaderOpen.value = false
   }
 })

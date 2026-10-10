@@ -39,48 +39,48 @@
         </div>
       </div>
 
-      <!-- 列表筛选控制区域 -->
+      <!-- 列表筛选控制区域 (响应式) -->
       <div
-        class="grid grid-cols-12 gap-2 rounded-xl border border-slate-200/80 bg-slate-50/50 p-2 text-xs"
+        class="grid grid-cols-1 gap-2 rounded-xl border border-slate-200/80 bg-slate-50/50 p-2.5 text-xs sm:grid-cols-12"
       >
-        <div class="col-span-6 flex items-center gap-1.5">
+        <div class="flex items-center gap-1.5 sm:col-span-6">
           <span class="shrink-0 font-medium text-slate-400">Frame 筛选:</span>
           <input
             v-model.number="filterForm.minFrame"
             type="number"
             placeholder="Min"
-            class="w-full rounded-md border border-slate-200 bg-white px-2 py-1 font-mono text-slate-700 focus:border-slate-500 focus:outline-none"
+            class="w-full rounded-md border border-slate-200 bg-white px-2 py-1.5 font-mono text-slate-700 focus:border-slate-500 focus:outline-none"
           />
           <span class="text-slate-300">-</span>
           <input
             v-model.number="filterForm.maxFrame"
             type="number"
             placeholder="Max"
-            class="w-full rounded-md border border-slate-200 bg-white px-2 py-1 font-mono text-slate-700 focus:border-slate-500 focus:outline-none"
+            class="w-full rounded-md border border-slate-200 bg-white px-2 py-1.5 font-mono text-slate-700 focus:border-slate-500 focus:outline-none"
           />
         </div>
 
-        <div class="col-span-5 flex items-center gap-1.5">
+        <div class="flex items-center gap-1.5 sm:col-span-5">
           <span class="shrink-0 font-medium text-slate-400">BPM 筛选:</span>
           <input
             v-model.number="filterForm.minBpm"
             type="number"
             placeholder="Min"
-            class="w-full rounded-md border border-slate-200 bg-white px-2 py-1 font-mono text-slate-700 focus:border-slate-500 focus:outline-none"
+            class="w-full rounded-md border border-slate-200 bg-white px-2 py-1.5 font-mono text-slate-700 focus:border-slate-500 focus:outline-none"
           />
           <span class="text-slate-300">-</span>
           <input
             v-model.number="filterForm.maxBpm"
             type="number"
             placeholder="Max"
-            class="w-full rounded-md border border-slate-200 bg-white px-2 py-1 font-mono text-slate-700 focus:border-slate-500 focus:outline-none"
+            class="w-full rounded-md border border-slate-200 bg-white px-2 py-1.5 font-mono text-slate-700 focus:border-slate-500 focus:outline-none"
           />
         </div>
 
-        <div class="col-span-1 flex items-center justify-end">
+        <div class="flex items-center justify-end sm:col-span-1">
           <button
             type="button"
-            class="cursor-pointer text-xs text-slate-400 transition-colors hover:text-slate-600"
+            class="cursor-pointer px-2 py-1 text-xs text-slate-400 transition-colors hover:text-slate-600"
             @click="resetFilter"
           >
             重置
@@ -88,7 +88,7 @@
         </div>
       </div>
 
-      <!-- 渐变生成配置面板 -->
+      <!-- 渐变生成配置面板 (响应式) -->
       <div
         v-if="showRampPanel"
         class="space-y-3 rounded-xl border border-indigo-100 bg-indigo-50/40 p-3 text-xs transition-all"
@@ -114,14 +114,14 @@
           </span>
           <button
             type="button"
-            class="cursor-pointer text-slate-400 hover:text-slate-600"
+            class="cursor-pointer p-1 text-slate-400 hover:text-slate-600"
             @click="toggleRampPanel(false)"
           >
             ✕
           </button>
         </div>
 
-        <div class="grid grid-cols-2 gap-3">
+        <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <div class="space-y-1.5">
             <label class="block font-medium text-slate-500">Frame 范围 & 采样密度</label>
             <div class="flex items-center gap-1.5">
@@ -129,14 +129,14 @@
                 v-model="rampForm.startFrame"
                 type="number"
                 placeholder="起始 Frame"
-                class="w-full rounded-md border border-slate-200 bg-white px-2 py-1 font-mono"
+                class="w-full rounded-md border border-slate-200 bg-white px-2 py-1.5 font-mono"
               />
               <span class="text-slate-300">→</span>
               <input
                 v-model="rampForm.endFrame"
                 type="number"
                 placeholder="结束 Frame"
-                class="w-full rounded-md border border-slate-200 bg-white px-2 py-1 font-mono"
+                class="w-full rounded-md border border-slate-200 bg-white px-2 py-1.5 font-mono"
               />
             </div>
             <div class="flex items-center gap-2 pt-1">
@@ -146,7 +146,7 @@
                 type="number"
                 min="1"
                 placeholder="如 100"
-                class="w-24 rounded-md border border-slate-200 bg-white px-2 py-1 font-mono"
+                class="w-28 rounded-md border border-slate-200 bg-white px-2 py-1.5 font-mono"
               />
             </div>
           </div>
@@ -158,21 +158,21 @@
                 v-model="rampForm.startBpm"
                 type="number"
                 placeholder="起始 BPM"
-                class="w-full rounded-md border border-slate-200 bg-white px-2 py-1 font-mono"
+                class="w-full rounded-md border border-slate-200 bg-white px-2 py-1.5 font-mono"
               />
               <span class="text-slate-300">→</span>
               <input
                 v-model="rampForm.endBpm"
                 type="number"
                 placeholder="结束 BPM"
-                class="w-full rounded-md border border-slate-200 bg-white px-2 py-1 font-mono"
+                class="w-full rounded-md border border-slate-200 bg-white px-2 py-1.5 font-mono"
               />
             </div>
             <div class="flex items-center gap-2 pt-1">
               <span class="shrink-0 text-slate-400">缓动类型:</span>
               <select
                 v-model="rampForm.easing"
-                class="w-full rounded-md border border-slate-200 bg-white px-2 py-1"
+                class="w-full rounded-md border border-slate-200 bg-white px-2 py-1.5"
               >
                 <option value="linear">Linear (线性)</option>
                 <option value="easeIn">Ease In (0.42, 0, 1, 1)</option>
@@ -196,14 +196,14 @@
             v-model="rampForm.customBezier"
             type="text"
             placeholder="例: cubic-bezier(0.25, 0.10, 0.25, 1.00)"
-            class="w-full rounded-md border border-slate-200 px-2.5 py-1 font-mono text-xs text-slate-800 focus:border-indigo-500 focus:outline-none"
+            class="w-full rounded-md border border-slate-200 px-2.5 py-1.5 font-mono text-xs text-slate-800 focus:border-indigo-500 focus:outline-none"
           />
         </div>
 
         <div class="flex justify-end gap-2 pt-1">
           <button
             type="button"
-            class="cursor-pointer rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-semibold text-white transition-all hover:bg-indigo-700 active:scale-95"
+            class="cursor-pointer rounded-lg bg-indigo-600 px-3.5 py-2 text-xs font-semibold text-white transition-all hover:bg-indigo-700 active:scale-95"
             @click="generateRampNodes"
           >
             生成并插入节点
@@ -211,7 +211,7 @@
         </div>
       </div>
 
-      <!-- 批量删除配置面板 -->
+      <!-- 批量删除配置面板 (响应式) -->
       <div
         v-if="showDeletePanel"
         class="space-y-3 rounded-xl border border-rose-100 bg-rose-50/40 p-3 text-xs transition-all"
@@ -237,14 +237,14 @@
           </span>
           <button
             type="button"
-            class="cursor-pointer text-slate-400 hover:text-slate-600"
+            class="cursor-pointer p-1 text-slate-400 hover:text-slate-600"
             @click="toggleDeletePanel(false)"
           >
             ✕
           </button>
         </div>
 
-        <div class="grid grid-cols-2 gap-3">
+        <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <!-- Frame 删除范围 -->
           <div class="space-y-1">
             <label class="block font-medium text-slate-600">Frame 删除区间</label>
@@ -253,14 +253,14 @@
                 v-model="deleteForm.minFrame"
                 type="number"
                 placeholder="最小 Frame"
-                class="w-full rounded-md border border-slate-200 bg-white px-2 py-1 font-mono"
+                class="w-full rounded-md border border-slate-200 bg-white px-2 py-1.5 font-mono"
               />
               <span class="text-slate-300">-</span>
               <input
                 v-model="deleteForm.maxFrame"
                 type="number"
                 placeholder="最大 Frame"
-                class="w-full rounded-md border border-slate-200 bg-white px-2 py-1 font-mono"
+                class="w-full rounded-md border border-slate-200 bg-white px-2 py-1.5 font-mono"
               />
             </div>
           </div>
@@ -273,20 +273,20 @@
                 v-model="deleteForm.minBpm"
                 type="number"
                 placeholder="最小 BPM"
-                class="w-full rounded-md border border-slate-200 bg-white px-2 py-1 font-mono"
+                class="w-full rounded-md border border-slate-200 bg-white px-2 py-1.5 font-mono"
               />
               <span class="text-slate-300">-</span>
               <input
                 v-model="deleteForm.maxBpm"
                 type="number"
                 placeholder="最大 BPM"
-                class="w-full rounded-md border border-slate-200 bg-white px-2 py-1 font-mono"
+                class="w-full rounded-md border border-slate-200 bg-white px-2 py-1.5 font-mono"
               />
             </div>
           </div>
         </div>
 
-        <div class="flex items-center justify-between pt-1">
+        <div class="flex flex-col justify-between gap-2 pt-1 sm:flex-row sm:items-center">
           <span class="font-medium text-slate-500">
             受影响节点: <strong class="font-mono text-rose-600">{{ pendingDeleteCount }}</strong> 个
             (首个固定节点会被保留)
@@ -294,7 +294,7 @@
           <button
             type="button"
             :disabled="pendingDeleteCount === 0"
-            class="cursor-pointer rounded-lg bg-rose-600 px-3 py-1.5 text-xs font-semibold text-white transition-all hover:bg-rose-700 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-rose-600"
+            class="cursor-pointer rounded-lg bg-rose-600 px-3.5 py-2 text-xs font-semibold text-white transition-all hover:bg-rose-700 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-rose-600"
             @click="executeBatchDelete"
           >
             确认批量删除
@@ -302,17 +302,17 @@
         </div>
       </div>
 
-      <!-- BPM 虚拟列表 (Element Plus el-table-v2) -->
+      <!-- BPM 虚拟列表 (Element Plus el-table-v2 宽度自适应适配) -->
       <div class="h-75 w-full overflow-hidden rounded-xl border border-slate-100 text-xs">
         <template v-if="displayList.length > 0">
           <el-auto-resizer>
             <template #default="{ height, width }">
               <el-table-v2
-                :columns="columns"
+                :columns="getColumns(width)"
                 :data="displayList"
                 :width="width"
                 :height="height"
-                :row-height="40"
+                :row-height="44"
                 row-key="rawIndex"
                 fixed
               >
@@ -333,7 +333,7 @@
                       step="1"
                       :disabled="rowData.rawIndex === 0"
                       :placeholder="rowData.rawIndex === 0 ? '0 (固定)' : 'Frame'"
-                      class="w-full rounded-md border border-slate-200 bg-white px-2 py-1 font-mono text-xs font-semibold text-slate-700 transition-all focus:border-slate-500 focus:outline-none disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                      class="w-full rounded-md border border-slate-200 bg-white px-2 py-1.5 font-mono text-xs font-semibold text-slate-700 transition-all focus:border-slate-500 focus:outline-none disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                     />
                   </template>
 
@@ -345,7 +345,7 @@
                       min="1"
                       step="0.01"
                       placeholder="BPM"
-                      class="w-full rounded-md border border-slate-200 bg-white px-2 py-1 font-mono text-xs font-semibold text-slate-700 transition-all focus:border-slate-500 focus:outline-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                      class="w-full rounded-md border border-slate-200 bg-white px-2 py-1.5 font-mono text-xs font-semibold text-slate-700 transition-all focus:border-slate-500 focus:outline-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                     />
                   </template>
 
@@ -355,12 +355,12 @@
                       <button
                         type="button"
                         :disabled="rowData.rawIndex === 0"
-                        class="flex h-7 w-7 cursor-pointer items-center justify-center rounded-md text-slate-400 transition-colors hover:bg-rose-50 hover:text-rose-600 disabled:cursor-not-allowed disabled:opacity-20 disabled:hover:bg-transparent disabled:hover:text-slate-400"
+                        class="flex h-8 w-8 cursor-pointer items-center justify-center rounded-md text-slate-400 transition-colors hover:bg-rose-50 hover:text-rose-600 disabled:cursor-not-allowed disabled:opacity-20 disabled:hover:bg-transparent disabled:hover:text-slate-400"
                         title="删除此 BPM 节点"
                         @click="removeItemByRawIndex(rowData.rawIndex)"
                       >
                         <svg
-                          class="h-3.5 w-3.5"
+                          class="h-4 w-4"
                           fill="none"
                           stroke="currentColor"
                           stroke-width="2"
@@ -390,10 +390,10 @@
       </p>
 
       <!-- 底部添加操作栏 -->
-      <div class="grid grid-cols-3 gap-2">
+      <div class="grid grid-cols-1 gap-2 sm:grid-cols-3">
         <button
           type="button"
-          class="flex cursor-pointer items-center justify-center gap-1 rounded-xl border border-dashed border-slate-300 py-2 text-xs font-semibold text-slate-600 transition-all hover:border-slate-400 hover:bg-slate-50 active:scale-[0.99]"
+          class="flex cursor-pointer items-center justify-center gap-1 rounded-xl border border-dashed border-slate-300 py-2.5 text-xs font-semibold text-slate-600 transition-all hover:border-slate-400 hover:bg-slate-50 active:scale-[0.99]"
           @click="addItem"
         >
           <svg
@@ -410,7 +410,7 @@
 
         <button
           type="button"
-          class="flex cursor-pointer items-center justify-center gap-1 rounded-xl border border-indigo-200 bg-indigo-50/50 py-2 text-xs font-semibold text-indigo-600 transition-all hover:bg-indigo-100/50 active:scale-[0.99]"
+          class="flex cursor-pointer items-center justify-center gap-1 rounded-xl border border-indigo-200 bg-indigo-50/50 py-2.5 text-xs font-semibold text-indigo-600 transition-all hover:bg-indigo-100/50 active:scale-[0.99]"
           @click="toggleRampPanel(!showRampPanel)"
         >
           <svg
@@ -431,7 +431,7 @@
 
         <button
           type="button"
-          class="flex cursor-pointer items-center justify-center gap-1 rounded-xl border border-rose-200 bg-rose-50/50 py-2 text-xs font-semibold text-rose-600 transition-all hover:bg-rose-100/50 active:scale-[0.99]"
+          class="flex cursor-pointer items-center justify-center gap-1 rounded-xl border border-rose-200 bg-rose-50/50 py-2.5 text-xs font-semibold text-rose-600 transition-all hover:bg-rose-100/50 active:scale-[0.99]"
           @click="toggleDeletePanel(!showDeletePanel)"
         >
           <svg
@@ -487,13 +487,37 @@ const isReversed = ref(false)
 const showRampPanel = ref(false)
 const showDeletePanel = ref(false)
 
-// Element Plus el-table-v2 列配置
-const columns = [
-  { key: 'rawIndex', title: '原序号', dataKey: 'rawIndex', width: 90 },
-  { key: 'frame', title: 'Frame (帧)', dataKey: 'Frame', width: 220 },
-  { key: 'bpm', title: 'BPM', dataKey: 'BPM', width: 200 },
-  { key: 'action', title: '操作', width: 80, align: 'center' as const },
-]
+// 动态计算 el-table-v2 列宽，支持移动端适配不写死宽度
+const getColumns = (containerWidth: number) => {
+  const isMobile = containerWidth < 450
+
+  return [
+    {
+      key: 'rawIndex',
+      title: '原序号',
+      dataKey: 'rawIndex',
+      width: isMobile ? 60 : Math.floor(containerWidth * 0.15),
+    },
+    {
+      key: 'frame',
+      title: 'Frame (帧)',
+      dataKey: 'Frame',
+      width: isMobile ? 120 : Math.floor(containerWidth * 0.35),
+    },
+    {
+      key: 'bpm',
+      title: 'BPM',
+      dataKey: 'BPM',
+      width: isMobile ? 110 : Math.floor(containerWidth * 0.35),
+    },
+    {
+      key: 'action',
+      title: '操作',
+      width: isMobile ? 60 : Math.floor(containerWidth * 0.15),
+      align: 'center' as const,
+    },
+  ]
+}
 
 // 列表筛选表单
 const filterForm = reactive({

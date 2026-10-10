@@ -1,6 +1,6 @@
 <template>
   <!-- 1. 最外层 div 挂载 v-loading 指令 -->
-  <div v-loading="comLoading" class="h-screen w-full">
+  <div v-loading="comLoading" class="h-screen w-full overflow-hidden">
     <!-- 2. 加载未完成时不渲染核心编辑区域 -->
     <ResponsiveEditorLayout v-if="!comLoading">
       <!-- Header 插槽 -->
@@ -13,14 +13,25 @@
         <SongInfoPanel />
       </template>
 
-      <!-- 中间插槽：画布 -->
+      <!-- 中间插槽：画布与移动端控制面板 -->
       <template #center>
-        <RhythmCanvas
-          :style="{
-            width: globalConfigStore.canvasWidth + 'px',
-          }"
-          :key="globalConfigStore.canvasWidth"
-        />
+        <div
+          class="relative flex h-full w-full flex-col overflow-hidden"
+          :style="{ backgroundColor: cssCanvasBgColor }"
+        >
+          <!-- 上部分：画布滚动与展示区域 -->
+          <div class="flex w-full flex-1 items-center justify-center overflow-auto">
+            <RhythmCanvas
+              :style="{
+                width: globalConfigStore.canvasWidth + 'px',
+              }"
+              :key="globalConfigStore.canvasWidth"
+            />
+          </div>
+
+          <!-- 下部分：如果是触屏设备，则在底部固定渲染 MobileActionPanel 组件 -->
+          <MobileActionPanel v-if="isTouchDevice" />
+        </div>
       </template>
 
       <!-- 右侧插槽：配置区域 -->
@@ -32,10 +43,11 @@
 </template>
 
 <script setup lang="ts">
-import { useRefHistory } from '@vueuse/core'
+import { useMediaQuery, useRefHistory } from '@vueuse/core'
 import { computed, nextTick, onUnmounted, ref, toRaw, watch } from 'vue'
 import { useRoute } from 'vue-router'
 
+import MobileActionPanel from '@/components/MobileActionPanel.vue'
 import NoteEditorHeader from '@/components/NoteEditorHeader.vue'
 import ResponsiveEditorLayout from '@/components/ResponsiveEditorLayout.vue'
 import RhythmCanvas from '@/components/RhythmCanvas.vue'
@@ -45,14 +57,19 @@ import { useSongStorage } from '@/db/useSongStorage'
 import { useGlobalConfigStore } from '@/store/global-config'
 import { useAppStore } from '@/store/store'
 import { emitter } from '@/utils/eventBus'
-import { deepToRaw } from '@/utils/utils'
+import { deepToRaw, toCssHex8 } from '@/utils/utils'
 
 const route = useRoute()
 const appStore = useAppStore()
 const globalConfigStore = useGlobalConfigStore()
 const comLoading = ref(true)
 const { loading, getSongById, updateSong } = useSongStorage()
+const isTouchDevice = useMediaQuery('(pointer: coarse)')
 const id = Number(Array.isArray(route.params.id) ? route.params.id[0] : route.params.id)
+
+const cssCanvasBgColor = computed(() => {
+  return toCssHex8(globalConfigStore.canvasBgColor)
+})
 
 // ==================== 历史记录与撤回重做逻辑 ====================
 const areaRef = computed({

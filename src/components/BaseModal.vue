@@ -6,7 +6,7 @@
     align-center
     append-to-body
     destroy-on-close
-    class="bpm-edit-dialog rounded-2xl"
+    class="bpm-edit-dialog flex max-h-[95vh] max-w-[95vw] flex-col overflow-hidden rounded-2xl"
     @update:model-value="handleClose"
     @open="$emit('open')"
   >
@@ -69,3 +69,10 @@ const handleClose = (val: boolean) => {
   emit('update:modelValue', val)
 }
 </script>
+
+<style>
+.el-dialog__body {
+  flex: 1;
+  overflow: auto;
+}
+</style>

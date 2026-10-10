@@ -77,8 +77,8 @@
         <span>{{ formattedDuration }}</span>
       </div>
 
-      <!-- 进度条容器：直接 v-model 绑定 currentSongInfo.currentTime -->
-      <div class="progress-slider-container min-w-16 flex-1">
+      <!-- 1. 触屏设备：隐藏播放进度条 -->
+      <div v-if="!isTouchDevice" class="progress-slider-container min-w-16 flex-1">
         <el-slider
           v-model="currentSongInfo.currentTime"
           :max="currentSongInfo.duration"
@@ -100,7 +100,8 @@
           class="ml-auto shrink-0"
         />
 
-        <div class="group/volume relative ml-auto flex shrink-0 items-center">
+        <!-- 1. 触屏设备：隐藏音量控制器 -->
+        <div v-if="!isTouchDevice" class="group/volume relative ml-auto flex shrink-0 items-center">
           <button
             type="button"
             class="flex h-8 w-8 items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-slate-200/60 hover:text-slate-800"
@@ -238,6 +239,7 @@
 </template>
 
 <script setup lang="ts">
+import { useMediaQuery } from '@vueuse/core'
 import { ref, computed, watch, watchEffect, onUnmounted } from 'vue'
 
 import { useGlobalConfigStore } from '@/store/global-config.ts'
@@ -247,6 +249,9 @@ import { formatTime, getDecimalPlaces } from '@/utils/utils.ts'
 
 import AudioWorker from '../audio-worker.ts?worker'
 import TrackManagerPopover from './TrackManagerPopover.vue'
+
+// 使用 VueUse 的 useMediaQuery 检测触屏设备
+const isTouchDevice = useMediaQuery('(pointer: coarse)')
 
 const { currentSong, currentSongInfo } = useAppStore()
 const globalConfigStore = useGlobalConfigStore()
@@ -816,13 +821,10 @@ const handleSeekToEvent = (payload: any, typeArg?: 'time' | 'frame' | 'coord') =
   if (payload === undefined || payload === null) return
 
   if (Array.isArray(payload)) {
-    // 数组/元组传参: emitter.emit('seekTo', [targetCoord, 'coord'])
     seekTo(payload[0], payload[1])
   } else if (typeof payload === 'object') {
-    // 对象传参: emitter.emit('seekTo', { target: targetCoord, type: 'coord' })
     seekTo(payload.target ?? payload.value, payload.type)
   } else {
-    // 基础参数形式: emitter.emit('seekTo', targetCoord, 'coord')
     seekTo(payload, typeArg ?? 'frame')
   }
 }
@@ -953,9 +955,6 @@ const seekTo = (target: number | string, type: 'time' | 'frame' | 'coord') => {
   }
 }
 
-/**
- * FIX: 修正调整速率时因为计算延迟导致的不同步问题
- */
 watch(combinedRate, () => {
   seekTo(calculatedCoord.value.rounded, 'coord')
 })

@@ -1,6 +1,6 @@
 <template>
   <main
-    class="relative h-full w-full shrink-0 overflow-hidden rounded-2xl border border-slate-200/80 select-none"
+    class="relative h-full w-full shrink-0 overflow-hidden rounded-2xl select-none"
     :style="{ backgroundColor: cssCanvasBgColor }"
     @wheel="handleWheel"
     @contextmenu.prevent

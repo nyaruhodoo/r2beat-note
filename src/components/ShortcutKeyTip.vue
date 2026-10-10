@@ -1,124 +1,131 @@
 <template>
   <div class="flex w-full max-w-90 flex-col gap-2 font-sans select-none">
-    <div
-      v-for="(item, index) in shortcutKey"
-      :key="item.event"
-      class="group relative flex items-center justify-between gap-2 rounded-xl p-3 transition-all"
-      :class="[
-        item.lock
-          ? 'cursor-not-allowed bg-slate-100/60 opacity-60'
-          : 'cursor-pointer bg-slate-50 hover:bg-slate-100/80',
-      ]"
-      @click="startRecording(index)"
-    >
-      <!-- 左侧 Label 与锁图标 -->
-      <div class="flex shrink-0 items-center gap-1.5 overflow-hidden">
-        <span class="truncate text-xs font-medium text-slate-500">
-          {{ item.title.trim() }}
-        </span>
-        <!-- 锁定图标 -->
-        <svg
-          v-if="item.lock"
-          class="h-3.5 w-3.5 shrink-0 text-slate-400"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-          stroke-width="2"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
-          />
-        </svg>
-      </div>
-
-      <!-- 右侧 快捷键组合按键 -->
-      <div class="flex shrink-0 items-center gap-1.5">
-        <template v-if="item.keys && item.keys.length > 0">
-          <template v-for="(key, keyIndex) in item.keys" :key="keyIndex">
-            <kbd
-              class="inline-flex h-6 min-w-6 items-center justify-center rounded-md border border-slate-200 bg-white px-2 font-mono text-xs font-semibold text-slate-700 shadow-xs transition-colors"
-              :class="{ 'group-hover:border-slate-300 group-hover:text-slate-900': !item.lock }"
-            >
-              {{ formatKey(key) }}
-            </kbd>
-            <span v-if="keyIndex < item.keys.length - 1" class="text-xs font-medium text-slate-400">
-              +
-            </span>
-          </template>
-        </template>
-        <span
-          v-else
-          class="inline-flex h-6 items-center justify-center rounded-md border border-dashed border-slate-200 bg-slate-100/50 px-2 text-[11px] font-normal text-slate-400"
-          :class="{ 'group-hover:border-slate-300': !item.lock }"
-        >
-          未设置
-        </span>
-      </div>
-
-      <!-- 点击修改时的蒙层 Overlay (锁定项目不展示) -->
+    <!-- 否则，渲染原有的快捷键区域 -->
+    <template v-if="!isTouchDevice">
       <div
-        v-if="!item.lock && activeIndex === index"
-        class="absolute inset-0 z-10 flex items-center justify-between rounded-xl border border-indigo-500 bg-indigo-600/90 px-3 text-white shadow-md backdrop-blur-xs transition-all"
-        @click.stop
+        v-for="(item, index) in shortcutKey"
+        :key="item.event"
+        class="group relative flex items-center justify-between gap-2 rounded-xl p-3 transition-all"
+        :class="[
+          item.lock
+            ? 'cursor-not-allowed bg-slate-100/60 opacity-60'
+            : 'cursor-pointer bg-slate-50 hover:bg-slate-100/80',
+        ]"
+        @click="startRecording(index)"
       >
-        <div class="flex items-center gap-1.5 overflow-hidden">
-          <span class="shrink-0 text-xs font-medium text-indigo-100">按下新快捷键:</span>
+        <!-- 左侧 Label 与锁图标 -->
+        <div class="flex shrink-0 items-center gap-1.5 overflow-hidden">
+          <span class="truncate text-xs font-medium text-slate-500">
+            {{ item.title.trim() }}
+          </span>
+          <!-- 锁定图标 -->
+          <svg
+            v-if="item.lock"
+            class="h-3.5 w-3.5 shrink-0 text-slate-400"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+            />
+          </svg>
+        </div>
 
-          <div class="flex items-center gap-1 overflow-x-auto">
-            <template v-if="recordedKeys.length">
-              <template v-for="(key, kIdx) in recordedKeys" :key="kIdx">
-                <kbd
-                  class="inline-flex h-5 min-w-5 items-center justify-center rounded border border-white/30 bg-white/20 px-1.5 font-mono text-[11px] font-bold text-white"
-                >
-                  {{ formatKey(key) }}
-                </kbd>
-                <span v-if="kIdx < recordedKeys.length - 1" class="text-[10px] text-indigo-200"
-                  >+</span
-                >
-              </template>
+        <!-- 右侧 快捷键组合按键 -->
+        <div class="flex shrink-0 items-center gap-1.5">
+          <template v-if="item.keys && item.keys.length > 0">
+            <template v-for="(key, keyIndex) in item.keys" :key="keyIndex">
+              <kbd
+                class="inline-flex h-6 min-w-6 items-center justify-center rounded-md border border-slate-200 bg-white px-2 font-mono text-xs font-semibold text-slate-700 shadow-xs transition-colors"
+                :class="{ 'group-hover:border-slate-300 group-hover:text-slate-900': !item.lock }"
+              >
+                {{ formatKey(key) }}
+              </kbd>
+              <span
+                v-if="keyIndex < item.keys.length - 1"
+                class="text-xs font-medium text-slate-400"
+              >
+                +
+              </span>
             </template>
-            <span v-else class="animate-pulse text-xs text-indigo-200">等待输入...</span>
+          </template>
+          <span
+            v-else
+            class="inline-flex h-6 items-center justify-center rounded-md border border-dashed border-slate-200 bg-slate-100/50 px-2 text-[11px] font-normal text-slate-400"
+            :class="{ 'group-hover:border-slate-300': !item.lock }"
+          >
+            未设置
+          </span>
+        </div>
+
+        <!-- 点击修改时的蒙层 Overlay (锁定项目不展示) -->
+        <div
+          v-if="!item.lock && activeIndex === index"
+          class="absolute inset-0 z-10 flex items-center justify-between rounded-xl border border-indigo-500 bg-indigo-600/90 px-3 text-white shadow-md backdrop-blur-xs transition-all"
+          @click.stop
+        >
+          <div class="flex items-center gap-1.5 overflow-hidden">
+            <span class="shrink-0 text-xs font-medium text-indigo-100">按下新快捷键:</span>
+
+            <div class="flex items-center gap-1 overflow-x-auto">
+              <template v-if="recordedKeys.length">
+                <template v-for="(key, kIdx) in recordedKeys" :key="kIdx">
+                  <kbd
+                    class="inline-flex h-5 min-w-5 items-center justify-center rounded border border-white/30 bg-white/20 px-1.5 font-mono text-[11px] font-bold text-white"
+                  >
+                    {{ formatKey(key) }}
+                  </kbd>
+                  <span v-if="kIdx < recordedKeys.length - 1" class="text-[10px] text-indigo-200"
+                    >+</span
+                  >
+                </template>
+              </template>
+              <span v-else class="animate-pulse text-xs text-indigo-200">等待输入...</span>
+            </div>
+          </div>
+
+          <div class="flex shrink-0 items-center gap-2">
+            <button
+              class="cursor-pointer text-[11px] font-medium text-indigo-200 transition-colors hover:text-white"
+              title="清空当前快捷键"
+              @click.stop="clearShortcut"
+            >
+              清除
+            </button>
+            <button
+              class="cursor-pointer text-[11px] font-medium text-indigo-200 transition-colors hover:text-white"
+              title="恢复默认值"
+              @click.stop="resetShortcut"
+            >
+              恢复
+            </button>
+            <button
+              class="cursor-pointer text-[11px] font-medium text-indigo-200 transition-colors hover:text-white"
+              title="确认保存 (Enter)"
+              @click.stop="saveShortcut"
+            >
+              确定
+            </button>
+            <button
+              class="cursor-pointer text-[11px] font-medium text-indigo-200 transition-colors hover:text-white"
+              title="取消 (Esc)"
+              @click.stop="stopRecording"
+            >
+              取消
+            </button>
           </div>
         </div>
-
-        <div class="flex shrink-0 items-center gap-2">
-          <button
-            class="cursor-pointer text-[11px] font-medium text-indigo-200 transition-colors hover:text-white"
-            title="清空当前快捷键"
-            @click.stop="clearShortcut"
-          >
-            清除
-          </button>
-          <button
-            class="cursor-pointer text-[11px] font-medium text-indigo-200 transition-colors hover:text-white"
-            title="恢复默认值"
-            @click.stop="resetShortcut"
-          >
-            恢复
-          </button>
-          <button
-            class="cursor-pointer text-[11px] font-medium text-indigo-200 transition-colors hover:text-white"
-            title="确认保存 (Enter)"
-            @click.stop="saveShortcut"
-          >
-            确定
-          </button>
-          <button
-            class="cursor-pointer text-[11px] font-medium text-indigo-200 transition-colors hover:text-white"
-            title="取消 (Esc)"
-            @click.stop="stopRecording"
-          >
-            取消
-          </button>
-        </div>
       </div>
-    </div>
+    </template>
   </div>
 </template>
 
 <script setup lang="ts">
+import { useMediaQuery } from '@vueuse/core'
 import { storeToRefs } from 'pinia'
 import { ref, onMounted, onUnmounted } from 'vue'
 
@@ -137,6 +144,9 @@ const { shortcutKey } = storeToRefs(globalConfigStore)
 
 const activeIndex = ref<number | null>(null)
 const recordedKeys = ref<string[]>([])
+
+// 检测是否为触屏设备
+const isTouchDevice = useMediaQuery('(pointer: coarse)')
 
 const formatKey = (key: string) => {
   if (!key) return ''
@@ -388,7 +398,7 @@ const handleGlobalMouseDown = (e: MouseEvent) => {
   }
 
   for (const item of shortcutKey.value) {
-    // 如果没有绑定快捷键或已锁定，跳过
+    // If no shortcut is bound or it's locked, skip
     if (item.lock || !item.keys || item.keys.length === 0) continue
 
     if (isKeyMatch(item.keys, currentPressedKeys)) {

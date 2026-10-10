@@ -1,22 +1,23 @@
 <template>
   <header
-    class="flex items-center justify-between rounded-2xl border border-slate-200/80 bg-white px-6 py-3"
+    class="flex items-center justify-between gap-4 rounded-2xl border border-slate-200/80 bg-white px-6 py-3"
   >
-    <div class="flex items-center gap-3">
-      <el-button circle class="border-none" @click="router.back()">
+    <!-- 左侧区域：返回按钮 + 歌名编辑，利用 flex-1 与 min-w-0 自适应宽度 -->
+    <div class="flex min-w-0 flex-1 items-center gap-3">
+      <el-button circle class="shrink-0 border-none" @click="router.back()">
         <el-icon>
           <Back />
         </el-icon>
       </el-button>
 
-      <!-- 歌名与内联编辑区域（保持单一输入框节点，防止高度跳变） -->
-      <div class="flex items-center gap-1.5">
+      <!-- 歌名与内联编辑区域：min-w-0 配合 w-full 与 flex-1 确保正确伸缩适配 -->
+      <div class="flex max-w-50 min-w-0 flex-1 items-center gap-1.5">
         <input
           ref="titleInputRef"
           v-model="editingTitleText"
           type="text"
           :readonly="!isEditingTitle"
-          class="rounded-lg border px-2 py-1 text-lg font-bold text-slate-800 transition-all duration-200 focus:outline-none"
+          class="w-full min-w-0 rounded-lg border px-2 py-1 text-lg font-bold text-slate-800 transition-all duration-200 focus:outline-none"
           :class="
             isEditingTitle
               ? 'border-slate-300 bg-white shadow-xs focus:border-slate-500'
@@ -31,7 +32,7 @@
         <!-- 触发/保存按钮 -->
         <button
           type="button"
-          class="rounded-md p-1.5 text-slate-400 transition-all duration-200 hover:bg-slate-100 hover:text-slate-600 active:scale-95"
+          class="shrink-0 rounded-md p-1.5 text-slate-400 transition-all duration-200 hover:bg-slate-100 hover:text-slate-600 active:scale-95"
           :title="isEditingTitle ? '保存歌名' : '修改歌名'"
           @click="toggleEditTitle"
         >
@@ -65,7 +66,8 @@
       </div>
     </div>
 
-    <div class="flex items-center gap-3">
+    <!-- 右侧区域：使用 shrink-0 防止被宽度影响导致伸缩 -->
+    <div class="flex shrink-0 items-center gap-3">
       <!-- <el-button type="primary" :disabled="loading" @click="statsVisible = true" >详情统计</el-button> -->
 
       <button
