@@ -4,7 +4,7 @@
   >
     <!-- 左侧区域：返回按钮 + 歌名编辑，利用 flex-1 与 min-w-0 自适应宽度 -->
     <div class="flex min-w-0 flex-1 items-center gap-3">
-      <el-button circle class="shrink-0 border-none" @click="router.back()">
+      <el-button circle class="shrink-0 border-none" @click="handleBack">
         <el-icon>
           <Back />
         </el-icon>
@@ -110,6 +110,10 @@ const appStore = useAppStore()
 // 歌名编辑相关状态
 const isEditingTitle = ref(false)
 const titleInputRef = ref<HTMLInputElement | null>(null)
+
+const handleBack = () => {
+  router.replace('/')
+}
 
 // 读写计算属性：修改 songTitle 时自动同步更新 store
 const songTitle = computed({

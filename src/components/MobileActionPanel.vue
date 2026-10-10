@@ -6,6 +6,7 @@
     @touchend="onTouchEnd"
     @mousedown="onMouseDown"
     @mouseup="onMouseUp"
+    @touchmove="onTouchMove"
   >
     <!-- 顶部脱离分页的 Slider 滑块（用于控制 Coord 精度） -->
     <div class="flex items-center gap-2 px-2 py-0.5">
@@ -241,6 +242,11 @@ let mouseStartX = 0
 
 const onTouchStart = (e: TouchEvent) => {
   touchStartX = e.changedTouches[0].screenX
+}
+
+// 关键：拦截 touchmove，防止触发浏览器左右边缘返回/前进手势
+const onTouchMove = (e: TouchEvent) => {
+  e.preventDefault()
 }
 
 const onTouchEnd = (e: TouchEvent) => {

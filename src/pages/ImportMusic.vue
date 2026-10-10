@@ -234,11 +234,7 @@ const xmlFileName = ref('')
 
 // 返回逻辑
 const handleBack = () => {
-  if (window.history.length > 1) {
-    router.back()
-  } else {
-    router.replace('/')
-  }
+  router.replace('/')
 }
 
 // 处理音频上传

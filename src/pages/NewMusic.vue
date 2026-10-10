@@ -211,11 +211,7 @@ const audioFileName = ref('')
 
 // 返回路由逻辑
 const handleBack = () => {
-  if (window.history.length > 1) {
-    router.back()
-  } else {
-    router.replace('/')
-  }
+  router.replace('/')
 }
 
 // 处理音频文件选择事件

@@ -1,6 +1,6 @@
 <template>
   <aside
-    class="flex h-full w-full flex-col overflow-hidden rounded-2xl border border-slate-200/80 bg-white p-6"
+    class="flex h-full w-full flex-col overflow-hidden rounded-2xl border border-slate-200/80 bg-white p-4"
   >
     <!-- 可滚动区域：包含 歌曲元数据列表 + ObstacleSelector -->
     <div class="flex flex-1 flex-col gap-6 overflow-y-auto pr-1">
@@ -20,7 +20,7 @@
         />
         <SongMetaCard
           v-model="songDelay"
-          label="延迟(Frame)"
+          label="延迟"
           :show-edit-button="true"
           input-type="number"
         />
