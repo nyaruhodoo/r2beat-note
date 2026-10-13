@@ -16,11 +16,17 @@
       <!-- 中间插槽：画布与移动端控制面板 -->
       <template #center>
         <div class="relative flex h-full w-full flex-col overflow-hidden">
-          <!-- 上部分：画布滚动与展示区域 -->
-          <div class="flex w-full flex-1 items-center justify-center overflow-auto">
+          <!-- 上部分：画布滚动与展示区域（设为 relative 以供左侧悬浮组件定位） -->
+          <div class="relative flex w-full flex-1 items-center justify-center overflow-hidden">
+            <!-- 浮在上层、左侧对齐、受父级高度限制且自身滚动的 ObstacleSelector 组件 -->
+            <ObstacleSelector
+              class="absolute top-4 left-10 z-10 max-h-full overflow-y-auto"
+              v-if="isTouchDevice"
+            />
+
             <RhythmCanvas
               :style="{
-                width: globalConfigStore.canvasWidth + 'px',
+                width: isTouchDevice ? '100%' : globalConfigStore.canvasWidth + 'px',
               }"
               :key="globalConfigStore.canvasWidth"
             />
@@ -46,6 +52,7 @@ import { useRoute } from 'vue-router'
 
 import MobileActionPanel from '@/components/MobileActionPanel.vue'
 import NoteEditorHeader from '@/components/NoteEditorHeader.vue'
+import ObstacleSelector from '@/components/ObstacleSelector.vue'
 import ResponsiveEditorLayout from '@/components/ResponsiveEditorLayout.vue'
 import RhythmCanvas from '@/components/RhythmCanvas.vue'
 import SongInfoPanel from '@/components/SongInfoPanel.vue'

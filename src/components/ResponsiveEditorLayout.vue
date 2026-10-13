@@ -5,10 +5,10 @@
     -->
     <div
       :class="[
-        isMobile
+        isTouchDevice
           ? 'absolute top-0 right-0 left-0 z-30 p-4 transition-transform duration-300 ease-in-out'
           : 'mb-4 shrink-0',
-        isMobile && !isHeaderOpen ? '-translate-y-full' : 'translate-y-0',
+        isTouchDevice && !isHeaderOpen ? '-translate-y-full' : 'translate-y-0',
       ]"
     >
       <div>
@@ -17,7 +17,7 @@
 
       <!-- 小屏专属：下拉小箭头按钮 -->
       <button
-        v-if="isMobile && !isHeaderOpen"
+        v-if="isTouchDevice && !isHeaderOpen"
         type="button"
         class="absolute -bottom-6 left-1/2 flex h-6 w-12 -translate-x-1/2 items-center justify-center rounded-b-lg bg-white/90 shadow-md backdrop-blur-sm"
         @click="isHeaderOpen = true"
@@ -30,7 +30,7 @@
 
     <!-- 顶栏展开时的背景遮罩 -->
     <div
-      v-if="isMobile && isHeaderOpen"
+      v-if="isTouchDevice && isHeaderOpen"
       class="fixed inset-0 z-20 bg-black/20 transition-opacity"
       @click="isHeaderOpen = false"
     />
@@ -42,12 +42,12 @@
     <div
       class="relative flex min-h-0 flex-1 justify-center gap-4 overflow-hidden sm:gap-6"
       :style="{
-        backgroundColor: isMobile ? cssCanvasBgColor : undefined,
+        backgroundColor: isTouchDevice ? cssCanvasBgColor : undefined,
       }"
     >
       <!-- 小屏专属：左侧抽屉唤出悬浮按钮 -->
       <button
-        v-if="isMobile && !isLeftDrawerOpen"
+        v-if="isTouchDevice && !isLeftDrawerOpen"
         type="button"
         class="fixed top-1/2 left-0 z-20 flex -translate-y-1/2 items-center rounded-r-lg border border-l-0 border-slate-200 bg-white/90 px-1.5 py-3 text-slate-700 shadow-md backdrop-blur-sm hover:bg-white"
         @click="isLeftDrawerOpen = true"
@@ -59,10 +59,10 @@
       <div
         :class="[
           'transition-transform duration-300 ease-in-out',
-          isMobile
+          isTouchDevice
             ? 'fixed top-0 bottom-0 left-0 z-40 box-border flex h-screen max-h-screen w-[85%] flex-col overflow-hidden p-4'
             : 'flex min-h-0 flex-1 flex-col sm:bg-transparent',
-          isMobile && !isLeftDrawerOpen ? '-translate-x-full' : 'translate-x-0',
+          isTouchDevice && !isLeftDrawerOpen ? '-translate-x-full' : 'translate-x-0',
         ]"
       >
         <div class="min-h-0 flex-1 overflow-y-auto">
@@ -72,19 +72,22 @@
 
       <!-- 左侧抽屉遮罩层 -->
       <div
-        v-if="isMobile && isLeftDrawerOpen"
+        v-if="isTouchDevice && isLeftDrawerOpen"
         class="fixed inset-0 z-30 bg-black/40 transition-opacity"
         @click="isLeftDrawerOpen = false"
       />
 
       <!-- 中间：画布区域 -->
-      <div class="flex shrink-0 items-center justify-center">
+      <div
+        class="flex shrink-0 items-center justify-center"
+        :style="{ width: isTouchDevice ? '100%' : undefined }"
+      >
         <slot name="center" />
       </div>
 
       <!-- 小屏专属：右侧抽屉唤出悬浮按钮 -->
       <button
-        v-if="isMobile && !isRightDrawerOpen"
+        v-if="isTouchDevice && !isRightDrawerOpen"
         type="button"
         class="fixed top-1/2 right-0 z-20 flex -translate-y-1/2 items-center rounded-l-lg border border-r-0 border-slate-200 bg-white/90 px-1.5 py-3 text-slate-700 shadow-md backdrop-blur-sm hover:bg-white"
         @click="isRightDrawerOpen = true"
@@ -96,10 +99,10 @@
       <div
         :class="[
           'transition-transform duration-300 ease-in-out',
-          isMobile
+          isTouchDevice
             ? 'fixed top-0 right-0 bottom-0 z-40 box-border flex h-screen max-h-screen w-[85%] flex-col overflow-hidden p-4'
             : 'flex min-h-0 flex-1 flex-col overflow-y-auto',
-          isMobile && !isRightDrawerOpen ? 'translate-x-full' : 'translate-x-0',
+          isTouchDevice && !isRightDrawerOpen ? 'translate-x-full' : 'translate-x-0',
         ]"
       >
         <div class="min-h-0 flex-1 overflow-y-auto">
@@ -109,7 +112,7 @@
 
       <!-- 右侧抽屉遮罩层 -->
       <div
-        v-if="isMobile && isRightDrawerOpen"
+        v-if="isTouchDevice && isRightDrawerOpen"
         class="fixed inset-0 z-30 bg-black/40 transition-opacity"
         @click="isRightDrawerOpen = false"
       />
@@ -127,7 +130,7 @@ import { toCssHex8 } from '@/utils/utils'
 
 const globalConfigStore = useGlobalConfigStore()
 
-const isMobile = useMediaQuery('(max-width: 1023px)')
+const isTouchDevice = useMediaQuery('(pointer: coarse)')
 
 const isLeftDrawerOpen = ref(false)
 const isRightDrawerOpen = ref(false)
@@ -138,8 +141,8 @@ const cssCanvasBgColor = computed(() => {
 })
 
 // 切换到桌面端时自动关闭移动端浮层
-watch(isMobile, (mobile) => {
-  if (!mobile) {
+watch(isTouchDevice, (touchDevice) => {
+  if (!touchDevice) {
     isLeftDrawerOpen.value = false
     isRightDrawerOpen.value = false
     isHeaderOpen.value = false

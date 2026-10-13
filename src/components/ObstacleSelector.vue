@@ -8,17 +8,21 @@
     >
       <template v-for="(id, colIndex) in row" :key="id || `empty-${rowIndex}-${colIndex}`">
         <div v-if="id" class="relative">
-          <!-- 障碍物主选择按钮 -->
+          <!-- 障碍物主选择按钮（触屏模式下尺寸缩小一半：p-1 代替 p-2，max-w-10 代替 max-w-20） -->
           <button
             @click="selectObstacle(id)"
-            class="group relative flex items-center justify-center rounded-xl p-2 transition-all duration-200"
+            class="group relative flex items-center justify-center rounded-xl transition-all duration-200"
             :class="[
+              isTouchDevice ? 'p-1' : 'p-2',
               selectedObstacle?.Kind === String(id)
                 ? 'border border-slate-800 bg-slate-800 shadow-xs'
                 : 'border border-slate-200 bg-slate-50 hover:border-slate-300 hover:bg-slate-100',
             ]"
           >
-            <div class="relative flex max-w-20 items-center justify-center">
+            <div
+              class="relative flex items-center justify-center"
+              :class="[isTouchDevice ? 'max-w-10' : 'max-w-20']"
+            >
               <img
                 :src="getObstacleImageUrl(id)"
                 :alt="`Obstacle ${id}`"
@@ -116,7 +120,7 @@
 
 <script setup lang="ts">
 import { Setting } from '@element-plus/icons-vue'
-import { useMagicKeys } from '@vueuse/core'
+import { useMagicKeys, useMediaQuery } from '@vueuse/core'
 import { storeToRefs } from 'pinia'
 import { watch, onUnmounted, computed } from 'vue'
 
@@ -127,6 +131,7 @@ import { useAppStore } from '@/store/store'
 const store = useAppStore()
 const { selectedObstacle } = storeToRefs(store)
 const globalConfigStore = useGlobalConfigStore()
+const isTouchDevice = useMediaQuery('(pointer: coarse)')
 
 // ================= 按键监听 (8方向互斥 + 长按) =================
 const { ArrowUp, ArrowDown, ArrowLeft, ArrowRight } = useMagicKeys()
@@ -236,6 +241,28 @@ onUnmounted(() => {
  * 障碍物布局列表
  */
 const layoutConfig = computed(() => {
+  if (isTouchDevice.value) {
+    return [
+      ['16'],
+      ['17'],
+      ['18'],
+      ['19'],
+      ['26'],
+      ['27'],
+      ['20'],
+      ['21'],
+      ['22'],
+      ['23'],
+      ['130'],
+      ['133'],
+      ['136'],
+      ['139'],
+      ['142'],
+      ['145'],
+      ['161'],
+    ]
+  }
+
   if (globalConfigStore.enableSingleObstacle && globalConfigStore.enableAutoDirection)
     return [
       ['18', '145', null, null],

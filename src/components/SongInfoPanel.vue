@@ -31,7 +31,7 @@
       </div>
 
       <div class="flex flex-1 items-center justify-end">
-        <ObstacleSelector></ObstacleSelector>
+        <ObstacleSelector v-if="!isTouchDevice"></ObstacleSelector>
       </div>
     </div>
 
@@ -45,6 +45,7 @@
 </template>
 
 <script setup lang="ts">
+import { useMediaQuery } from '@vueuse/core'
 import { ref, computed } from 'vue'
 
 import { useAppStore } from '@/store/store.ts'
@@ -94,4 +95,5 @@ const songDelay = computed<number>({
 
 // --- BPM 弹窗 ---
 const isBpmModalOpen = ref(false)
+const isTouchDevice = useMediaQuery('(pointer: coarse)')
 </script>
